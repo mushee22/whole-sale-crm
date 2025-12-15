@@ -52,7 +52,7 @@ export async function getRewards(params?: {
     page?: number;
 }): Promise<RewardsResponse> {
     const token = localStorage.getItem("token");
-    const response = await axios.get(`${API_URL}admin/rewards`, {
+    const response = await axios.get(`${API_URL}/admin/rewards`, {
         headers: { Authorization: `Bearer ${token}` },
         params: {
             search: params?.search || "",
