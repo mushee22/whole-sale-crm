@@ -22,6 +22,7 @@ export default function CustomerForm({ onSuccess, onCancel, initialData }: Custo
         defaultValues: initialData ? {
             name: initialData.name,
             phone: initialData.phone,
+            whatsapp_no: initialData.whatsapp_no || "",
             email: initialData.email || "",
             total_earned_points: initialData.total_earned_points,
             total_referral_points: initialData.total_referral_points,
@@ -63,6 +64,12 @@ export default function CustomerForm({ onSuccess, onCancel, initialData }: Custo
                     <Label htmlFor="phone">Phone Number *</Label>
                     <Input id="phone" placeholder="1234567890" {...register("phone")} />
                     {errors.phone && <p className="text-sm text-red-500">{errors.phone.message}</p>}
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="whatsapp_no">WhatsApp Number (Optional)</Label>
+                    <Input id="whatsapp_no" placeholder="1234567890" {...register("whatsapp_no")} />
+                    {errors.whatsapp_no && <p className="text-sm text-red-500">{errors.whatsapp_no.message}</p>}
                 </div>
 
                 <div className="space-y-2">

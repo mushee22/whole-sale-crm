@@ -6,6 +6,7 @@ export interface Customer {
     unique_id: string; // Added unique_id
     name: string;
     phone: string;
+    whatsapp_no?: string | null;
     email: string | null;
     total_earned_points: number;
     total_referral_points: number;
@@ -55,6 +56,7 @@ export interface CustomerDetailsResponse {
 export const createCustomerSchema = z.object({
     name: z.string().min(1, "Name is required"),
     phone: z.string().min(10, "Phone number must be at least 10 digits"),
+    whatsapp_no: z.string().optional().nullable().or(z.literal("")),
     email: z.string().email("Invalid email address").optional().nullable().or(z.literal("")),
     total_earned_points: z.number().optional(),
     total_referral_points: z.number().optional(),

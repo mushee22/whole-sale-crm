@@ -75,6 +75,11 @@ export default function CustomerList() {
                                         </TableCell>
                                         <TableCell>
                                             <div className="text-sm text-gray-900">{customer.phone}</div>
+                                            {customer.whatsapp_no && (
+                                                <div className="text-xs text-green-600 flex items-center gap-1">
+                                                    <span>WA:</span> {customer.whatsapp_no}
+                                                </div>
+                                            )}
                                             {customer.email && <div className="text-xs text-gray-500">{customer.email}</div>}
                                         </TableCell>
                                         <TableCell className="text-center">
@@ -155,6 +160,6 @@ export default function CustomerList() {
                     }}
                 />
             </Modal>
-        </div>
+        </div >
     );
 }

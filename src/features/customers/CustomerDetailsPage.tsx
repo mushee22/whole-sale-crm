@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getCustomer } from "./api/customers";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { ArrowLeft, Download, TrendingUp, ShoppingBag, Copy, ExternalLink, History, Eye } from "lucide-react";
+import { ArrowLeft, Download, TrendingUp, ShoppingBag, Copy, ExternalLink, History, Eye, MessageCircle } from "lucide-react";
 import { useRef, useState } from "react";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
@@ -25,30 +25,49 @@ export default function CustomerDetailsPage() {
         enabled: !!customerId
     });
 
+    const generateCardBlob = async () => {
+        if (!cardRef.current) return null;
+
+        try {
+            const canvas = await html2canvas(cardRef.current, {
+                backgroundColor: '#ffffff',
+                scale: 2,
+                logging: false,
+                useCORS: true,
+            });
+
+            return new Promise<Blob | null>((resolve) => {
+                canvas.toBlob((blob) => {
+                    resolve(blob);
+                }, 'image/png');
+            });
+        } catch (error) {
+            console.error('Failed to generate image:', error);
+            return null;
+        }
+    };
+
     const handleDownload = async () => {
         if (!cardRef.current) {
             toast.error("Card element not found");
             return;
         }
 
-        try {
-            toast.info("Generating image...");
-            const canvas = await html2canvas(cardRef.current, {
-                backgroundColor: '#ffffff',
-                scale: 2,
-                logging: true,
-                useCORS: true,
-            });
+        toast.info("Generating image...");
+        const blob = await generateCardBlob();
 
-            const link = document.createElement('a');
-            link.download = `${customerData?.customer?.name || 'customer'}-loyalty-card.png`;
-            link.href = canvas.toDataURL('image/png');
-            link.click();
-            toast.success("Card downloaded successfully!");
-        } catch (error) {
-            console.error('Failed to download image:', error);
-            toast.error("Failed to download card. Check console for details.");
+        if (!blob) {
+            toast.error("Failed to generate card. Check console for details.");
+            return;
         }
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = `${customerData?.customer?.name || 'customer'}-loyalty-card.png`;
+        link.href = url;
+        link.click();
+        URL.revokeObjectURL(url);
+        toast.success("Card downloaded successfully!");
     };
 
     const copyPublicLink = () => {
@@ -56,6 +75,50 @@ export default function CustomerDetailsPage() {
             const url = `${window.location.origin}/c/${customerData.customer.unique_id}`;
             navigator.clipboard.writeText(url);
             toast.success("Public profile link copied to clipboard");
+        }
+    };
+
+    const sendToWhatsapp = async () => {
+        if (customerData?.customer?.unique_id) {
+            const customer = customerData.customer;
+            // Use whatsapp_no if available, otherwise phone
+            const phoneNumber = customer.whatsapp_no || customer.phone;
+
+            if (!phoneNumber) {
+                toast.error("No phone number available for this customer");
+                return;
+            }
+
+            toast.info("Generating card image...");
+
+            // Generate and copy image
+            const blob = await generateCardBlob();
+            if (blob) {
+                try {
+                    await navigator.clipboard.write([
+                        new ClipboardItem({
+                            [blob.type]: blob
+                        })
+                    ]);
+                    toast.success("Card image copied! PASTE it in WhatsApp (Ctrl+V)");
+                } catch (err) {
+                    console.error('Failed to copy image to clipboard:', err);
+                    toast.warning("Could not copy image automatically. Please download it manually.");
+                }
+            }
+
+            const url = `${window.location.origin}/c/${customer.unique_id}`;
+            const message = `Hi ${customer.name},\n\nHere is your loyalty card link: ${url}`;
+            const encodedMessage = encodeURIComponent(message);
+            // Remove any non-numeric characters from the phone number
+            const cleanPhone = phoneNumber.replace(/\D/g, '');
+
+            // Small delay to ensure clipboard operation completes and toast is visible
+            setTimeout(() => {
+                window.open(`https://wa.me/${cleanPhone}?text=${encodedMessage}`, '_blank');
+            }, 500);
+        } else {
+            toast.error("Customer data not loaded yet");
         }
     };
 
@@ -83,6 +146,14 @@ export default function CustomerDetailsPage() {
                 <div className="flex flex-wrap gap-2">
                     <Button
                         variant="outline"
+                        className="gap-2 bg-white text-green-700 border-green-200 hover:bg-green-50 hover:text-green-800"
+                        onClick={sendToWhatsapp}
+                    >
+                        <MessageCircle className="h-4 w-4" />
+                        Send on WhatsApp
+                    </Button>
+                    <Button
+                        variant="outline"
                         className="gap-2 bg-white"
                         onClick={copyPublicLink}
                     >
@@ -107,11 +178,10 @@ export default function CustomerDetailsPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Left Column: Loyalty Card & Stats */}
-                <div className="space-y-6 lg:col-span-1">
-                    {/* Loyalty Card */}
-                    <div ref={cardRef} className="relative transform transition-transform hover:scale-[1.02] duration-300">
+            <div className="space-y-10">
+                {/* Top Section: Loyalty Card */}
+                <div className="flex justify-center">
+                    <div ref={cardRef} className="w-full max-w-3xl relative transform transition-transform hover:scale-[1.01] duration-300">
                         <Card className="overflow-hidden border-none shadow-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
                             <CardContent className="p-0">
                                 {/* Decorative Background Pattern */}
@@ -120,98 +190,105 @@ export default function CustomerDetailsPage() {
                                     <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-400 rounded-full blur-3xl transform -translate-x-1/2 translate-y-1/2"></div>
                                 </div>
 
-                                <div className="relative p-6">
+                                <div className="relative p-8 md:p-10">
                                     {/* Header Section */}
-                                    <div className="flex items-start justify-between mb-6">
+                                    <div className="flex items-start justify-between mb-8">
                                         <div>
-                                            <h1 className="text-2xl font-bold text-white tracking-tight">{customer.name}</h1>
-                                            <p className="text-slate-300 text-xs">Loyalty Member</p>
+                                            <h1 className="text-3xl font-bold text-white tracking-tight">{customer.name}</h1>
+                                            <p className="text-slate-300 text-sm mt-1">Loyalty Member</p>
                                         </div>
                                         <div className="text-right">
-                                            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-0.5">Member ID</div>
-                                            <div className="text-sm font-mono font-bold text-white">{customer.unique_id}</div>
+                                            <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Member ID</div>
+                                            <div className="text-lg font-mono font-bold text-white">{customer.unique_id}</div>
                                         </div>
                                     </div>
 
                                     {/* Points Display */}
-                                    <div className="mb-6">
-                                        <div className="text-center mb-4">
-                                            <div className="text-[10px] text-slate-400 uppercase tracking-wider mb-1">Total Available Points</div>
-                                            <div className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500">
+                                    <div className="mb-8">
+                                        <div className="text-center mb-8">
+                                            <div className="text-xs text-slate-400 uppercase tracking-wider mb-2">Total Available Points</div>
+                                            <div className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500">
                                                 {/* @ts-ignore */}
                                                 {customer.available_points ?? totalPoints}
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-3 gap-2">
-                                            <div className="text-center p-2 bg-green-500/10 rounded-lg border border-green-500/20">
-                                                <div className="text-lg font-bold text-green-400">{customer.total_earned_points}</div>
-                                                <div className="text-[10px] text-slate-400">Earned</div>
+                                        <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
+                                            <div className="text-center p-4 bg-green-500/10 rounded-xl border border-green-500/20">
+                                                <div className="text-2xl font-bold text-green-400">{customer.total_earned_points}</div>
+                                                <div className="text-xs text-slate-400 mt-1">Earned</div>
                                             </div>
-                                            <div className="text-center p-2 bg-blue-500/10 rounded-lg border border-blue-500/20">
-                                                <div className="text-lg font-bold text-blue-400">{customer.total_referral_points}</div>
-                                                <div className="text-[10px] text-slate-400">Referral</div>
+                                            <div className="text-center p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                                                <div className="text-2xl font-bold text-blue-400">{customer.total_referral_points}</div>
+                                                <div className="text-xs text-slate-400 mt-1">Referral</div>
                                             </div>
-                                            <div className="text-center p-2 bg-amber-500/10 rounded-lg border border-amber-500/20">
-                                                <div className="text-lg font-bold text-amber-400">{customer.total_used_points}</div>
-                                                <div className="text-[10px] text-slate-400">Used</div>
+                                            <div className="text-center p-4 bg-amber-500/10 rounded-xl border border-amber-500/20">
+                                                <div className="text-2xl font-bold text-amber-400">{customer.total_used_points}</div>
+                                                <div className="text-xs text-slate-400 mt-1">Used</div>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Footer */}
-                                    <div className="pt-4 border-t border-white/10 flex justify-between items-end">
+                                    <div className="pt-6 border-t border-white/10 flex justify-between items-end">
                                         <div>
-                                            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Phone</div>
-                                            <div className="text-white text-sm font-medium">{customer.phone}</div>
+                                            <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Phone</div>
+                                            <div className="text-white text-base font-medium">{customer.phone}</div>
                                         </div>
+                                        {customer.whatsapp_no && (
+                                            <div className="text-center">
+                                                <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">WhatsApp</div>
+                                                <div className="text-white text-base font-medium">{customer.whatsapp_no}</div>
+                                            </div>
+                                        )}
                                         <div className="text-right">
-                                            <div className="text-[10px] text-slate-400 uppercase tracking-wider">Joined</div>
-                                            <div className="text-white text-sm font-medium">{new Date(customer.created_at).toLocaleDateString()}</div>
+                                            <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Joined</div>
+                                            <div className="text-white text-base font-medium">{new Date(customer.created_at).toLocaleDateString()}</div>
                                         </div>
                                     </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                        <Card className="bg-white border-gray-100 shadow-sm">
-                            <CardContent className="p-4 flex items-center justify-between">
-                                <div>
-                                    <p className="text-xs text-gray-500 font-medium uppercase">Total Orders</p>
-                                    <p className="text-2xl font-bold text-slate-900 mt-1">{orders_count}</p>
-                                </div>
-                                <div className="h-10 w-10 bg-indigo-50 rounded-full flex items-center justify-center">
-                                    <ShoppingBag className="h-5 w-5 text-indigo-600" />
-                                </div>
-                            </CardContent>
-                        </Card>
-                        <Card className="bg-white border-gray-100 shadow-sm">
-                            <CardContent className="p-4 flex items-center justify-between">
-                                <div>
-                                    <p className="text-xs text-gray-500 font-medium uppercase">Total Spent</p>
-                                    <p className="text-2xl font-bold text-slate-900 mt-1">{total_orders_amount}</p>
-                                </div>
-                                <div className="h-10 w-10 bg-emerald-50 rounded-full flex items-center justify-center">
-                                    <TrendingUp className="h-5 w-5 text-emerald-600" />
                                 </div>
                             </CardContent>
                         </Card>
                     </div>
                 </div>
 
-                {/* Right Column: Tables */}
-                <div className="space-y-8 lg:col-span-2">
+                {/* Middle Grid: Stats */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto w-full">
+                    <Card className="bg-white border-gray-100 shadow-sm">
+                        <CardContent className="p-6 flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 font-medium uppercase">Total Orders</p>
+                                <p className="text-3xl font-bold text-slate-900 mt-2">{orders_count}</p>
+                            </div>
+                            <div className="h-12 w-12 bg-indigo-50 rounded-full flex items-center justify-center">
+                                <ShoppingBag className="h-6 w-6 text-indigo-600" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                    <Card className="bg-white border-gray-100 shadow-sm">
+                        <CardContent className="p-6 flex items-center justify-between">
+                            <div>
+                                <p className="text-sm text-gray-500 font-medium uppercase">Total Spent</p>
+                                <p className="text-3xl font-bold text-slate-900 mt-2">{total_orders_amount}</p>
+                            </div>
+                            <div className="h-12 w-12 bg-emerald-50 rounded-full flex items-center justify-center">
+                                <TrendingUp className="h-6 w-6 text-emerald-600" />
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+
+                {/* Bottom Grid: Tables */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     {/* Points Ledger */}
-                    <Card className="border-gray-100 shadow-sm">
+                    <Card className="border-gray-100 shadow-sm flex flex-col h-full">
                         <CardHeader className="border-b border-gray-100 bg-gray-50/50 pb-4">
                             <div className="flex items-center gap-2">
                                 <History className="h-5 w-5 text-slate-500" />
                                 <CardTitle className="text-lg font-semibold text-slate-800">Points History</CardTitle>
                             </div>
                         </CardHeader>
-                        <CardContent className="p-0">
+                        <CardContent className="p-0 flex-1 overflow-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow className="bg-gray-50/30">
@@ -257,7 +334,7 @@ export default function CustomerDetailsPage() {
                     </Card>
 
                     {/* Recent Orders */}
-                    <Card className="border-gray-100 shadow-sm">
+                    <Card className="border-gray-100 shadow-sm flex flex-col h-full">
                         <CardHeader className="border-b border-gray-100 bg-gray-50/50 pb-4">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -266,7 +343,7 @@ export default function CustomerDetailsPage() {
                                 </div>
                             </div>
                         </CardHeader>
-                        <CardContent className="p-0">
+                        <CardContent className="p-0 flex-1 overflow-auto">
                             <Table>
                                 <TableHeader>
                                     <TableRow className="bg-gray-50/30">
