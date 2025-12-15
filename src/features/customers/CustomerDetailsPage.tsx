@@ -4,6 +4,7 @@ import { getCustomer } from "./api/customers";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { ArrowLeft, Download, TrendingUp, ShoppingBag, Copy, ExternalLink, History, Eye, MessageCircle } from "lucide-react";
+import QRCode from "react-qr-code";
 import { useRef, useState } from "react";
 import html2canvas from "html2canvas";
 import { toast } from "sonner";
@@ -34,6 +35,15 @@ export default function CustomerDetailsPage() {
                 scale: 2,
                 logging: false,
                 useCORS: true,
+                onclone: (clonedDoc) => {
+                    const pointsEl = clonedDoc.getElementById('total-points-display');
+                    if (pointsEl) {
+                        // Fix for html2canvas not supporting bg-clip: text
+                        pointsEl.style.background = 'none';
+                        pointsEl.style.webkitTextFillColor = 'initial';
+                        pointsEl.style.color = '#fbbf24'; // Solid amber color fallback
+                    }
+                }
             });
 
             return new Promise<Blob | null>((resolve) => {
@@ -197,9 +207,19 @@ export default function CustomerDetailsPage() {
                                             <h1 className="text-3xl font-bold text-white tracking-tight">{customer.name}</h1>
                                             <p className="text-slate-300 text-sm mt-1">Loyalty Member</p>
                                         </div>
-                                        <div className="text-right">
-                                            <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Member ID</div>
-                                            <div className="text-lg font-mono font-bold text-white">{customer.unique_id}</div>
+                                        <div className="flex flex-col items-end gap-2">
+                                            <div className="bg-white p-2 rounded-lg">
+                                                <QRCode
+                                                    value={`${window.location.origin}/c/${customer.unique_id}`}
+                                                    size={64}
+                                                    style={{ height: "auto", maxWidth: "100%", width: "100%" }}
+                                                    viewBox={`0 0 256 256`}
+                                                />
+                                            </div>
+                                            <div className="text-right">
+                                                <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Member ID</div>
+                                                <div className="text-lg font-mono font-bold text-white">{customer.unique_id}</div>
+                                            </div>
                                         </div>
                                     </div>
 
@@ -207,7 +227,10 @@ export default function CustomerDetailsPage() {
                                     <div className="mb-8">
                                         <div className="text-center mb-8">
                                             <div className="text-xs text-slate-400 uppercase tracking-wider mb-2">Total Available Points</div>
-                                            <div className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500">
+                                            <div
+                                                id="total-points-display"
+                                                className="text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500"
+                                            >
                                                 {/* @ts-ignore */}
                                                 {customer.available_points ?? totalPoints}
                                             </div>
@@ -253,7 +276,7 @@ export default function CustomerDetailsPage() {
                 </div>
 
                 {/* Middle Grid: Stats */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto w-full">
+                < div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto w-full" >
                     <Card className="bg-white border-gray-100 shadow-sm">
                         <CardContent className="p-6 flex items-center justify-between">
                             <div>
@@ -276,12 +299,12 @@ export default function CustomerDetailsPage() {
                             </div>
                         </CardContent>
                     </Card>
-                </div>
+                </div >
 
                 {/* Bottom Grid: Tables */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                < div className="grid grid-cols-1 lg:grid-cols-2 gap-8" >
                     {/* Points Ledger */}
-                    <Card className="border-gray-100 shadow-sm flex flex-col h-full">
+                    < Card className="border-gray-100 shadow-sm flex flex-col h-full" >
                         <CardHeader className="border-b border-gray-100 bg-gray-50/50 pb-4">
                             <div className="flex items-center gap-2">
                                 <History className="h-5 w-5 text-slate-500" />
@@ -331,10 +354,10 @@ export default function CustomerDetailsPage() {
                                 </TableBody>
                             </Table>
                         </CardContent>
-                    </Card>
+                    </Card >
 
                     {/* Recent Orders */}
-                    <Card className="border-gray-100 shadow-sm flex flex-col h-full">
+                    < Card className="border-gray-100 shadow-sm flex flex-col h-full" >
                         <CardHeader className="border-b border-gray-100 bg-gray-50/50 pb-4">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-2">
@@ -398,15 +421,15 @@ export default function CustomerDetailsPage() {
                                 </TableBody>
                             </Table>
                         </CardContent>
-                    </Card>
-                </div>
-            </div>
+                    </Card >
+                </div >
+            </div >
 
             <OrderDetailsModal
                 orderId={selectedOrderId}
                 isOpen={isOrderModalOpen}
                 onClose={() => setIsOrderModalOpen(false)}
             />
-        </div>
+        </div >
     );
 }

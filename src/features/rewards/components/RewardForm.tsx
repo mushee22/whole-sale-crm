@@ -11,9 +11,10 @@ interface RewardFormProps {
     onSubmit: (data: RewardFormData) => void;
     initialData?: Reward | null;
     isLoading?: boolean;
+    onCancel: () => void;
 }
 
-export default function RewardForm({ onSubmit, initialData, isLoading }: RewardFormProps) {
+export default function RewardForm({ onSubmit, initialData, isLoading, onCancel }: RewardFormProps) {
     const {
         register,
         handleSubmit,
@@ -84,8 +85,11 @@ export default function RewardForm({ onSubmit, initialData, isLoading }: RewardF
                 </Label>
             </div>
 
-            <div className="flex justify-end gap-2 pt-4">
-                <Button type="submit" disabled={isLoading} className="bg-blue-600 hover:bg-blue-700">
+            <div className="flex justify-end gap-3 pt-4 border-t">
+                <Button type="button" variant="outline" onClick={onCancel}>
+                    Cancel
+                </Button>
+                <Button type="submit" disabled={isLoading} className="bg-slate-900 hover:bg-slate-800 text-white">
                     {isLoading ? "Saving..." : initialData ? "Update Reward" : "Create Reward"}
                 </Button>
             </div>

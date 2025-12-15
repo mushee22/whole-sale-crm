@@ -1,7 +1,7 @@
 import { z } from "zod";
 import axios from "axios";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://13.62.76.231/api";
+const API_URL = import.meta.env.VITE_API_BASE_URL || "http://13.62.76.231/api";
 
 // Zod Schema
 export const rewardSchema = z.object({
@@ -52,7 +52,7 @@ export async function getRewards(params?: {
     page?: number;
 }): Promise<RewardsResponse> {
     const token = localStorage.getItem("token");
-    const response = await axios.get(`${API_URL}/admin/rewards`, {
+    const response = await axios.get(`${API_URL}admin/rewards`, {
         headers: { Authorization: `Bearer ${token}` },
         params: {
             search: params?.search || "",

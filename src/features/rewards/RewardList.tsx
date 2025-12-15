@@ -88,7 +88,7 @@ export default function RewardList() {
                         <CardTitle className="text-xl font-bold">Rewards</CardTitle>
                         <p className="text-sm text-gray-500">Manage customer rewards and redemption options.</p>
                     </div>
-                    <Button onClick={openCreate} className="bg-blue-600 hover:bg-blue-700">
+                    <Button onClick={openCreate} className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20">
                         <Plus className="h-4 w-4 mr-2" />
                         Add Reward
                     </Button>
@@ -104,12 +104,12 @@ export default function RewardList() {
                             <Table>
                                 <TableHeader>
                                     <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
-                                        <TableHead className="font-semibold text-gray-700 pl-6">ID</TableHead>
-                                        <TableHead className="font-semibold text-gray-700">Reward Name</TableHead>
-                                        <TableHead className="font-semibold text-gray-700">Required Points</TableHead>
-                                        <TableHead className="font-semibold text-gray-700">Description</TableHead>
-                                        <TableHead className="font-semibold text-gray-700">Status</TableHead>
-                                        <TableHead className="font-semibold text-gray-700 text-right pr-6">Actions</TableHead>
+                                        <TableHead className="font-semibold text-gray-600 pl-6">ID</TableHead>
+                                        <TableHead className="font-semibold text-gray-600">Reward Name</TableHead>
+                                        <TableHead className="font-semibold text-gray-600">Required Points</TableHead>
+                                        <TableHead className="font-semibold text-gray-600">Description</TableHead>
+                                        <TableHead className="font-semibold text-gray-600">Status</TableHead>
+                                        <TableHead className="font-semibold text-gray-600 text-right pr-6">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
@@ -184,6 +184,10 @@ export default function RewardList() {
                     onSubmit={handleSubmit}
                     initialData={editingReward}
                     isLoading={createMutation.isPending || updateMutation.isPending}
+                    onCancel={() => {
+                        setIsFormOpen(false);
+                        setEditingReward(null);
+                    }}
                 />
             </Modal>
 
