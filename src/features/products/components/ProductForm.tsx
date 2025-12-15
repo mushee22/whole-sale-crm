@@ -106,26 +106,26 @@ export function ProductForm({ onSubmit, isLoading, initialData }: ProductFormPro
 
             <div className="space-y-2">
                 <Label htmlFor="name">Product Name</Label>
-                <Input id="name" placeholder="Loyalty Card Gold" {...register("name")} />
+                <Input id="name" placeholder="Enter product name" {...register("name")} />
                 {errors.name && <p className="text-sm text-red-500">{errors.name.message}</p>}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                     <Label htmlFor="price">Price (₹)</Label>
-                    <Input id="price" type="number" step="0.01" placeholder="99.99" {...register("price")} />
+                    <Input id="price" type="number" step="0.01" placeholder="Enter price" {...register("price")} />
                     {errors.price && <p className="text-sm text-red-500">{errors.price.message}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="discount_price">Discount Price (₹)</Label>
-                    <Input id="discount_price" type="number" step="0.01" placeholder="79.99" {...register("discount_price")} />
+                    <Input id="discount_price" type="number" step="0.01" placeholder="Enter discount price" {...register("discount_price")} />
                     {errors.discount_price && <p className="text-sm text-red-500">{errors.discount_price.message}</p>}
                 </div>
             </div>
 
             <div className="space-y-2">
                 <Label htmlFor="stock">Stock</Label>
-                <Input id="stock" type="number" placeholder="100" {...register("stock")} />
+                <Input id="stock" type="number" placeholder="Enter stock quantity" {...register("stock")} />
                 {errors.stock && <p className="text-sm text-red-500">{errors.stock.message}</p>}
             </div>
 

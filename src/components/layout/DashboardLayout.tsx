@@ -144,7 +144,11 @@ export default function DashboardLayout() {
                                 <Menu className="h-5 w-5" />
                             </Button>
                             <h1 className="text-lg font-semibold text-slate-900">
-                                {sidebarItems.find(item => item.to === location.pathname)?.label || 'Dashboard'}
+                                {sidebarItems.find(item =>
+                                    item.to === "/"
+                                        ? location.pathname === "/"
+                                        : location.pathname.startsWith(item.to)
+                                )?.label || 'Dashboard'}
                             </h1>
                         </div>
 

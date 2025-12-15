@@ -3,6 +3,7 @@ import { z } from "zod";
 
 export interface Customer {
     id: number;
+    unique_id: string; // Added unique_id
     name: string;
     phone: string;
     email: string | null;
@@ -21,8 +22,34 @@ export interface CustomersResponse {
     per_page: number;
 }
 
+export interface LedgerItem {
+    id: number;
+    customer_id: number;
+    order_id: number | null;
+    claim_id: number | null;
+    type: string;
+    points: number;
+    description: string;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface CustomerOrder {
+    id: number;
+    customer_id: number;
+    order_number: string;
+    total_amount: string;
+    total_points_earned: number;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface CustomerDetailsResponse {
     customer: Customer;
+    points_ledger: LedgerItem[];
+    orders: CustomerOrder[];
+    orders_count: number;
+    total_orders_amount: string;
 }
 
 export const createCustomerSchema = z.object({
@@ -43,7 +70,7 @@ export const getCustomers = async (params?: { page?: number; per_page?: number; 
 
 export const getCustomer = async (id: number) => {
     const response = await axios.get<CustomerDetailsResponse>(`/admin/customers/${id}`);
-    return response.data.customer;
+    return response.data; // Return the full response object
 };
 
 export const createCustomer = async (data: CreateCustomerData) => {

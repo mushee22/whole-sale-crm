@@ -15,6 +15,7 @@ import RewardList from "./features/rewards/RewardList";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 import { Toaster } from "sonner";
 import SettingsPage from "./features/settings/SettingsPage";
+import PublicCustomerPage from "./pages/PublicCustomerPage";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
         element: <LoginPage />,
       },
     ],
+  },
+  {
+    path: "/c/:uniqueId",
+    element: <PublicCustomerPage />, // Public access, no layout or auth required
   },
   {
     path: "/",

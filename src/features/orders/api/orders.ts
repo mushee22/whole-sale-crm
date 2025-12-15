@@ -7,6 +7,7 @@ export interface OrderUser {
     name: string;
     phone: string;
     email: string | null;
+    whatsapp_no?: string | null;
 }
 
 export interface OrderItemProduct {
@@ -94,6 +95,7 @@ export const orderItemSchema = z.object({
 export const createOrderSchema = z.object({
     customer_name: z.string().min(1, "Customer name is required"),
     phone: z.string().min(10, "Phone number must be at least 10 digits"),
+    whatsapp_no: z.string().optional().nullable(),
     email: z.string().email("Invalid email address").optional().nullable().or(z.literal("")),
     items: z.array(orderItemSchema).min(1, "At least one item is required"),
     referral_phone: z.string().optional().nullable(),

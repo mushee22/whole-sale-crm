@@ -216,6 +216,7 @@ export default function CreateOrderPage() {
             reset({
                 customer_name: orderData.customer.name,
                 phone: orderData.customer.phone,
+                whatsapp_no: orderData.customer.whatsapp_no || "",
                 email: orderData.customer.email || "",
                 referral_phone: orderData.referral_phone,
                 // Map items
@@ -253,7 +254,7 @@ export default function CreateOrderPage() {
     if (isEditMode && isLoadingOrder) return <div className="p-8 text-center text-gray-500">Loading order...</div>;
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6">
+        <div className="max-w-4xl mx-auto space-y-6 px-4 md:px-6">
             <div className="flex items-center justify-between">
                 <div>
                     <Button variant="ghost" className="pl-0 hover:bg-transparent -ml-2 mb-2 text-slate-500" onClick={() => navigate("/orders")}>
@@ -273,17 +274,22 @@ export default function CreateOrderPage() {
                     <CardContent className="grid md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <Label htmlFor="customer_name">Customer Name</Label>
-                            <Input id="customer_name" placeholder="John Doe" {...register("customer_name")} />
+                            <Input id="customer_name" placeholder="Enter customer name" {...register("customer_name")} />
                             {errors.customer_name && <p className="text-sm text-red-500">{errors.customer_name.message}</p>}
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="phone">Phone Number</Label>
-                            <Input id="phone" placeholder="9876543210" {...register("phone")} />
+                            <Input id="phone" placeholder="Enter phone number" {...register("phone")} />
                             {errors.phone && <p className="text-sm text-red-500">{errors.phone.message}</p>}
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="whatsapp_no">WhatsApp Number (Optional)</Label>
+                            <Input id="whatsapp_no" placeholder="Enter WhatsApp number" {...register("whatsapp_no")} />
+                            {errors.whatsapp_no && <p className="text-sm text-red-500">{errors.whatsapp_no.message}</p>}
                         </div>
                         <div className="space-y-2 md:col-span-2">
                             <Label htmlFor="email">Email (Optional)</Label>
-                            <Input id="email" type="email" placeholder="customer@example.com" {...register("email")} />
+                            <Input id="email" type="email" placeholder="Enter email address" {...register("email")} />
                             {errors.email && <p className="text-sm text-red-500">{errors.email.message}</p>}
                         </div>
                     </CardContent>
@@ -332,7 +338,7 @@ export default function CreateOrderPage() {
                     <CardContent className="grid md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <Label htmlFor="referral_phone">Referral Phone (Optional)</Label>
-                            <Input id="referral_phone" placeholder="Referrer's Phone" {...register("referral_phone")} />
+                            <Input id="referral_phone" placeholder="Enter referrer's phone number" {...register("referral_phone")} />
                         </div>
                         {/* Placeholder for Claim Reward ID if needed, hiding for now or keeping minimal */}
                         <div className="space-y-2">
@@ -340,7 +346,7 @@ export default function CreateOrderPage() {
                             <Input
                                 id="claim_reward_id"
                                 type="number"
-                                placeholder="Reward ID"
+                                placeholder="Enter reward ID"
                                 {...register("claim_reward_id", {
                                     setValueAs: (v) => v === "" ? null : parseInt(v, 10)
                                 })}

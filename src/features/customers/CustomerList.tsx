@@ -71,7 +71,7 @@ export default function CustomerList() {
                                     <TableRow key={customer.id}>
                                         <TableCell>
                                             <div className="font-medium text-gray-900">{customer.name}</div>
-                                            <div className="text-xs text-gray-500">ID: #{customer.id}</div>
+                                            <div className="text-xs text-gray-500">ID: {customer.unique_id}</div>
                                         </TableCell>
                                         <TableCell>
                                             <div className="text-sm text-gray-900">{customer.phone}</div>
