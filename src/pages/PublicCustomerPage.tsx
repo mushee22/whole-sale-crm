@@ -182,7 +182,7 @@ export default function PublicCustomerPage() {
                                                 <p className="text-gray-800 text-sm font-medium mt-2 leading-relaxed">{item.description}</p>
                                                 <div className={`text-lg font-bold mt-2 flex items-center gap-1 ${item.type === 'earn' ? 'text-green-600' : 'text-amber-600'
                                                     }`}>
-                                                    {item.type === 'earn' ? '+' : '-'}{item.points}
+                                                    {item.type === 'earn' ? '+' : ''}{item.points}
                                                 </div>
                                             </div>
                                         ))}

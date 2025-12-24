@@ -221,9 +221,9 @@ export default function CreateClaimPage() {
 
     const mutation = useMutation({
         mutationFn: createClaim,
-        onSuccess: () => {
+        onSuccess: (_data) => {
             toast.success("Rewards claimed successfully!");
-            navigate(`/customers/${selectedCustomer?.id}`); // Or to claims list if we had one
+            navigate(`/customers/${selectedCustomer?.id}`);
         },
         onError: (error: any) => {
             toast.error("Failed to claim rewards");
