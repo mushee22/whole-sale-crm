@@ -71,7 +71,7 @@ export async function getRewards(params?: {
     is_show_to_brochure?: boolean;
 }): Promise<RewardsResponse> {
     const token = localStorage.getItem("token");
-    const response = await axios.get(`${API_URL}admin/rewards`, {
+    const response = await axios.get(`${API_URL}/admin/rewards`, {
         headers: { Authorization: `Bearer ${token}` },
         params: {
             search: params?.search || "",
