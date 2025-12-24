@@ -18,8 +18,21 @@ import ProtectedRoute from "./components/layout/ProtectedRoute";
 import { Toaster } from "sonner";
 import SettingsPage from "./features/settings/SettingsPage";
 import PublicCustomerPage from "./pages/PublicCustomerPage";
+import UsersListPage from "./features/users/UsersListPage";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 
 const queryClient = new QueryClient();
+
+const StaffRestricted = ({ children }: { children: React.ReactNode }) => {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) return <div>Loading...</div>; // Or return null/spinner
+
+  if (user?.role === 'staff') {
+    return <Navigate to="/customers" replace />;
+  }
+  return <>{children}</>;
+};
 
 const router = createBrowserRouter([
   {
@@ -46,11 +59,19 @@ const router = createBrowserRouter([
     children: [
       {
         path: "",
-        element: <DashboardPage />,
+        element: (
+          <StaffRestricted>
+            <DashboardPage />
+          </StaffRestricted>
+        ),
       },
       {
         path: "products",
-        element: <ProductList />,
+        element: (
+          <StaffRestricted>
+            <ProductList />
+          </StaffRestricted>
+        ),
       },
       {
         path: "orders",
@@ -93,8 +114,20 @@ const router = createBrowserRouter([
         element: <CreateClaimPage />,
       },
       {
+        path: "staff",
+        element: (
+          <StaffRestricted>
+            <UsersListPage />
+          </StaffRestricted>
+        ),
+      },
+      {
         path: "settings",
-        element: <SettingsPage />,
+        element: (
+          <StaffRestricted>
+            <SettingsPage />
+          </StaffRestricted>
+        ),
       },
     ],
   },
@@ -107,8 +140,10 @@ const router = createBrowserRouter([
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
-      <Toaster position="top-right" richColors />
+      <AuthProvider>
+        <RouterProvider router={router} />
+        <Toaster position="top-right" richColors />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

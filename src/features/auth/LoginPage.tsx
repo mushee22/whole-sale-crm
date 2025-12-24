@@ -8,11 +8,13 @@ import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { loginWithEmail, loginSchema, type LoginCredentials } from "./api/auth";
 import { useState } from "react";
+import { useAuth } from "../../context/AuthContext";
 
 import { toast } from "sonner";
 
 export default function LoginPage() {
     const navigate = useNavigate();
+    const { login } = useAuth();
     const [error, setError] = useState<string | null>(null);
 
     const {
@@ -26,7 +28,7 @@ export default function LoginPage() {
     const loginMutation = useMutation({
         mutationFn: loginWithEmail,
         onSuccess: (data) => {
-            localStorage.setItem('token', data.token);
+            login(data.token, data.user);
             toast.success("Welcome back!", {
                 description: "You have successfully logged in."
             });

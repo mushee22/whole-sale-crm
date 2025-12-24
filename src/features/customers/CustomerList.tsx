@@ -10,6 +10,8 @@ import { useNavigate } from "react-router-dom";
 import { Modal } from "../../components/ui/modal";
 import CustomerForm from "./components/CustomerForm";
 
+import { useAuth } from "../../context/AuthContext";
+
 export default function CustomerList() {
     const navigate = useNavigate();
     const [page, setPage] = useState(1);
@@ -22,6 +24,8 @@ export default function CustomerList() {
         queryFn: () => getCustomers({ page, per_page: 15, search }),
     });
 
+    const { user } = useAuth();
+
     if (isLoading) return <div className="p-8 text-center text-gray-500">Loading customers...</div>;
 
     return (
@@ -32,12 +36,14 @@ export default function CustomerList() {
                         <CardTitle className="text-xl font-bold">All Customers</CardTitle>
                         <p className="text-sm text-gray-500">Manage your customer base and loyalty points.</p>
                     </div>
-                    <Button
-                        className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20"
-                        onClick={() => setIsModalOpen(true)}
-                    >
-                        + Add Customer
-                    </Button>
+                    {user?.role !== 'staff' && (
+                        <Button
+                            className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20"
+                            onClick={() => setIsModalOpen(true)}
+                        >
+                            + Add Customer
+                        </Button>
+                    )}
                 </CardHeader>
                 <CardContent className="p-0">
                     <div className="p-4 flex gap-2 border-b border-gray-100 bg-white">
@@ -103,17 +109,19 @@ export default function CustomerList() {
                                         <TableCell>{new Date(customer.created_at).toLocaleDateString()}</TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-2">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                    onClick={() => {
-                                                        setEditingCustomer(customer);
-                                                        setIsModalOpen(true);
-                                                    }}
-                                                >
-                                                    <Pencil className="h-4 w-4" />
-                                                </Button>
+                                                {user?.role !== 'staff' && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                        onClick={() => {
+                                                            setEditingCustomer(customer);
+                                                            setIsModalOpen(true);
+                                                        }}
+                                                    >
+                                                        <Pencil className="h-4 w-4" />
+                                                    </Button>
+                                                )}
                                                 <Button
                                                     variant="ghost"
                                                     size="icon"

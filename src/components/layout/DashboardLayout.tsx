@@ -2,6 +2,7 @@ import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { LayoutDashboard, Package, Users, ShoppingCart, Gift, Menu, LogOut, User, X, Settings } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
+import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect } from "react";
 
 const sidebarItems = [
@@ -12,27 +13,31 @@ const sidebarItems = [
     { icon: Gift, label: "Points", to: "/loyalties" },
     { icon: Gift, label: "Rewards", to: "/rewards" },
     { icon: ShoppingCart, label: "Claims", to: "/claims" },
+    { icon: User, label: "Staff", to: "/staff" },
     { icon: Settings, label: "Settings", to: "/settings" },
 ];
 
 export default function DashboardLayout() {
     const location = useLocation();
     const navigate = useNavigate();
+    const { user, logout } = useAuth();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-    // Mock user data
-    const user = {
-        name: "Admin User",
-        email: "admin@example.com"
-    };
 
     // Close mobile menu on route change
     useEffect(() => {
         setIsMobileMenuOpen(false);
     }, [location.pathname]);
 
+    // Filter items based on role
+    const filteredItems = sidebarItems.filter(item => {
+        if (user?.role === 'staff') {
+            return !['Dashboard', 'Products', 'Staff', 'Settings'].includes(item.label);
+        }
+        return true;
+    });
+
     const handleLogout = () => {
-        localStorage.removeItem('token');
+        logout();
         navigate('/login');
     };
 
@@ -53,7 +58,7 @@ export default function DashboardLayout() {
                         Main Menu
                     </h3>
                     <nav className="space-y-1.5">
-                        {sidebarItems.map((item) => (
+                        {filteredItems.map((item) => (
                             <NavLink
                                 key={item.to}
                                 to={item.to}
@@ -92,8 +97,8 @@ export default function DashboardLayout() {
                         </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">{user.name}</p>
-                        <p className="text-xs text-slate-400 truncate">{user.email}</p>
+                        <p className="text-sm font-medium text-white truncate">{user?.name || "User"}</p>
+                        <p className="text-xs text-slate-400 truncate">{user?.email || ""}</p>
                     </div>
                 </div>
             </div>
@@ -145,7 +150,7 @@ export default function DashboardLayout() {
                                 <Menu className="h-5 w-5" />
                             </Button>
                             <h1 className="text-lg font-semibold text-slate-900">
-                                {sidebarItems.find(item =>
+                                {filteredItems.find(item =>
                                     item.to === "/"
                                         ? location.pathname === "/"
                                         : location.pathname.startsWith(item.to)

@@ -10,6 +10,7 @@ import { Plus, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import { Card, CardHeader, CardContent, CardTitle } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { toast } from "sonner";
+import { useAuth } from "../../context/AuthContext";
 
 export default function LoyaltyList() {
     const [page, setPage] = useState(1);
@@ -19,6 +20,7 @@ export default function LoyaltyList() {
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
     const queryClient = useQueryClient();
+    const { user } = useAuth();
 
     const { data: loyaltyData, isLoading } = useQuery({
         queryKey: ['loyalties', page, search],
@@ -114,9 +116,11 @@ export default function LoyaltyList() {
                                 </svg>
                             </div>
                         </div>
-                        <Button className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20 transition-all" onClick={openCreate}>
-                            <Plus className="mr-2 h-4 w-4" /> Add Rule
-                        </Button>
+                        {user?.role !== 'staff' && (
+                            <Button className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20 transition-all" onClick={openCreate}>
+                                <Plus className="mr-2 h-4 w-4" /> Add Rule
+                            </Button>
+                        )}
                     </div>
 
                     {isLoading && !loyaltyData ? (
@@ -162,22 +166,26 @@ export default function LoyaltyList() {
                                                 </TableCell>
                                                 <TableCell className="text-right pr-6">
                                                     <div className="flex justify-end gap-1">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                            onClick={() => openEdit(loyalty)}
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                            onClick={() => setDeleteId(loyalty.id)}
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
+                                                        {user?.role !== 'staff' && (
+                                                            <>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                                    onClick={() => openEdit(loyalty)}
+                                                                >
+                                                                    <Pencil className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                                    onClick={() => setDeleteId(loyalty.id)}
+                                                                >
+                                                                    <Trash2 className="h-4 w-4" />
+                                                                </Button>
+                                                            </>
+                                                        )}
                                                     </div>
                                                 </TableCell>
                                             </TableRow>

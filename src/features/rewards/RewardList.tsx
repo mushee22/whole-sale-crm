@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getRewards, createReward, updateReward, deleteReward, type Reward, type RewardFormData } from "./api/rewards";
@@ -9,12 +10,14 @@ import { AlertDialog } from "../../components/ui/alert-dialog";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import RewardForm from "./components/RewardForm";
+import { useAuth } from "../../context/AuthContext";
 
 export default function RewardList() {
     const queryClient = useQueryClient();
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingReward, setEditingReward] = useState<Reward | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
+    const { user } = useAuth();
 
     // Fetch rewards
     const { data: rewardsData, isLoading } = useQuery({
@@ -80,6 +83,7 @@ export default function RewardList() {
         setIsFormOpen(true);
     };
 
+
     return (
         <div className="space-y-6">
             <Card className="border-gray-100 shadow-sm">
@@ -88,10 +92,12 @@ export default function RewardList() {
                         <CardTitle className="text-xl font-bold">Rewards</CardTitle>
                         <p className="text-sm text-gray-500">Manage customer rewards and redemption options.</p>
                     </div>
-                    <Button onClick={openCreate} className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20">
-                        <Plus className="h-4 w-4 mr-2" />
-                        Add Reward
-                    </Button>
+                    {user?.role !== 'staff' && (
+                        <Button onClick={openCreate} className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20">
+                            <Plus className="h-4 w-4 mr-2" />
+                            Add Reward
+                        </Button>
+                    )}
                 </CardHeader>
 
                 <CardContent className="p-0">
@@ -129,32 +135,36 @@ export default function RewardList() {
                                             </TableCell>
                                             <TableCell>
                                                 <span
-                                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${reward.is_active
-                                                        ? "bg-green-100 text-green-800"
-                                                        : "bg-gray-100 text-gray-800"
-                                                        }`}
+                                                    className={`inline - flex items - center px - 2.5 py - 0.5 rounded - full text - xs font - medium ${reward.is_active
+                                                            ? "bg-green-100 text-green-800"
+                                                            : "bg-gray-100 text-gray-800"
+                                                        } `}
                                                 >
                                                     {reward.is_active ? "Active" : "Inactive"}
                                                 </span>
                                             </TableCell>
                                             <TableCell className="text-right pr-6">
                                                 <div className="flex justify-end gap-1">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                        onClick={() => openEdit(reward)}
-                                                    >
-                                                        <Pencil className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                        onClick={() => setDeleteId(reward.id)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                                    {user?.role !== 'staff' && (
+                                                        <>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                                onClick={() => openEdit(reward)}
+                                                            >
+                                                                <Pencil className="h-4 w-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                                onClick={() => setDeleteId(reward.id)}
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </TableCell>
                                         </TableRow>
