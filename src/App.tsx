@@ -12,6 +12,8 @@ import CustomerList from "./features/customers/CustomerList";
 import CustomerDetailsPage from "./features/customers/CustomerDetailsPage";
 import LoyaltyList from "./features/loyalties/LoyaltyList";
 import RewardList from "./features/rewards/RewardList";
+import CreateClaimPage from "./features/claims/CreateClaimPage";
+import ClaimsListPage from "./features/claims/ClaimsListPage";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 import { Toaster } from "sonner";
 import SettingsPage from "./features/settings/SettingsPage";
@@ -81,6 +83,14 @@ const router = createBrowserRouter([
       {
         path: "rewards",
         element: <RewardList />,
+      },
+      {
+        path: "claims",
+        element: <ClaimsListPage />,
+      },
+      {
+        path: "claims/new",
+        element: <CreateClaimPage />,
       },
       {
         path: "settings",

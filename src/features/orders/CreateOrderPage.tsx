@@ -62,9 +62,7 @@ function OrderItemRow({ index, register, remove, setValue, watch, errors }: Orde
         setSearch('');
     };
 
-    const items = watch("items");
-    const currentItem = items[index];
-    const selectedProductData = productsData?.data.find(p => p.id === currentItem?.product_id);
+
 
     const lineTotal = (unitPrice || 0) * (quantity || 0);
 
@@ -134,24 +132,12 @@ function OrderItemRow({ index, register, remove, setValue, watch, errors }: Orde
 
             <div className="col-span-4 md:col-span-2 space-y-2">
                 <Label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Price</Label>
-                <div className="flex flex-col justify-center h-10 px-3 text-sm bg-gray-50 rounded-md border border-gray-200">
-                    {selectedProductData ? (
-                        selectedProductData?.discount_price ? (
-                            <>
-                                <span className="text-xs text-gray-400 line-through">₹{selectedProductData?.price ?? 0}</span>
-                                <span className="font-semibold text-green-600">₹{selectedProductData?.discount_price ?? 0}</span>
-                            </>
-                        ) : (
-                            <>
-
-                                <span className="font-medium">₹{selectedProductData?.price ?? 0}</span>
-                            </>
-                        )
-                    ) : (
-                        <span className="text-gray-400">-</span>
-                    )}
-                </div>
-                <input type="hidden" {...register(`items.${index}.unit_price`, { valueAsNumber: true })} />
+                <Input
+                    type="number"
+                    className="bg-white"
+                    step="0.01"
+                    {...register(`items.${index}.unit_price`, { valueAsNumber: true })}
+                />
             </div>
 
             <div className="col-span-4 md:col-span-2 space-y-2">
@@ -231,9 +217,13 @@ export default function CreateOrderPage() {
 
     const mutation = useMutation({
         mutationFn: (data: CreateOrderData) => isEditMode ? updateOrder(orderId, data) : createOrder(data),
-        onSuccess: () => {
+        onSuccess: (data: any) => {
             toast.success(`Order ${isEditMode ? 'updated' : 'created'} successfully`);
-            navigate("/orders");
+            if (!isEditMode && data?.customer_id) {
+                navigate(`/customers/${data.customer_id}`);
+            } else {
+                navigate("/orders");
+            }
         },
         onError: (error: any) => {
             toast.error(`Failed to ${isEditMode ? 'update' : 'create'} order`);
@@ -242,7 +232,8 @@ export default function CreateOrderPage() {
     });
 
     const onSubmit = (data: CreateOrderData) => {
-        mutation.mutate(data);
+        const totalAmount = data.items.reduce((acc, item) => acc + (item.unit_price * item.quantity), 0);
+        mutation.mutate({ ...data, total_amount: totalAmount });
     };
 
     // Calculate total order value
@@ -341,7 +332,7 @@ export default function CreateOrderPage() {
                             <Input id="referral_phone" placeholder="Enter referrer's phone number" {...register("referral_phone")} />
                         </div>
                         {/* Placeholder for Claim Reward ID if needed, hiding for now or keeping minimal */}
-                        <div className="space-y-2">
+                        {/* <div className="space-y-2">
                             <Label htmlFor="claim_reward_id">Reward ID (Optional)</Label>
                             <Input
                                 id="claim_reward_id"
@@ -351,7 +342,7 @@ export default function CreateOrderPage() {
                                     setValueAs: (v) => v === "" ? null : parseInt(v, 10)
                                 })}
                             />
-                        </div>
+                        </div> */}
                     </CardContent>
                 </Card>
 

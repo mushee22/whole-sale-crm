@@ -11,6 +11,7 @@ const sidebarItems = [
     { icon: ShoppingCart, label: "Orders", to: "/orders" },
     { icon: Gift, label: "Points", to: "/loyalties" },
     { icon: Gift, label: "Rewards", to: "/rewards" },
+    { icon: ShoppingCart, label: "Claims", to: "/claims" },
     { icon: Settings, label: "Settings", to: "/settings" },
 ];
 

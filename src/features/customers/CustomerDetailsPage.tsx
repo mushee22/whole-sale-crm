@@ -1,6 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getCustomer } from "./api/customers";
+import { getLoyalties } from "../loyalties/api/loyalties";
+import { getRewards } from "../rewards/api/rewards";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { ArrowLeft, Download, TrendingUp, ShoppingBag, Copy, ExternalLink, History, Eye, MessageCircle } from "lucide-react";
@@ -24,6 +26,16 @@ export default function CustomerDetailsPage() {
         queryKey: ['customer', customerId],
         queryFn: () => getCustomer(customerId),
         enabled: !!customerId
+    });
+
+    const { data: brochureLoyalties } = useQuery({
+        queryKey: ['loyalties', 'brochure'],
+        queryFn: () => getLoyalties({ is_active: true, is_show_to_brochure: true, per_page: 6 }),
+    });
+
+    const { data: brochureRewards } = useQuery({
+        queryKey: ['rewards', 'brochure'],
+        queryFn: () => getRewards({ is_active: true, is_show_to_brochure: true, per_page: 6 }),
     });
 
     const generateCardBlob = async () => {
@@ -252,8 +264,75 @@ export default function CustomerDetailsPage() {
                                         </div>
                                     </div>
 
+                                    {/* Brochure Section */}
+                                    {((brochureLoyalties?.data && brochureLoyalties.data.length > 0) || (brochureRewards?.data && brochureRewards.data.length > 0)) && (
+                                        <div className="mb-0 border-t border-white/10 pt-6">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                                {/* Loyalties - Earn Points (Grid Layout) */}
+                                                {brochureLoyalties?.data && brochureLoyalties.data.length > 0 && (
+                                                    <div>
+                                                        <div className="text-xs text-green-400 uppercase tracking-wider mb-4 font-semibold flex items-center gap-2">
+                                                            <div className="h-1.5 w-1.5 rounded-full bg-green-400"></div>
+                                                            Earn Points
+                                                        </div>
+                                                        <div className="grid grid-cols-2 gap-3">
+                                                            {brochureLoyalties.data.map((loyalty) => (
+                                                                <div key={loyalty.id} className="flex flex-col items-center p-2 bg-white rounded-xl shadow-sm text-center h-full">
+                                                                    <div className="h-20 w-full mb-2 flex items-center justify-center bg-gray-50 rounded-lg p-1 overflow-hidden">
+                                                                        {loyalty.product?.image_url ? (
+                                                                            <img src={loyalty.product.image_url} alt={loyalty.product.name} className="h-full w-full object-contain" />
+                                                                        ) : (
+                                                                            <ShoppingBag className="h-8 w-8 text-gray-300" />
+                                                                        )}
+                                                                    </div>
+                                                                    <div className="text-slate-900 font-extrabold uppercase text-[10px] leading-tight mb-1 line-clamp-2 px-1">
+                                                                        {loyalty.product?.name}
+                                                                    </div>
+                                                                    <div className="text-slate-900 font-bold text-xs mt-auto">
+                                                                        {loyalty.points} POINTS
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                {/* Rewards - Redeem Points (List Layout) */}
+                                                {brochureRewards?.data && brochureRewards.data.length > 0 && (
+                                                    <div>
+                                                        <div className="text-xs text-amber-400 uppercase tracking-wider mb-4 font-semibold flex items-center gap-2">
+                                                            <div className="h-1.5 w-1.5 rounded-full bg-amber-400"></div>
+                                                            Redeem Points
+                                                        </div>
+                                                        <div className="space-y-3">
+                                                            {brochureRewards.data.map((reward) => (
+                                                                <div key={reward.id} className="flex items-center p-2 rounded-xl bg-white/5 border border-white/10">
+                                                                    {/* Points Badge */}
+                                                                    <div className="bg-white rounded-lg px-3 py-2 flex flex-col items-center justify-center min-w-[70px] shadow-sm">
+                                                                        <div className="text-amber-600 font-black text-lg leading-none">
+                                                                            {reward.required_points}
+                                                                        </div>
+                                                                        <div className="text-[8px] text-amber-600/80 font-bold uppercase tracking-wider mt-0.5">
+                                                                            POINTS
+                                                                        </div>
+                                                                    </div>
+                                                                    {/* Reward Name */}
+                                                                    <div className="ml-4 flex-1">
+                                                                        <div className="text-white font-serif text-lg font-medium tracking-wide leading-tight">
+                                                                            {reward.reward_name || reward.product?.name || "Reward"}
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {/* Footer */}
-                                    <div className="pt-6 border-t border-white/10 flex justify-between items-end">
+                                    <div className="pt-6 mt-3 border-t border-white/10 flex justify-between items-end">
                                         <div>
                                             <div className="text-xs text-slate-400 uppercase tracking-wider mb-1">Phone</div>
                                             <div className="text-white text-base font-medium">{customer.phone}</div>

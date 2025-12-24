@@ -18,13 +18,14 @@ interface LoyaltyFormProps {
 export function LoyaltyForm({ onSubmit, isLoading, initialData }: LoyaltyFormProps) {
     const [open, setOpen] = useState(false);
     const [search, setSearch] = useState("");
-    const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialData?.product as Product || null);
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(initialData?.product as unknown as Product || null);
     const wrapperRef = useRef<HTMLDivElement>(null);
 
     const { register, handleSubmit, setValue, reset, formState: { errors } } = useForm<CreateLoyaltyData>({
         resolver: zodResolver(createLoyaltySchema) as any,
         defaultValues: {
-            is_active: true
+            is_active: true,
+            is_show_to_brochure: false
         }
     });
 
@@ -41,16 +42,18 @@ export function LoyaltyForm({ onSubmit, isLoading, initialData }: LoyaltyFormPro
                 product_id: initialData.product_id,
                 points: initialData.points,
                 is_active: initialData.is_active,
+                is_show_to_brochure: initialData.is_show_to_brochure,
             });
             if (initialData.product) {
                 setSearch(initialData.product.name);
-                setSelectedProduct(initialData.product as Product);
+                setSelectedProduct(initialData.product as unknown as Product);
             }
         } else {
             reset({
                 product_id: 0,
                 points: 0,
                 is_active: true,
+                is_show_to_brochure: false,
             });
             setSearch("");
             setSelectedProduct(null);
@@ -132,14 +135,26 @@ export function LoyaltyForm({ onSubmit, isLoading, initialData }: LoyaltyFormPro
                 {errors.points && <p className="text-sm text-red-500">{errors.points.message}</p>}
             </div>
 
-            <div className="flex items-center space-x-2 pt-2">
-                <input
-                    type="checkbox"
-                    id="is_active"
-                    className="h-4 w-4 rounded border-gray-300 text-slate-900 focus:ring-slate-900"
-                    {...register("is_active")}
-                />
-                <Label htmlFor="is_active" className="font-normal text-sm text-gray-700">Active Rule</Label>
+            {/* Checkboxes for active and show to brochure */}
+            <div className="space-y-2 pt-2">
+                <div className="flex items-center space-x-2">
+                    <input
+                        type="checkbox"
+                        id="is_active"
+                        className="h-4 w-4 rounded border-gray-300 text-slate-900 focus:ring-slate-900"
+                        {...register("is_active")}
+                    />
+                    <Label htmlFor="is_active" className="font-normal text-sm text-gray-700">Active Rule</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                    <input
+                        type="checkbox"
+                        id="is_show_to_brochure"
+                        className="h-4 w-4 rounded border-gray-300 text-slate-900 focus:ring-slate-900"
+                        {...register("is_show_to_brochure")}
+                    />
+                    <Label htmlFor="is_show_to_brochure" className="font-normal text-sm text-gray-700">Show to Brochure</Label>
+                </div>
             </div>
 
             <div className="flex justify-end pt-4">

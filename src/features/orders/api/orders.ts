@@ -100,6 +100,7 @@ export const createOrderSchema = z.object({
     items: z.array(orderItemSchema).min(1, "At least one item is required"),
     referral_phone: z.string().optional().nullable(),
     claim_reward_id: z.number().optional().nullable(),
+    total_amount: z.number().optional().nullable(), // Allow passing total amount explicitly
 });
 
 export type CreateOrderData = z.infer<typeof createOrderSchema>;

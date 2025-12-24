@@ -116,7 +116,9 @@ export default function RewardList() {
                                     {rewardsData?.data.map((reward) => (
                                         <TableRow key={reward.id} className="hover:bg-gray-50/50 transition-colors">
                                             <TableCell className="font-mono text-xs text-gray-400 pl-6">#{reward.id}</TableCell>
-                                            <TableCell className="font-medium text-gray-900">{reward.reward_name}</TableCell>
+                                            <TableCell className="font-medium text-gray-900">
+                                                {reward.reward_name || reward.product?.name || "-"}
+                                            </TableCell>
                                             <TableCell className="text-gray-700">
                                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                                     {reward.required_points} pts
