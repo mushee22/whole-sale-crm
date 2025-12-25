@@ -7,13 +7,13 @@ import { useState, useEffect } from "react";
 
 const sidebarItems = [
     { icon: LayoutDashboard, label: "Dashboard", to: "/" },
+    { icon: User, label: "Staff", to: "/staff" },
     { icon: Package, label: "Products", to: "/products" },
     { icon: Users, label: "Customers", to: "/customers" },
     { icon: ShoppingCart, label: "Orders", to: "/orders" },
     { icon: Gift, label: "Points", to: "/loyalties" },
     { icon: Gift, label: "Rewards", to: "/rewards" },
     { icon: ShoppingCart, label: "Claims", to: "/claims" },
-    { icon: User, label: "Staff", to: "/staff" },
     { icon: Settings, label: "Settings", to: "/settings" },
 ];
 
