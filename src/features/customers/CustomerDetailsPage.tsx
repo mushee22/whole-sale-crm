@@ -5,10 +5,11 @@ import { getLoyalties } from "../loyalties/api/loyalties";
 import { getRewards } from "../rewards/api/rewards";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { ArrowLeft, TrendingUp, ShoppingBag, Copy, ExternalLink, History, Eye, MessageCircle } from "lucide-react";
+import { ArrowLeft, TrendingUp, ShoppingBag, Copy, ExternalLink, History, Eye, MessageCircle, Download } from "lucide-react";
 import QRCode from "react-qr-code";
 import { useRef, useState } from "react";
 import html2canvas from "html2canvas";
+
 import { toast } from "sonner";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Badge } from "../../components/ui/badge";
@@ -38,93 +39,96 @@ export default function CustomerDetailsPage() {
         queryFn: () => getRewards({ is_active: true, is_show_to_brochure: true, per_page: 6 }),
     });
 
+    // Helper to convert image URL to Base64 (Shared)
+    const toDataURL = async (url: string): Promise<string | null> => {
+        try {
+            const response = await fetch(url, {
+                mode: 'cors',
+                credentials: 'omit',
+                cache: 'no-store',
+            });
+
+            if (!response.ok) throw new Error(`Fetch failed: ${response.statusText}`);
+
+            const blob = await response.blob();
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result as string);
+                reader.onerror = () => resolve(null);
+                reader.readAsDataURL(blob);
+            });
+        } catch (error) {
+            console.warn('Failed to convert image to Base64:', url, error);
+            return null;
+        }
+    };
+
     const generateCardBlob = async () => {
         if (!cardRef.current) return null;
 
-        // Helper to convert image URL to Base64
-        const toDataURL = async (url: string): Promise<string | null> => {
-            try {
-                // Dynamically get domain from env
-                const apiBase = import.meta.env.VITE_API_BASE_URL || 'https://api.traceflowtech.com/api/';
-                let apiDomain = '';
-                try {
-                    apiDomain = new URL(apiBase).origin;
-                } catch (e) {
-                    apiDomain = 'https://api.traceflowtech.com';
-                }
-
-                // Always use proxy path strategies because the API blocks CORS
-                // We rely on Vite Proxy (Dev) and Infra Proxy (Vercel/Netlify/Nginx) in Prod
-                let fetchUrlString = url;
-                if (url.includes(apiDomain)) {
-                    fetchUrlString = url.replace(apiDomain, '');
-                }
-
-                // Add cache-busting
-                const fetchUrl = new URL(fetchUrlString, window.location.origin);
-                fetchUrl.searchParams.append('t', Date.now().toString());
-
-                const response = await fetch(fetchUrl.toString(), {
-                    cache: 'no-store',
-                });
-
-                if (!response.ok) throw new Error(`Fetch failed: ${response.statusText}`);
-
-                const blob = await response.blob();
-                return new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onloadend = () => resolve(reader.result as string);
-                    reader.onerror = () => resolve(null);
-                    reader.readAsDataURL(blob);
-                });
-            } catch (error) {
-                console.warn('Failed to convert image to Base64:', url, error);
-                return null;
-            }
-        };
-
         const images = cardRef.current.querySelectorAll('img');
-        const originalSrcs: Map<HTMLImageElement, string> = new Map();
+        const originalState: Map<HTMLImageElement, { src: string; style: string }> = new Map();
 
         try {
-            // Pre-convert to Base64 to handle CORS
+            // 1. Convert all images to Base64
             await Promise.all(Array.from(images).map(async (img) => {
+                // Optimization: Skip product images as they are hidden
+                if (img.closest('.product-image-wrapper')) return;
+
+                // Save original state
+                originalState.set(img, {
+                    src: img.src,
+                    style: img.getAttribute('style') || ''
+                });
+
                 const src = img.src;
-                if (src.startsWith('http')) {
+                // Only convert if it's a remote URL
+                if (src.startsWith('http') || src.startsWith('//')) {
                     const base64 = await toDataURL(src);
                     if (base64) {
-                        originalSrcs.set(img, src);
                         img.src = base64;
+                    } else {
+                        // If failed, hide the image to prevent tainting/broken UI
+                        img.style.display = 'none';
                     }
                 }
             }));
 
-            // Wait a moment for images to re-render with base64
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // 2. Wait for all images to handle (load or error)
+            await Promise.all(Array.from(images).map(img => {
+                if (img.style.display === 'none') return Promise.resolve();
+                if (img.complete && img.naturalHeight !== 0) return Promise.resolve();
+
+                return new Promise<void>((resolve) => {
+                    img.onload = () => resolve();
+                    img.onerror = () => resolve();
+                    setTimeout(resolve, 2000);
+                });
+            }));
+
+            // Small delay for layout strictness
+            await new Promise(resolve => setTimeout(resolve, 100));
 
             const canvas = await html2canvas(cardRef.current, {
                 backgroundColor: '#1e293b', // Match card bg
                 scale: 2,
                 logging: false,
                 useCORS: true,
-                allowTaint: true,
-                windowWidth: 1280, // Force desktop media queries
+                allowTaint: false,
+                windowWidth: 1280,
                 onclone: (clonedDoc) => {
                     const clonedWrapper = clonedDoc.getElementById('loyalty-card-wrapper');
                     if (clonedWrapper) {
-                        // Force desktop layout dimensions
                         clonedWrapper.style.width = '800px';
                         clonedWrapper.style.maxWidth = 'none';
                         clonedWrapper.style.margin = '0 auto';
                         clonedWrapper.style.transform = 'none';
 
-                        // Reduce bottom padding
                         const contentContainer = clonedWrapper.querySelector('.relative.p-5');
                         if (contentContainer instanceof HTMLElement) {
                             contentContainer.style.paddingBottom = '24px';
                         }
 
-                        // Ensure grid layouts respect desktop sizing
                         const content = clonedWrapper.querySelector('.md\\:grid-cols-2');
                         if (content instanceof HTMLElement) {
                             content.classList.remove('grid-cols-1');
@@ -134,10 +138,101 @@ export default function CustomerDetailsPage() {
 
                     const pointsEl = clonedDoc.getElementById('total-points-display');
                     if (pointsEl) {
-                        // Fix for html2canvas not supporting bg-clip: text
                         pointsEl.style.background = 'none';
                         pointsEl.style.webkitTextFillColor = 'initial';
-                        pointsEl.style.color = '#fbbf24'; // Solid amber color fallback
+                        pointsEl.style.color = '#fbbf24';
+                    }
+
+
+                    // Hide product images in the screenshot
+                    const productWrappers = clonedDoc.querySelectorAll('.product-image-wrapper');
+                    productWrappers.forEach(el => {
+                        if (el instanceof HTMLElement) el.style.display = 'none';
+                    });
+
+                    // Improve styling for loyalty cards in download (since images are gone)
+                    // TRANSFORMATION: Make "Earn Points" look like "Redeem Points"
+                    const earnGrid = clonedDoc.getElementById('earn-points-grid');
+                    if (earnGrid) {
+                        // Change Grid to List
+                        earnGrid.classList.remove('grid', 'grid-cols-2', 'gap-2', 'md:gap-3');
+                        earnGrid.style.display = 'flex';
+                        earnGrid.style.flexDirection = 'column';
+                        earnGrid.style.gap = '12px'; // space-y-3 equivalent
+
+                        const cards = earnGrid.querySelectorAll('.loyalty-item-card');
+                        cards.forEach((card) => {
+                            if (card instanceof HTMLElement) {
+                                let name = '';
+                                let points = '';
+
+                                const children = Array.from(card.children) as HTMLElement[];
+                                children.forEach(child => {
+                                    const text = child.textContent?.trim() || '';
+                                    if (text.includes('POINTS')) {
+                                        points = text.replace(/\D/g, '');
+                                    } else if (text && !child.classList.contains('product-image-wrapper')) {
+                                        name = text;
+                                    }
+                                });
+
+                                // Reset Card Styling
+                                card.className = '';
+                                card.style.cssText = `
+                                        display: flex;
+                                        align-items: center;
+                                        padding: 8px;
+                                        border-radius: 12px;
+                                        background-color: rgba(255, 255, 255, 0.05);
+                                        border: 1px solid rgba(255, 255, 255, 0.1);
+                                        width: 100%;
+                                        box-sizing: border-box;
+                                    `;
+
+                                // Reconstruct HTML Content
+                                card.innerHTML = `
+                                        <div style="
+                                            background-color: white;
+                                            border-radius: 8px;
+                                            padding: 8px 12px;
+                                            display: flex;
+                                            flex-direction: column;
+                                            align-items: center;
+                                            justify-content: center;
+                                            min-width: 70px;
+                                            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+                                        ">
+                                            <div style="
+                                                color: #16a34a; /* green-600 */
+                                                font-weight: 900;
+                                                font-size: 18px;
+                                                line-height: 1;
+                                            ">${points}</div>
+                                            <div style="
+                                                font-size: 8px;
+                                                color: rgba(22, 163, 74, 0.8);
+                                                font-weight: 700;
+                                                text-transform: uppercase;
+                                                letter-spacing: 0.05em;
+                                                margin-top: 2px;
+                                            ">POINTS</div>
+                                        </div>
+                                        <div style="
+                                            margin-left: 16px;
+                                            flex: 1;
+                                        ">
+                                            <div style="
+                                                color: white;
+                                                font-family: ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+                                                font-size: 18px;
+                                                font-weight: 500;
+                                                letter-spacing: 0.025em;
+                                                line-height: 1.25;
+                                            ">${name}</div>
+                                        </div>
+                                    `;
+                            }
+                        });
                     }
                 }
             });
@@ -152,12 +247,19 @@ export default function CustomerDetailsPage() {
             console.error('Failed to generate image:', error);
             return null;
         } finally {
-            // Restore original image sources
-            originalSrcs.forEach((src, img) => {
-                img.src = src;
+            // Restore original image sources and styles
+            originalState.forEach((state, img) => {
+                img.src = state.src;
+                if (state.style) {
+                    img.setAttribute('style', state.style);
+                } else {
+                    img.removeAttribute('style');
+                }
             });
         }
     };
+
+
 
 
 
@@ -259,6 +361,31 @@ export default function CustomerDetailsPage() {
                         <ExternalLink className="h-4 w-4" />
                         View Public Page
                     </Button>
+                    <Button
+                        variant="outline"
+                        className="gap-2 bg-white"
+                        onClick={async () => {
+                            toast.info("Generating card image...");
+                            const blob = await generateCardBlob();
+                            if (blob) {
+                                const url = URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = url;
+                                link.download = `loyalty-card-${customerData.customer.unique_id}.png`;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                                URL.revokeObjectURL(url);
+                                toast.success("Card downloaded successfully");
+                            } else {
+                                toast.error("Failed to generate card image");
+                            }
+                        }}
+                    >
+                        <Download className="h-4 w-4" />
+                        Download Image
+                    </Button>
+
 
                 </div>
             </div>
@@ -339,12 +466,16 @@ export default function CustomerDetailsPage() {
                                                             <div className="h-1.5 w-1.5 rounded-full bg-green-400"></div>
                                                             Earn Points
                                                         </div>
-                                                        <div className="grid grid-cols-2 gap-2 md:gap-3">
+                                                        <div id="earn-points-grid" className="grid grid-cols-2 gap-2 md:gap-3">
                                                             {brochureLoyalties.data.map((loyalty) => (
-                                                                <div key={loyalty.id} className="flex flex-col items-center p-2 bg-white rounded-xl shadow-sm text-center h-full">
-                                                                    <div className="h-16 md:h-20 w-full mb-2 flex items-center justify-center bg-gray-50 rounded-lg p-1 overflow-hidden">
+                                                                <div key={loyalty.id} className="loyalty-item-card flex flex-col items-center p-2 bg-white rounded-xl shadow-sm text-center h-full">
+                                                                    <div className="product-image-wrapper h-16 md:h-20 w-full mb-2 flex items-center justify-center bg-gray-50 rounded-lg p-1 overflow-hidden">
                                                                         {loyalty.product?.image_url ? (
-                                                                            <img src={loyalty.product.image_url} alt={loyalty.product.name} className="h-full w-full object-contain" />
+                                                                            <img
+                                                                                src={loyalty.product.image_url}
+                                                                                alt={loyalty.product.name}
+                                                                                className="h-full w-full object-contain"
+                                                                            />
                                                                         ) : (
                                                                             <ShoppingBag className="h-6 md:h-8 w-6 md:w-8 text-gray-300" />
                                                                         )}

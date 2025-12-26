@@ -19,7 +19,7 @@ import { Toaster } from "sonner";
 import SettingsPage from "./features/settings/SettingsPage";
 import PublicCustomerPage from "./pages/PublicCustomerPage";
 import UsersListPage from "./features/users/UsersListPage";
-import UserOrderLogsPage from "./features/users/UserOrderLogsPage";
+import StaffDetailsPage from "./features/users/StaffDetailsPage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 
 const queryClient = new QueryClient();
@@ -123,10 +123,10 @@ const router = createBrowserRouter([
         ),
       },
       {
-        path: "staff/:id/logs",
+        path: "staff/:id",
         element: (
           <StaffRestricted>
-            <UserOrderLogsPage />
+            <StaffDetailsPage />
           </StaffRestricted>
         ),
       },

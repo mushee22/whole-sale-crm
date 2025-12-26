@@ -8,7 +8,7 @@ import { Button } from "../../components/ui/button";
 import { Modal } from "../../components/ui/modal";
 import { AlertDialog } from "../../components/ui/alert-dialog";
 import { Pagination } from "../../components/ui/pagination";
-import { Plus, Pencil, Trash2, User as UserIcon, History } from "lucide-react";
+import { Plus, Pencil, Trash2, User as UserIcon, Eye } from "lucide-react";
 import { toast } from "sonner";
 import UserForm from "./components/UserForm";
 
@@ -134,9 +134,9 @@ export default function UsersListPage() {
                                                 variant="ghost"
                                                 size="sm"
                                                 className="h-8 text-slate-600 border-slate-200 hover:bg-slate-50"
-                                                onClick={() => navigate(`/staff/${user.id}/logs`)}
+                                                onClick={() => navigate(`/staff/${user.id}`)}
                                             >
-                                                <History className="h-4 w-4 mr-2" /> History
+                                                <Eye className="h-4 w-4 mr-2" /> Details
                                             </Button>
                                             <Button
                                                 variant="ghost"
@@ -198,11 +198,11 @@ export default function UsersListPage() {
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="h-8 w-8 text-slate-600 hover:text-slate-900 hover:bg-slate-50"
-                                                            onClick={() => navigate(`/staff/${user.id}/logs`)}
-                                                            title="View Order History"
+                                                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                            onClick={() => navigate(`/staff/${user.id}`)}
+                                                            title="View Staff Details"
                                                         >
-                                                            <History className="h-4 w-4" />
+                                                            <Eye className="h-4 w-4" />
                                                         </Button>
                                                         <Button
                                                             variant="ghost"

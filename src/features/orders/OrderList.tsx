@@ -5,8 +5,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from ".
 import { Pagination } from "../../components/ui/pagination";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { Eye } from "lucide-react";
+import { Eye, Download } from "lucide-react";
 import { Card, CardHeader, CardContent, CardTitle } from "../../components/ui/card";
+import ExportOrdersModal from "../reports/components/ExportOrdersModal";
 
 import { getOrders } from "./api/orders";
 
@@ -14,6 +15,7 @@ export default function OrderList() {
     const [page, setPage] = useState(1);
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
+    const [isExportModalOpen, setIsExportModalOpen] = useState(false);
 
     const navigate = useNavigate();
 
@@ -33,12 +35,22 @@ export default function OrderList() {
                         <CardTitle className="text-xl font-bold">All Orders</CardTitle>
                         <p className="text-sm text-gray-500">View and manage all orders here.</p>
                     </div>
-                    <Button
-                        className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20 w-full sm:w-auto"
-                        onClick={() => navigate('/orders/create')}
-                    >
-                        + Create Manual Order
-                    </Button>
+                    <div className="flex gap-2 w-full sm:w-auto">
+                        <Button
+                            variant="outline"
+                            className="bg-white hover:bg-slate-50 text-slate-900 border-slate-200"
+                            onClick={() => setIsExportModalOpen(true)}
+                        >
+                            <Download className="mr-2 h-4 w-4" />
+                            Export
+                        </Button>
+                        <Button
+                            className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20 w-full sm:w-auto"
+                            onClick={() => navigate('/orders/create')}
+                        >
+                            + Create Manual Order
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent className="p-0">
                     {/* Filters Toolbar */}
@@ -183,6 +195,10 @@ export default function OrderList() {
                     </div>
                 </CardContent>
             </Card>
+            <ExportOrdersModal
+                isOpen={isExportModalOpen}
+                onClose={() => setIsExportModalOpen(false)}
+            />
         </div>
     );
 }

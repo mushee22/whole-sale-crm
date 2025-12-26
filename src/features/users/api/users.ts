@@ -86,6 +86,11 @@ export interface UsersListResponse {
     total: number;
 }
 
+export const getUser = async (id: number) => {
+    const response = await api.get<{ user: User }>(`/admin/users/${id}`);
+    return response.data.user;
+};
+
 export const getUsers = async (params: GetUsersParams = {}) => {
     const queryParams = new URLSearchParams();
     if (params.page) queryParams.append('page', params.page.toString());
