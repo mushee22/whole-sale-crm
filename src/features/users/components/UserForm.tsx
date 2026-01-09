@@ -13,7 +13,6 @@ interface UserFormProps {
     onSubmit: (data: CreateUserData) => void;
     initialData?: User | null;
     isLoading?: boolean;
-    isLoading?: boolean;
     onCancel: () => void;
     defaultRoleId?: number;
 }
