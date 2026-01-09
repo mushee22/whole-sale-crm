@@ -8,6 +8,8 @@ import { ArrowLeft, Pencil, Trash2, User, Phone, Mail, Award } from "lucide-reac
 import { toast } from "sonner";
 import { cn } from "../../lib/utils";
 import { useAuth } from "../../context/AuthContext";
+import { AssignDeliveryModal } from "./components/AssignDeliveryModal";
+import { Truck } from "lucide-react";
 
 export default function OrderDetailsPage() {
     const { id } = useParams();
@@ -51,6 +53,15 @@ export default function OrderDetailsPage() {
                 </Button>
                 {user?.role !== 'staff' && (
                     <div className="flex flex-wrap gap-2 w-full sm:w-auto">
+                        <AssignDeliveryModal
+                            orderId={orderId}
+                            trigger={
+                                <Button variant="outline" className="flex-1 sm:flex-none gap-2 text-slate-700 bg-blue-50 hover:bg-blue-100 border-blue-200">
+                                    <Truck className="h-4 w-4 text-blue-600" />
+                                    Assign Delivery
+                                </Button>
+                            }
+                        />
                         <Button variant="outline" className="flex-1 sm:flex-none gap-2 text-slate-700" onClick={() => navigate(`/orders/edit/${orderId}`)}>
                             <Pencil className="h-4 w-4" />
                             Edit

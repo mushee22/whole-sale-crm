@@ -67,17 +67,17 @@ export const createCustomerSchema = z.object({
 export type CreateCustomerData = z.infer<typeof createCustomerSchema>;
 
 export const getCustomers = async (params?: { page?: number; per_page?: number; search?: string }) => {
-    const response = await axios.get<CustomersResponse>("/admin/customers", { params });
+    const response = await axios.get<CustomersResponse>("/customers", { params });
     return response.data;
 };
 
 export const getCustomer = async (id: number) => {
-    const response = await axios.get<CustomerDetailsResponse>(`/admin/customers/${id}`);
+    const response = await axios.get<CustomerDetailsResponse>(`/customers/${id}`);
     return response.data; // Return the full response object
 };
 
 export const createCustomer = async (data: CreateCustomerData) => {
     // The API will check if customer exists by phone and update if exists, create if not
-    const response = await axios.post("/admin/customers", data);
+    const response = await axios.post("/customers", data);
     return response.data;
 };

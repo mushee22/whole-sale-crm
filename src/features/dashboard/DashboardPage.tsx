@@ -7,58 +7,58 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { DollarSign, Package, Users } from "lucide-react";
 
 export default function DashboardPage() {
-    const [selectedProductId, setSelectedProductId] = useState<string>("");
-    const [selectedUserId, setSelectedUserId] = useState<string>("");
+    // const [selectedProductId, setSelectedProductId] = useState<string>("");
+    // const [selectedUserId, setSelectedUserId] = useState<string>("");
 
-    const { data: metrics, isLoading: isLoadingMetrics, error: metricsError } = useQuery({
-        queryKey: ['admin', 'dashboard'],
-        queryFn: getDashboardMetrics,
-    });
+    // const { data: metrics, isLoading: isLoadingMetrics, error: metricsError } = useQuery({
+    //     queryKey: ['admin', 'dashboard'],
+    //     queryFn: getDashboardMetrics,
+    // });
 
-    const { data: products } = useQuery({
-        queryKey: ['products', 'list'],
-        queryFn: () => getProducts({ per_page: 100, is_active: true }),
-    });
+    // const { data: products } = useQuery({
+    //     queryKey: ['products', 'list'],
+    //     queryFn: () => getProducts({ per_page: 100, is_active: true }),
+    // });
 
-    const { data: users } = useQuery({
-        queryKey: ['users', 'staff'],
-        queryFn: () => getUsers({ per_page: 100 }),
-    });
+    // const { data: users } = useQuery({
+    //     queryKey: ['users', 'staff'],
+    //     queryFn: () => getUsers({ per_page: 100 }),
+    // });
 
-    // Set default user to the first one when users are loaded
-    useEffect(() => {
-        if (!selectedUserId && users?.data && users.data.length > 0) {
-            setSelectedUserId(users.data[0].id.toString());
-        }
-    }, [users?.data, selectedUserId]);
+    // // Set default user to the first one when users are loaded
+    // useEffect(() => {
+    //     if (!selectedUserId && users?.data && users.data.length > 0) {
+    //         setSelectedUserId(users.data[0].id.toString());
+    //     }
+    // }, [users?.data, selectedUserId]);
 
-    const { data: productSales, isLoading: isLoadingSales } = useQuery({
-        queryKey: ['admin', 'dashboard', 'sales', selectedProductId, selectedUserId],
-        queryFn: () => getProductSales({
-            product_id: selectedProductId,
-            user_id: selectedUserId,
-        }),
-        enabled: !!selectedUserId || !!selectedProductId // Only fetch if we have filters, though now we enforce user_id
-    });
+    // const { data: productSales, isLoading: isLoadingSales } = useQuery({
+    //     queryKey: ['admin', 'dashboard', 'sales', selectedProductId, selectedUserId],
+    //     queryFn: () => getProductSales({
+    //         product_id: selectedProductId,
+    //         user_id: selectedUserId,
+    //     }),
+    //     enabled: !!selectedUserId || !!selectedProductId // Only fetch if we have filters, though now we enforce user_id
+    // });
 
-    if (isLoadingMetrics) {
-        return <div className="p-8 text-center text-gray-500">Loading dashboard...</div>;
-    }
+    // if (isLoadingMetrics) {
+    //     return <div className="p-8 text-center text-gray-500">Loading dashboard...</div>;
+    // }
 
-    if (metricsError) {
-        return (
-            <div className="p-8 text-center text-red-600 bg-red-50 rounded-lg">
-                <p>Error loading dashboard: {(metricsError as Error).message}</p>
-            </div>
-        );
-    }
+    // if (metricsError) {
+    //     return (
+    //         <div className="p-8 text-center text-red-600 bg-red-50 rounded-lg">
+    //             <p>Error loading dashboard: {(metricsError as Error).message}</p>
+    //         </div>
+    //     );
+    // }
 
     return (
         <div className="space-y-6">
             <h1 className="text-3xl font-bold tracking-tight text-gray-900">Dashboard</h1>
 
             {/* Stats Cards */}
-            <div className="grid gap-4 md:grid-cols-3">
+            {/* <div className="grid gap-4 md:grid-cols-3">
                 <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                         <CardTitle className="text-sm font-medium">
@@ -70,9 +70,7 @@ export default function DashboardPage() {
                         <div className="text-2xl font-bold">
                             {isLoadingMetrics ? "..." : (metrics?.total_amount ? `₹${metrics.total_amount}` : '₹0')}
                         </div>
-                        {/* <p className="text-xs text-muted-foreground">
-                            Lifetime revenue
-                        </p> */}
+                       
                     </CardContent>
                 </Card>
                 <Card>
@@ -107,11 +105,11 @@ export default function DashboardPage() {
                         </p>
                     </CardContent>
                 </Card>
-            </div>
+            </div> */}
 
             {/* Product Sales Section */}
             <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                {/* <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <h2 className="text-xl font-semibold text-gray-800 flex items-center gap-2">
                         <Package className="h-5 w-5" />
                         Product Sales
@@ -145,10 +143,10 @@ export default function DashboardPage() {
                             </select>
                         </div>
                     </div>
-                </div>
+                </div> */}
 
                 {/* Product Sales Stats */}
-                <div className="grid gap-4 md:grid-cols-3">
+                {/* <div className="grid gap-4 md:grid-cols-3">
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium">
@@ -188,7 +186,7 @@ export default function DashboardPage() {
                             </div>
                         </CardContent>
                     </Card>
-                </div>
+                </div> */}
             </div>
         </div>
     );

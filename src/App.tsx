@@ -4,7 +4,6 @@ import AuthLayout from "./components/layout/AuthLayout";
 import DashboardLayout from "./components/layout/DashboardLayout";
 import LoginPage from "./features/auth/LoginPage";
 import DashboardPage from "./features/dashboard/DashboardPage";
-import ProductList from "./features/products/ProductList";
 import OrderList from "./features/orders/OrderList";
 import CreateOrderPage from "./features/orders/CreateOrderPage";
 import OrderDetailsPage from "./features/orders/OrderDetailsPage";
@@ -19,8 +18,21 @@ import { Toaster } from "sonner";
 import SettingsPage from "./features/settings/SettingsPage";
 import PublicCustomerPage from "./pages/PublicCustomerPage";
 import UsersListPage from "./features/users/UsersListPage";
+import DeliveryBoysListPage from "./features/users/DeliveryBoysListPage";
 import StaffDetailsPage from "./features/users/StaffDetailsPage";
+import { ProductsPage } from "./features/master-data/pages/ProductsPage";
+import { ProductVariantsPage } from "./features/master-data/pages/ProductVariantsPage";
+import ColorsPage from "./features/master-data/pages/ColorsPage";
+import SizesPage from "./features/master-data/pages/SizesPage";
+import LocationsPage from "./features/master-data/pages/LocationsPage";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { SalesOrderPage } from "./features/sales/pages/SalesOrderPage";
+import { PreOrderListPage } from "./features/sales/pages/PreOrderListPage";
+import { CreateOrderFromPreOrderPage } from "./features/sales/pages/CreateOrderFromPreOrderPage";
+import RolesListPage from "./features/roles/pages/RolesListPage";
+import CreateRolePage from "./features/roles/components/CreateRolePage";
+import { PettyCashPage } from "./features/finance/pages/PettyCashPage";
+import { CustomerTransactionsPage } from "./features/finance/pages/CustomerTransactionsPage";
 
 const queryClient = new QueryClient();
 
@@ -66,14 +78,14 @@ const router = createBrowserRouter([
           </StaffRestricted>
         ),
       },
-      {
-        path: "products",
-        element: (
-          <StaffRestricted>
-            <ProductList />
-          </StaffRestricted>
-        ),
-      },
+      // {
+      //   path: "products",
+      //   element: (
+      //     <StaffRestricted>
+      //       <ProductList />
+      //     </StaffRestricted>
+      //   ),
+      // },
       {
         path: "orders",
         element: <OrderList />,
@@ -123,7 +135,31 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "users",
+        element: (
+          <StaffRestricted>
+            <UsersListPage />
+          </StaffRestricted>
+        ),
+      },
+      {
+        path: "delivery-boys",
+        element: (
+          <StaffRestricted>
+            <DeliveryBoysListPage />
+          </StaffRestricted>
+        ),
+      },
+      {
         path: "staff/:id",
+        element: (
+          <StaffRestricted>
+            <StaffDetailsPage />
+          </StaffRestricted>
+        ),
+      },
+      {
+        path: "users/:id",
         element: (
           <StaffRestricted>
             <StaffDetailsPage />
@@ -137,6 +173,95 @@ const router = createBrowserRouter([
             <SettingsPage />
           </StaffRestricted>
         ),
+      },
+      {
+        path: "roles",
+        element: (
+          <StaffRestricted>
+            <RolesListPage />
+          </StaffRestricted>
+        ),
+      },
+      {
+        path: "roles/create",
+        element: (
+          <StaffRestricted>
+            <CreateRolePage />
+          </StaffRestricted>
+        ),
+      },
+      {
+        path: "products",
+        element: (
+          <StaffRestricted>
+            <ProductsPage />
+          </StaffRestricted>
+        ),
+      },
+      {
+        path: "products/:id/variants",
+        element: (
+          <StaffRestricted>
+            <ProductVariantsPage />
+          </StaffRestricted>
+        ),
+      },
+      {
+        path: "petty-cash-accounts",
+        element: (
+          <StaffRestricted>
+            <PettyCashPage />
+          </StaffRestricted>
+        ),
+      },
+      {
+        path: "customer-transactions",
+        element: (
+          <StaffRestricted>
+            <CustomerTransactionsPage />
+          </StaffRestricted>
+        ),
+      },
+      {
+        path: "sales/new",
+        element: <SalesOrderPage />,
+      },
+      {
+        path: "sales/pre-orders",
+        element: <PreOrderListPage />,
+      },
+      {
+        path: "sales/pre-orders/:id/create",
+        element: <CreateOrderFromPreOrderPage />,
+      },
+      {
+        path: "master-data",
+        children: [
+          {
+            path: "colors",
+            element: (
+              <StaffRestricted>
+                <ColorsPage />
+              </StaffRestricted>
+            ),
+          },
+          {
+            path: "sizes",
+            element: (
+              <StaffRestricted>
+                <SizesPage />
+              </StaffRestricted>
+            ),
+          },
+          {
+            path: "locations",
+            element: (
+              <StaffRestricted>
+                <LocationsPage />
+              </StaffRestricted>
+            ),
+          },
+        ]
       },
     ],
   },

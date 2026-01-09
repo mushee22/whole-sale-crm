@@ -22,11 +22,11 @@ export interface AuthResponse {
 }
 
 export const loginWithEmail = async (data: LoginCredentials): Promise<AuthResponse> => {
-    const response = await api.post<AuthResponse>('auth/login', data);
+    const response = await api.post<AuthResponse>('login', data);
     return response.data;
 };
 
 export const getUser = async (): Promise<{ user: User }> => {
-    const response = await api.get<{ user: User }>('auth/me');
+    const response = await api.get<{ user: User }>('me');
     return response.data;
 };

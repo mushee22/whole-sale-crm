@@ -1,20 +1,35 @@
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Package, Users, ShoppingCart, Gift, Menu, LogOut, User, X, Settings } from "lucide-react";
+import { Menu, LogOut, User, X, Database, Package, ShoppingCart, Shield, Truck } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
 import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect } from "react";
 
 const sidebarItems = [
-    { icon: LayoutDashboard, label: "Dashboard", to: "/" },
-    { icon: User, label: "Staff", to: "/staff" },
-    { icon: Package, label: "Products", to: "/products" },
-    { icon: Users, label: "Customers", to: "/customers" },
-    { icon: ShoppingCart, label: "Orders", to: "/orders" },
-    { icon: Gift, label: "Points", to: "/loyalties" },
-    { icon: Gift, label: "Rewards", to: "/rewards" },
-    { icon: ShoppingCart, label: "Claims", to: "/claims" },
-    { icon: Settings, label: "Settings", to: "/settings" },
+    { label: "Users", icon: User, to: "/users" },
+    { label: "Delivery Boys", icon: Truck, to: "/delivery-boys" },
+    { label: "Roles", icon: Shield, to: "/roles" },
+    { label: "Products", icon: Package, to: "/products" },
+    { label: "Petty Cash", icon: Database, to: "/petty-cash-accounts" },
+    { label: "Customer Transactions", icon: Database, to: "/customer-transactions" },
+    {
+        label: "Master Data",
+        icon: Database,
+        items: [
+            { label: "Colors", to: "/master-data/colors" },
+            { label: "Sizes", to: "/master-data/sizes" },
+            { label: "Locations", to: "/master-data/locations" },
+        ]
+    },
+    {
+        label: "Sales",
+        icon: Package,
+        items: [
+            { label: "New Order", to: "/sales/new" },
+            { label: "Pre-Orders", to: "/sales/pre-orders" }
+        ]
+    },
+    { label: "Orders", icon: ShoppingCart, to: "/orders" }
 ];
 
 export default function DashboardLayout() {
@@ -51,38 +66,63 @@ export default function DashboardLayout() {
             </div>
 
             <div className="flex-1 py-8 px-4 space-y-8 overflow-y-auto">
-                <div>
-                    <h3 className="mb-4 px-4 text-xs font-bold text-slate-400 uppercase tracking-widest">
-                        Main Menu
-                    </h3>
-                    <nav className="space-y-1.5">
-                        {filteredItems.map((item) => (
-                            <NavLink
-                                key={item.to}
-                                to={item.to}
-                                className={({ isActive }) =>
-                                    cn(
-                                        "group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
-                                        isActive
-                                            ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30"
-                                            : "text-slate-300 hover:bg-white/5 hover:text-white"
-                                    )
-                                }
-                            >
-                                {({ isActive }) => (
-                                    <>
-                                        <item.icon
-                                            className={cn(
-                                                "h-5 w-5 transition-transform duration-200",
-                                                isActive ? "scale-110" : "group-hover:scale-105"
+                <div className="space-y-6">
+                    {filteredItems.map((item, index) => (
+                        <div key={index}>
+                            {item.items ? (
+                                <>
+                                    <h3 className="mb-2 px-4 text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                                        {item.icon && <item.icon className="h-4 w-4" />}
+                                        {item.label}
+                                    </h3>
+                                    <nav className="space-y-1">
+                                        {item.items.map((subItem) => (
+                                            <NavLink
+                                                key={subItem.to}
+                                                to={subItem.to}
+                                                className={({ isActive }) =>
+                                                    cn(
+                                                        "group flex items-center gap-3 px-4 py-2 mx-2 rounded-lg text-sm font-medium transition-all duration-200",
+                                                        isActive
+                                                            ? "bg-blue-600/10 text-blue-400"
+                                                            : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                                    )
+                                                }
+                                            >
+                                                <span className="truncate">{subItem.label}</span>
+                                            </NavLink>
+                                        ))}
+                                    </nav>
+                                </>
+                            ) : (
+                                <NavLink
+                                    to={item.to!}
+                                    className={({ isActive }) =>
+                                        cn(
+                                            "group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                                            isActive
+                                                ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30"
+                                                : "text-slate-300 hover:bg-white/5 hover:text-white"
+                                        )
+                                    }
+                                >
+                                    {({ isActive }) => (
+                                        <>
+                                            {item.icon && (
+                                                <item.icon
+                                                    className={cn(
+                                                        "h-5 w-5 transition-transform duration-200",
+                                                        isActive ? "scale-110" : "group-hover:scale-105"
+                                                    )}
+                                                />
                                             )}
-                                        />
-                                        <span>{item.label}</span>
-                                    </>
-                                )}
-                            </NavLink>
-                        ))}
-                    </nav>
+                                            <span>{item.label}</span>
+                                        </>
+                                    )}
+                                </NavLink>
+                            )}
+                        </div>
+                    ))}
                 </div>
             </div>
 
@@ -148,10 +188,10 @@ export default function DashboardLayout() {
                                 <Menu className="h-5 w-5" />
                             </Button>
                             <h1 className="text-lg font-semibold text-slate-900">
-                                {filteredItems.find(item =>
+                                {filteredItems.flatMap(item => item.items ? item.items : [item]).find(item =>
                                     item.to === "/"
                                         ? location.pathname === "/"
-                                        : location.pathname.startsWith(item.to)
+                                        : location.pathname.startsWith(item.to || '')
                                 )?.label || 'Dashboard'}
                             </h1>
                         </div>

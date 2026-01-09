@@ -50,8 +50,8 @@ export default function StaffDetailsPage() {
             page,
             per_page: 15,
             user_id: userId,
-            start_date: startDate,
-            end_date: endDate
+            order_date_from: startDate,
+            order_date_to: endDate
         }),
         enabled: !!userId
     });
@@ -59,15 +59,15 @@ export default function StaffDetailsPage() {
     return (
         <div className="space-y-6 max-w-7xl mx-auto pb-10">
             <div className="flex items-center gap-4">
-                <Button variant="ghost" onClick={() => navigate("/staff")} className="pl-0 hover:bg-transparent text-slate-500">
+                <Button variant="ghost" onClick={() => navigate("/users")} className="pl-0 hover:bg-transparent text-slate-500">
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to Staff List
+                    Back to Users List
                 </Button>
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <h1 className="text-3xl font-bold text-slate-900">
-                    {user?.name || "Staff Details"}
+                    {user?.name || "User Details"}
                     <span className="block text-sm font-normal text-slate-500 mt-1">{user?.email}</span>
                 </h1>
 

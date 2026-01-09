@@ -12,7 +12,7 @@ import { Plus, Pencil, Trash2, User as UserIcon, Eye } from "lucide-react";
 import { toast } from "sonner";
 import UserForm from "./components/UserForm";
 
-export default function UsersListPage() {
+export default function DeliveryBoysListPage() {
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [page, setPage] = useState(1);
@@ -20,51 +20,50 @@ export default function UsersListPage() {
     const [editingUser, setEditingUser] = useState<User | null>(null);
     const [deleteId, setDeleteId] = useState<number | null>(null);
 
+    // Fetch users with role_id=3
     const { data: usersData, isLoading } = useQuery({
-        queryKey: ['users', page],
-        queryFn: () => getUsers({ page, per_page: 15 }),
+        queryKey: ['delivery-boys', page],
+        queryFn: () => getUsers({ page, per_page: 15, role_id: 3 }),
     });
 
     const createMutation = useMutation({
         mutationFn: createUser,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({ queryKey: ['delivery-boys'] });
             setIsFormOpen(false);
-            toast.success("User added successfully!");
+            toast.success("Delivery Boy added successfully!");
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.message || "Failed to add user");
+            toast.error(error.response?.data?.message || "Failed to add delivery boy");
         }
     });
 
     const updateMutation = useMutation({
         mutationFn: ({ id, data }: { id: number; data: Partial<CreateUserData> }) => updateUser(id, data),
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({ queryKey: ['delivery-boys'] });
             setIsFormOpen(false);
             setEditingUser(null);
-            toast.success("User updated successfully!");
+            toast.success("Delivery Boy updated successfully!");
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.message || "Failed to update user");
+            toast.error(error.response?.data?.message || "Failed to update delivery boy");
         }
     });
 
     const deleteMutation = useMutation({
         mutationFn: deleteUser,
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['users'] });
+            queryClient.invalidateQueries({ queryKey: ['delivery-boys'] });
             setDeleteId(null);
-            toast.success("User deleted successfully!");
+            toast.success("Delivery Boy deleted successfully!");
         },
         onError: () => {
-            toast.error("Failed to delete user");
+            toast.error("Failed to delete delivery boy");
         }
     });
 
     const handleSubmit = (data: CreateUserData) => {
-        // If password is empty string during update, undefined it so it's not sent or handled by API logic if needed
-        // But our schema handles it.
         if (editingUser) {
             updateMutation.mutate({ id: editingUser.id, data });
         } else {
@@ -87,14 +86,14 @@ export default function UsersListPage() {
             <Card className="border-gray-100 shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-gray-100">
                     <div className="space-y-1">
-                        <CardTitle className="text-xl font-bold">User Management</CardTitle>
-                        <p className="text-sm text-gray-500">Manage system users and access.</p>
+                        <CardTitle className="text-xl font-bold">Delivery Boys</CardTitle>
+                        <p className="text-sm text-gray-500">Manage delivery personnel.</p>
                     </div>
                     <Button
                         onClick={openCreate}
                         className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20"
                     >
-                        <Plus className="mr-2 h-4 w-4" /> Add User
+                        <Plus className="mr-2 h-4 w-4" /> Add Delivery Boy
                     </Button>
                 </CardHeader>
 
@@ -102,7 +101,7 @@ export default function UsersListPage() {
                     {isLoading ? (
                         <div className="p-12 text-center">
                             <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-100 border-t-blue-600 mb-4"></div>
-                            <p className="text-gray-500">Loading users...</p>
+                            <p className="text-gray-500">Loading delivery boys...</p>
                         </div>
                     ) : (
                         <>
@@ -130,21 +129,9 @@ export default function UsersListPage() {
                                                 <span className="text-xs block">Phone</span>
                                                 <span className="font-medium text-gray-900">{user.phone}</span>
                                             </div>
-                                            <div className="text-right">
-                                                <span className="text-xs block">Role ID</span>
-                                                <span className="font-medium text-gray-900">{user.role_id}</span>
-                                            </div>
                                         </div>
 
                                         <div className="flex justify-end gap-2 pt-2 border-t border-gray-50">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-8 text-slate-600 border-slate-200 hover:bg-slate-50"
-                                                onClick={() => navigate(`/users/${user.id}`)}
-                                            >
-                                                <Eye className="h-4 w-4 mr-2" /> Details
-                                            </Button>
                                             <Button
                                                 variant="ghost"
                                                 size="sm"
@@ -175,7 +162,6 @@ export default function UsersListPage() {
                                             <TableHead className="font-semibold text-gray-600">Name</TableHead>
                                             <TableHead className="font-semibold text-gray-600">Email</TableHead>
                                             <TableHead className="font-semibold text-gray-600">Phone</TableHead>
-                                            <TableHead className="font-semibold text-gray-600">Role ID</TableHead>
                                             <TableHead className="font-semibold text-gray-600">Status</TableHead>
                                             <TableHead className="font-semibold text-gray-600">Joined Date</TableHead>
                                             <TableHead className="text-right font-semibold text-gray-600 pr-6">Actions</TableHead>
@@ -195,7 +181,6 @@ export default function UsersListPage() {
                                                 </TableCell>
                                                 <TableCell className="text-slate-600">{user.email}</TableCell>
                                                 <TableCell className="text-slate-600">{user.phone}</TableCell>
-                                                <TableCell className="text-slate-600">{user.role_id}</TableCell>
                                                 <TableCell>
                                                     <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${user.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
                                                         {user.status}
@@ -206,15 +191,6 @@ export default function UsersListPage() {
                                                 </TableCell>
                                                 <TableCell className="text-right pr-6">
                                                     <div className="flex justify-end gap-1">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                            onClick={() => navigate(`/users/${user.id}`)}
-                                                            title="View User Details"
-                                                        >
-                                                            <Eye className="h-4 w-4" />
-                                                        </Button>
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
@@ -237,8 +213,8 @@ export default function UsersListPage() {
                                         ))}
                                         {usersData?.data.length === 0 && (
                                             <TableRow>
-                                                <TableCell colSpan={8} className="h-32 text-center text-gray-400">
-                                                    No users found.
+                                                <TableCell colSpan={7} className="h-32 text-center text-gray-400">
+                                                    No delivery boys found.
                                                 </TableCell>
                                             </TableRow>
                                         )}
@@ -260,13 +236,14 @@ export default function UsersListPage() {
             <Modal
                 isOpen={isFormOpen}
                 onClose={() => setIsFormOpen(false)}
-                title={editingUser ? "Edit User" : "Add User"}
+                title={editingUser ? "Edit Delivery Boy" : "Add Delivery Boy"}
             >
                 <UserForm
                     onSubmit={handleSubmit}
                     initialData={editingUser}
                     isLoading={createMutation.isPending || updateMutation.isPending}
                     onCancel={() => setIsFormOpen(false)}
+                    defaultRoleId={3} // Defaulting to Delivery Boy role
                 />
             </Modal>
 
