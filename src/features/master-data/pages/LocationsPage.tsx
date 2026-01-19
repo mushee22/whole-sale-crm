@@ -5,6 +5,7 @@ export default function LocationsPage() {
     return (
         <MasterDataList
             title="Location"
+            module="locations"
             queryKey="locations"
             fetchFn={getLocations}
             createFn={createLocation}

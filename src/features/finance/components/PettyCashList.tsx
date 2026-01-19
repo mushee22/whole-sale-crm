@@ -7,6 +7,7 @@ import { Pagination } from "../../../components/ui/pagination";
 import { Plus, User as UserIcon } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { CreatePettyCashModal } from "./CreatePettyCashModal";
+import { PermissionGuard } from "../../../hooks/usePermission";
 
 export default function PettyCashList() {
     const [page, setPage] = useState(1);
@@ -23,13 +24,15 @@ export default function PettyCashList() {
                         <CardTitle className="text-xl font-bold">Petty Cash Accounts</CardTitle>
                         <p className="text-sm text-gray-500">Manage petty cash accounts for users.</p>
                     </div>
-                    <CreatePettyCashModal
-                        trigger={
-                            <Button className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20">
-                                <Plus className="mr-2 h-4 w-4" /> Create Account
-                            </Button>
-                        }
-                    />
+                    <PermissionGuard module="finance" action="add">
+                        <CreatePettyCashModal
+                            trigger={
+                                <Button className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20">
+                                    <Plus className="mr-2 h-4 w-4" /> Create Account
+                                </Button>
+                            }
+                        />
+                    </PermissionGuard>
                 </CardHeader>
 
                 <CardContent className="p-0">
@@ -134,7 +137,7 @@ export default function PettyCashList() {
                         </>
                     )}
                 </CardContent>
-            </Card>
+            </Card >
         </div >
     );
 }

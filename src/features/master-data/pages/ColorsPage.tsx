@@ -5,6 +5,7 @@ export default function ColorsPage() {
     return (
         <MasterDataList
             title="Color"
+            module="colors"
             queryKey="colors"
             fetchFn={getColors}
             createFn={createColor}

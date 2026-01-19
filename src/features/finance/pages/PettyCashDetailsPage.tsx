@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui
 import { Button } from "../../../components/ui/button";
 import { ArrowLeft, User, Wallet, Calendar } from "lucide-react";
 import { TransferPettyCashModal } from "../components/TransferPettyCashModal";
+import { PermissionGuard } from "../../../hooks/usePermission";
 
 export const PettyCashDetailsPage = () => {
     const { id } = useParams<{ id: string }>();
@@ -40,10 +41,12 @@ export const PettyCashDetailsPage = () => {
                             <p className="text-slate-400 text-sm font-medium">Current Balance</p>
                             <p className="text-2xl font-bold mt-1">₹{parseFloat(account.current_balance).toFixed(2)}</p>
                             <div className="mt-4">
-                                <TransferPettyCashModal
-                                    fromAccountId={account.id}
-                                    currentBalance={account.current_balance}
-                                />
+                                <PermissionGuard module="finance" action="update">
+                                    <TransferPettyCashModal
+                                        fromAccountId={account.id}
+                                        currentBalance={account.current_balance}
+                                    />
+                                </PermissionGuard>
                             </div>
                         </CardContent>
                     </Card>

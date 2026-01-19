@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, LogOut, User, X, Database, Package, ShoppingCart, Plus } from "lucide-react";
+import { Menu, LogOut, User, X, Database, Package, ShoppingCart, Plus, Truck } from "lucide-react";
 import { CreateTransactionModal } from "../../features/finance/components/CreateTransactionModal";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
@@ -12,6 +12,7 @@ interface SidebarItem {
     to?: string;
     permission?: string; // Key for permission checking (e.g., 'users' -> checks 'users.view')
     items?: { label: string; to: string; permission?: string }[];
+    allowedRoles?: string[];
 }
 
 const sidebarItems: SidebarItem[] = [
@@ -24,6 +25,12 @@ const sidebarItems: SidebarItem[] = [
             { label: "Customers", to: "/customers", permission: "customers" },
             { label: "Roles", to: "/roles", permission: "roles" },
         ]
+    },
+    {
+        label: "My Orders",
+        icon: Truck,
+        to: "/my-orders",
+        allowedRoles: ['delivery boy', 'delivery_boy']
     },
     {
         label: "Inventory",
@@ -77,6 +84,15 @@ export default function DashboardLayout() {
         // Ensure user.role is not null before checking if it is an object
         const roleName = (user?.role && typeof user.role === 'object') ? (user.role as any).name : user?.role;
 
+        // Check for specific role restriction
+        if (item.allowedRoles) {
+            const normalizedRole = roleName?.toLowerCase();
+            if (!item.allowedRoles.includes(normalizedRole)) {
+                return null;
+            }
+            return item;
+        }
+
         // Check for Admin (case insensitive)
         const isAdmin = roleName?.toLowerCase() === 'admin';
 
@@ -92,19 +108,14 @@ export default function DashboardLayout() {
                 if (subItem.permission) {
                     return userPermissions.includes(`${subItem.permission}.view`);
                 }
-                // If no permission key (like Dashboard/Settings if un-keyed), allow by default? 
-                // Or maybe Dashboard is always allowed.
-                // In my module list, Dashboard has key 'dashboard'.
+                // If no permission key (like Dashboard/Settings if un-keyed), allow by default
                 return true;
             });
-
-            // If the parent item also has a permission (though currently only sub-items do in my list except maybe future),
-            // we could check that too. But currently structure is Group -> Items.
 
             return { ...item, items: filteredSubItems };
         }
 
-        // If it's a top level item with no sub-items (none in my list currently but good for robust code)
+        // If it's a top level item with no sub-items
         if (item.permission) {
             if (!userPermissions.includes(`${item.permission}.view`)) {
                 return null; // Filter out

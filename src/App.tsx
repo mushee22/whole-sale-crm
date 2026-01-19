@@ -45,6 +45,7 @@ import { PettyCashDetailsPage } from "./features/finance/pages/PettyCashDetailsP
 import { CustomerTransactionsPage } from "./features/finance/pages/CustomerTransactionsPage";
 import InvoicesListPage from "./features/accounts/pages/InvoicesListPage";
 import { InvoiceDetailsPage } from "./features/accounts/pages/InvoiceDetailsPage";
+import MyOrdersPage from "./features/orders/pages/MyOrdersPage";
 
 const queryClient = new QueryClient();
 
@@ -299,10 +300,16 @@ const router = createBrowserRouter([
         path: "sales/out-for-delivery",
         element: <OutForDeliveryOrdersPage />,
       },
+
       {
         path: "sales/out-for-delivery/:id/check",
         element: <DeliveryCheckPage />,
       },
+      {
+        path: "my-orders",
+        element: <MyOrdersPage />,
+      },
+
       {
         path: "sales/completed-orders",
         element: <CompletedOrdersPage />,

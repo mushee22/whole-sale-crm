@@ -194,3 +194,8 @@ export const updateOrderStatus = async (orderId: number, status: string) => {
 };
 
 
+
+export const getMyDeliveryOrders = async (params?: { status?: string }) => {
+    const response = await axios.get<OrdersResponse>("/deliveries/my-orders", { params });
+    return response.data;
+};

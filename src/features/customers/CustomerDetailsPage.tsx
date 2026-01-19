@@ -14,6 +14,7 @@ import { Pagination } from "../../components/ui/pagination";
 import CustomerOrdersList from "./components/CustomerOrdersList";
 import { CreateTransactionModal } from "../finance/components/CreateTransactionModal";
 import { EditTransactionModal } from "../finance/components/EditTransactionModal";
+import { PermissionGuard } from "../../hooks/usePermission";
 
 export default function CustomerDetailsPage() {
     const { id } = useParams();
@@ -145,15 +146,17 @@ export default function CustomerDetailsPage() {
                                 <History className="h-5 w-5 text-slate-500" />
                                 <CardTitle className="text-lg font-semibold text-slate-800">Transaction History</CardTitle>
                             </div>
-                            <CreateTransactionModal
-                                customerId={customerId}
-                                collectedBy={user?.id}
-                                trigger={
-                                    <Button size="sm" className="bg-slate-900 hover:bg-slate-800 text-white shadow-sm h-8">
-                                        <Plus className="mr-2 h-3.5 w-3.5" /> Add Transaction
-                                    </Button>
-                                }
-                            />
+                            <PermissionGuard module="finance" action="add">
+                                <CreateTransactionModal
+                                    customerId={customerId}
+                                    collectedBy={user?.id}
+                                    trigger={
+                                        <Button size="sm" className="bg-slate-900 hover:bg-slate-800 text-white shadow-sm h-8">
+                                            <Plus className="mr-2 h-3.5 w-3.5" /> Add Transaction
+                                        </Button>
+                                    }
+                                />
+                            </PermissionGuard>
                         </CardHeader>
                         <CardContent className="p-0">
                             <div className="overflow-x-auto">
@@ -193,14 +196,16 @@ export default function CustomerDetailsPage() {
                                                         {tx.type === 'credit' ? '+' : '-'}{tx.amount}
                                                     </TableCell>
                                                     <TableCell>
-                                                        <EditTransactionModal
-                                                            transaction={tx}
-                                                            trigger={
-                                                                <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-blue-600">
-                                                                    <Edit className="h-3 w-3" />
-                                                                </Button>
-                                                            }
-                                                        />
+                                                        <PermissionGuard module="finance" action="update">
+                                                            <EditTransactionModal
+                                                                transaction={tx}
+                                                                trigger={
+                                                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-blue-600">
+                                                                        <Edit className="h-3 w-3" />
+                                                                    </Button>
+                                                                }
+                                                            />
+                                                        </PermissionGuard>
                                                     </TableCell>
                                                 </TableRow>
                                             ))

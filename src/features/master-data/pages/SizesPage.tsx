@@ -5,6 +5,7 @@ export default function SizesPage() {
     return (
         <MasterDataList
             title="Size"
+            module="sizes"
             queryKey="sizes"
             fetchFn={getSizes}
             createFn={createSize}

@@ -1,4 +1,3 @@
-// Fixed import source
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
@@ -9,7 +8,7 @@ import { Card, CardHeader, CardContent, CardTitle } from "../../../components/ui
 import { MasterDataForm } from "./MasterDataForm";
 import { type MasterDataItem } from "../types";
 import { toast } from "sonner";
-
+import { PermissionGuard } from "../../../hooks/usePermission";
 
 export interface Column {
     header: string;
@@ -20,6 +19,7 @@ export interface Column {
 
 interface MasterDataListProps {
     title: string;
+    module?: string;
     queryKey: string;
     fetchFn: () => Promise<MasterDataItem[]>;
     createFn: (data: any) => Promise<MasterDataItem>;
@@ -29,7 +29,7 @@ interface MasterDataListProps {
     columns?: Column[];
 }
 
-export function MasterDataList({ title, queryKey, fetchFn, createFn, updateFn, deleteFn, FormComponent = MasterDataForm, columns }: MasterDataListProps) {
+export function MasterDataList({ title, module, queryKey, fetchFn, createFn, updateFn, deleteFn, FormComponent = MasterDataForm, columns }: MasterDataListProps) {
     const queryClient = useQueryClient();
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<MasterDataItem | null>(null);
@@ -94,9 +94,17 @@ export function MasterDataList({ title, queryKey, fetchFn, createFn, updateFn, d
             <Card className="border-gray-100 shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-gray-100">
                     <CardTitle className="text-lg font-bold">{title}</CardTitle>
-                    <Button size="sm" onClick={openCreate} className="bg-slate-900 text-white hover:bg-slate-800">
-                        <Plus className="mr-2 h-4 w-4" /> Add {title}
-                    </Button>
+                    {module ? (
+                        <PermissionGuard module={module} action="add">
+                            <Button size="sm" onClick={openCreate} className="bg-slate-900 text-white hover:bg-slate-800">
+                                <Plus className="mr-2 h-4 w-4" /> Add {title}
+                            </Button>
+                        </PermissionGuard>
+                    ) : (
+                        <Button size="sm" onClick={openCreate} className="bg-slate-900 text-white hover:bg-slate-800">
+                            <Plus className="mr-2 h-4 w-4" /> Add {title}
+                        </Button>
+                    )}
                 </CardHeader>
                 <CardContent className="p-0">
                     {isLoading ? (
@@ -136,22 +144,48 @@ export function MasterDataList({ title, queryKey, fetchFn, createFn, updateFn, d
                                             )}
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-1">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-blue-600 hover:bg-blue-50"
-                                                        onClick={() => openEdit(item)}
-                                                    >
-                                                        <Pencil className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-red-600 hover:bg-red-50"
-                                                        onClick={() => setDeleteId(item.id)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                                    {module ? (
+                                                        <PermissionGuard module={module} action="update">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-blue-600 hover:bg-blue-50"
+                                                                onClick={() => openEdit(item)}
+                                                            >
+                                                                <Pencil className="h-4 w-4" />
+                                                            </Button>
+                                                        </PermissionGuard>
+                                                    ) : (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-blue-600 hover:bg-blue-50"
+                                                            onClick={() => openEdit(item)}
+                                                        >
+                                                            <Pencil className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
+                                                    {module ? (
+                                                        <PermissionGuard module={module} action="delete">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-red-600 hover:bg-red-50"
+                                                                onClick={() => setDeleteId(item.id)}
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </PermissionGuard>
+                                                    ) : (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-red-600 hover:bg-red-50"
+                                                            onClick={() => setDeleteId(item.id)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    )}
                                                 </div>
                                             </TableCell>
                                         </TableRow>
