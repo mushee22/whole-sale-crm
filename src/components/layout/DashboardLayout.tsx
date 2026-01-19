@@ -61,7 +61,8 @@ const sidebarItems: SidebarItem[] = [
         icon: Database,
         items: [
             { label: "Petty Cash", to: "/petty-cash-accounts", permission: "petty_cash" },
-            { label: "Transactions", to: "/customer-transactions", permission: "customer_transactions" },
+            { label: "Petty Cash Transactions", to: "/petty-cash-transactions", permission: "petty_cash_transactions" },
+            { label: "Customer Transactions", to: "/customer-transactions", permission: "customer_transactions" },
             { label: "Accounts", to: "/accounts", permission: "accounts" },
         ]
     }

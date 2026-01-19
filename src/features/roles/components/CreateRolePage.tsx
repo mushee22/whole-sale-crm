@@ -38,6 +38,7 @@ const modules = [
 
     // Finance
     { key: "petty_cash", label: "Petty Cash" },
+    { key: "petty_cash_transactions", label: "Petty Cash Transactions" },
     { key: "customer_transactions", label: "Customer Transactions" },
     { key: "accounts", label: "Accounts" },
 

@@ -46,13 +46,17 @@ export interface CreatePettyCashAccountParams {
 
 export interface PettyCashTransaction {
     id: number;
-    account_id: number;
+    from_account_id: number | null;
+    to_account_id: number | null;
     amount: string;
-    type: 'credit' | 'debit';
-    description: string;
+    type: 'credit' | 'debit' | 'transfer';
+    reference: string;
+    description?: string; // Kept as optional if still used in other endpoints, though not in example JSON
     date: string;
     created_at: string;
     updated_at: string;
+    from_account: PettyCashAccount | null;
+    to_account: PettyCashAccount | null;
 }
 
 export interface PettyCashTransactionsResponse {
@@ -61,6 +65,12 @@ export interface PettyCashTransactionsResponse {
     last_page: number;
     per_page: number;
     total: number;
+    links: {
+        url: string | null;
+        label: string;
+        active: boolean;
+        page: number | null;
+    }[];
 }
 
 export const getPettyCashAccounts = async (page = 1) => {
@@ -81,6 +91,23 @@ export const getPettyCashTransactions = async (accountId: number, params?: {
     page?: number;
 }) => {
     const response = await api.get<PettyCashTransactionsResponse>(`/petty-cash-accounts/${accountId}/transactions`, { params });
+    return response.data;
+};
+
+export const getAllPettyCashTransactions = async (params?: {
+    account_id?: number;
+    type?: string;
+    date_from?: string;
+    date_to?: string;
+    per_page?: number;
+    page?: number;
+}) => {
+    const response = await api.get<PettyCashTransactionsResponse>("/petty-cash-transactions", { params });
+    return response.data;
+};
+
+export const getPettyCashTransaction = async (id: number) => {
+    const response = await api.get<PettyCashTransaction>(`/petty-cash-transactions/${id}`);
     return response.data;
 };
 

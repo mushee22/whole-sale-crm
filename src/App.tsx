@@ -25,7 +25,7 @@ import { ProductVariantsPage } from "./features/master-data/pages/ProductVariant
 import ColorsPage from "./features/master-data/pages/ColorsPage";
 import SizesPage from "./features/master-data/pages/SizesPage";
 import LocationsPage from "./features/master-data/pages/LocationsPage";
-import { AuthProvider, useAuth } from "./context/AuthContext";
+import { AuthProvider } from "./context/AuthContext";
 import { SalesOrderPage } from "./features/sales/pages/SalesOrderPage";
 import { PreOrderListPage } from "./features/sales/pages/PreOrderListPage";
 import { CreateOrderFromPreOrderPage } from "./features/sales/pages/CreateOrderFromPreOrderPage";
@@ -46,19 +46,11 @@ import { CustomerTransactionsPage } from "./features/finance/pages/CustomerTrans
 import InvoicesListPage from "./features/accounts/pages/InvoicesListPage";
 import { InvoiceDetailsPage } from "./features/accounts/pages/InvoiceDetailsPage";
 import MyOrdersPage from "./features/orders/pages/MyOrdersPage";
+import PettyCashTransactionsPage from "./features/finance/pages/PettyCashTransactionsPage";
 
 const queryClient = new QueryClient();
 
-const StaffRestricted = ({ children }: { children: React.ReactNode }) => {
-  const { user, isLoading } = useAuth();
 
-  if (isLoading) return <div>Loading...</div>; // Or return null/spinner
-
-  if (user?.role === 'staff') {
-    return <Navigate to="/customers" replace />;
-  }
-  return <>{children}</>;
-};
 
 const router = createBrowserRouter([
   {
@@ -86,9 +78,7 @@ const router = createBrowserRouter([
       {
         path: "",
         element: (
-          <StaffRestricted>
-            <DashboardPage />
-          </StaffRestricted>
+          <DashboardPage />
         ),
       },
       // {
@@ -142,129 +132,104 @@ const router = createBrowserRouter([
       {
         path: "staff",
         element: (
-          <StaffRestricted>
-            <UsersListPage />
-          </StaffRestricted>
+          <UsersListPage />
         ),
       },
       {
         path: "users",
         element: (
-          <StaffRestricted>
-            <UsersListPage />
-          </StaffRestricted>
+          <UsersListPage />
         ),
       },
       {
         path: "delivery-boys",
         element: (
-          <StaffRestricted>
-            <DeliveryBoysListPage />
-          </StaffRestricted>
+          <DeliveryBoysListPage />
         ),
       },
       {
         path: "staff/:id",
         element: (
-          <StaffRestricted>
-            <StaffDetailsPage />
-          </StaffRestricted>
+          <StaffDetailsPage />
         ),
       },
       {
         path: "users/:id",
         element: (
-          <StaffRestricted>
-            <StaffDetailsPage />
-          </StaffRestricted>
+          <StaffDetailsPage />
         ),
       },
       {
         path: "settings",
         element: (
-          <StaffRestricted>
-            <SettingsPage />
-          </StaffRestricted>
+          <SettingsPage />
         ),
       },
       {
         path: "roles",
         element: (
-          <StaffRestricted>
-            <RolesListPage />
-          </StaffRestricted>
+          <RolesListPage />
         ),
       },
       {
         path: "roles/create",
         element: (
-          <StaffRestricted>
-            <CreateRolePage />
-          </StaffRestricted>
+          <CreateRolePage />
         ),
       },
       {
         path: "roles/:id",
         element: (
-          <StaffRestricted>
-            <EditRolePage />
-          </StaffRestricted>
+          <EditRolePage />
         ),
       },
       {
         path: "products",
         element: (
-          <StaffRestricted>
-            <ProductsPage />
-          </StaffRestricted>
+          <ProductsPage />
         ),
       },
       {
         path: "products/:id/variants",
         element: (
-          <StaffRestricted>
-            <ProductVariantsPage />
-          </StaffRestricted>
+          <ProductVariantsPage />
         ),
       },
       {
         path: "petty-cash-accounts",
         element: (
-          <StaffRestricted>
-            <PettyCashPage />
-          </StaffRestricted>
+          <PettyCashPage />
         ),
       },
       {
         path: "petty-cash-accounts/:id",
         element: (
-          <StaffRestricted>
-            <PettyCashDetailsPage />
-          </StaffRestricted>
+          <PettyCashDetailsPage />
         ),
       },
+
       {
         path: "customer-transactions",
         element: (
-          <StaffRestricted>
-            <CustomerTransactionsPage />
-          </StaffRestricted>
+          <CustomerTransactionsPage />
+        ),
+      },
+      {
+        path: "petty-cash-transactions",
+        element: (
+          <PettyCashTransactionsPage />
         ),
       },
       {
         path: "accounts",
         element: (
-          <StaffRestricted>
-            <InvoicesListPage />
-          </StaffRestricted>
+          <InvoicesListPage />
         ),
       },
       {
         path: "accounts/:id",
         element: (
-          <StaffRestricted>
-            <InvoiceDetailsPage />
-          </StaffRestricted>
+          <InvoiceDetailsPage />
         ),
       },
       {
@@ -325,25 +290,19 @@ const router = createBrowserRouter([
           {
             path: "colors",
             element: (
-              <StaffRestricted>
-                <ColorsPage />
-              </StaffRestricted>
+              <ColorsPage />
             ),
           },
           {
             path: "sizes",
             element: (
-              <StaffRestricted>
-                <SizesPage />
-              </StaffRestricted>
+              <SizesPage />
             ),
           },
           {
             path: "locations",
             element: (
-              <StaffRestricted>
-                <LocationsPage />
-              </StaffRestricted>
+              <LocationsPage />
             ),
           },
         ]
