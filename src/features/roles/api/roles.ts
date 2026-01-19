@@ -31,3 +31,13 @@ export const createRole = async (data: CreateRoleParams) => {
     const response = await api.post("/roles", data);
     return response.data;
 };
+
+export const getRole = async (id: number) => {
+    const response = await api.get<Role>(`/roles/${id}`);
+    return response.data;
+};
+
+export const updateRole = async (id: number, data: CreateRoleParams) => {
+    const response = await api.put(`/roles/${id}`, data);
+    return response.data;
+};

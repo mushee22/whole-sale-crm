@@ -10,6 +10,11 @@ export interface OrderUser {
     outstanding_amount?: string;
     created_at?: string;
     email?: string;
+    // Added based on JSON
+    role_id?: number;
+    status?: string;
+    email_verified_at?: string | null;
+    whatsapp_no?: string | null; // Added to fix TS error
 }
 
 export interface OrderItemProduct {
@@ -18,7 +23,25 @@ export interface OrderItemProduct {
     description: string | null;
     image_url: string | null;
     price: string;
-    sku?: string;
+    // Added based on JSON
+    parent_id?: number | null;
+    color_id?: number | null;
+    size_id?: number | null;
+    stock?: number;
+    is_active?: boolean;
+    created_at?: string;
+    updated_at?: string;
+    deleted_at?: string | null;
+    sku?: string; // Added to fix TS error, though might be null in JSON
+}
+
+export interface DispatchCheck {
+    id: number;
+    order_item_id: number;
+    is_checked: boolean;
+    checked_at?: string | null;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface OrderItem {
@@ -27,25 +50,43 @@ export interface OrderItem {
     product_id: number;
     quantity: number;
     price: string;
-    unit_price: string;
+    // unit_price: string; // Not in JSON, strictly using price
     comment: string | null;
     attachment_url: string | null;
     created_at: string;
+    updated_at: string;
     product: OrderItemProduct;
+    dispatch_check?: DispatchCheck | null;
 }
 
 export interface Order {
     id: number;
     customer_id: number;
-    order_number: string;
+    unique_id?: string; // Added based on JSON
+    created_by: number; // Added based on JSON
+    // order_number: string; // Not in JSON sample, maybe check if needed or optional
     order_date: string;
     estimated_delivery_date: string | null;
     status: string;
     created_at: string;
     updated_at: string;
+    deleted_at: string | null;
     customer: OrderUser;
-    order_items: OrderItem[];
-    deliveries: any[]; // Placeholder for deliveries
+    items: OrderItem[]; // Renamed from order_items
+    deliveries: any[];
+    delivery_checks: any[]; // Added based on JSON
+    invoice: {
+        id: number;
+        pdf_path: string | null;
+        total_amount: string;
+        invoice_date: string;
+    } | null;
+    creator: OrderUser; // Added based on JSON (using OrderUser as structure seems similar)
+    rewards: any[];
+    referral_phone?: string; // Added to fix TS error
+    order_number?: string; // Re-adding as optional/string to fix TS error in components that display it
+
+    // Kept optional for compatibility if used elsewhere or calculated
     total_amount?: number;
     points_ledger?: {
         id: number;
@@ -85,8 +126,8 @@ export const getOrders = async (params?: {
 };
 
 export const getOrder = async (id: number) => {
-    const response = await axios.get<OrderDetailsResponse>(`/orders/${id}`);
-    return response.data.order;
+    const response = await axios.get<Order>(`/orders/${id}`);
+    return response.data;
 };
 
 export const deleteOrder = async (id: number) => {
@@ -136,3 +177,20 @@ export const assignDelivery = async (orderId: number, data: { delivery_boy_id: n
     const response = await axios.post(`/orders/${orderId}/assign-delivery`, data);
     return response.data;
 };
+
+export const dispatchCheck = async (orderId: number, data: { order_item_id: number; is_checked: boolean }) => {
+    const response = await axios.post(`/orders/${orderId}/dispatch-check`, data);
+    return response.data;
+};
+
+export const deliveryCheck = async (orderId: number, data: { order_item_id: number; is_delivered: boolean }) => {
+    const response = await axios.post(`/deliveries/${orderId}/check`, data);
+    return response.data;
+};
+
+export const updateOrderStatus = async (orderId: number, status: string) => {
+    const response = await axios.put(`/orders/${orderId}`, { status });
+    return response.data;
+};
+
+

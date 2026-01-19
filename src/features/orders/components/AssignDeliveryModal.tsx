@@ -36,9 +36,10 @@ interface AssignDeliveryModalProps {
     trigger?: React.ReactNode;
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
+    onSuccess?: () => void;
 }
 
-export function AssignDeliveryModal({ orderId, trigger, open, onOpenChange }: AssignDeliveryModalProps) {
+export function AssignDeliveryModal({ orderId, trigger, open, onOpenChange, onSuccess }: AssignDeliveryModalProps) {
     const [internalOpen, setInternalOpen] = useState(false);
     const isControlled = open !== undefined;
     const isOpen = isControlled ? open : internalOpen;
@@ -51,8 +52,8 @@ export function AssignDeliveryModal({ orderId, trigger, open, onOpenChange }: As
     });
 
     const { data: usersData, isLoading: isLoadingUsers } = useQuery({
-        queryKey: ["users-list"],
-        queryFn: () => getUsers({ per_page: 100 }),
+        queryKey: ["users-list", "delivery-boys"], // Added specific key to avoid caching issues with generic list
+        queryFn: () => getUsers({ per_page: 100, role_id: 3 }),
     });
 
     const assignMutation = useMutation({
@@ -62,6 +63,7 @@ export function AssignDeliveryModal({ orderId, trigger, open, onOpenChange }: As
             toast.success("Delivery assigned successfully");
             setIsOpen && setIsOpen(false);
             reset();
+            onSuccess && onSuccess();
         },
         onError: (error: any) => {
             toast.error(error.response?.data?.message || "Failed to assign delivery");

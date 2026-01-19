@@ -1,35 +1,63 @@
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, LogOut, User, X, Database, Package, ShoppingCart, Shield, Truck } from "lucide-react";
+import { Menu, LogOut, User, X, Database, Package, ShoppingCart, Plus } from "lucide-react";
+import { CreateTransactionModal } from "../../features/finance/components/CreateTransactionModal";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
 import { useAuth } from "../../context/AuthContext";
 import { useState, useEffect } from "react";
 
-const sidebarItems = [
-    { label: "Users", icon: User, to: "/users" },
-    { label: "Delivery Boys", icon: Truck, to: "/delivery-boys" },
-    { label: "Roles", icon: Shield, to: "/roles" },
-    { label: "Products", icon: Package, to: "/products" },
-    { label: "Petty Cash", icon: Database, to: "/petty-cash-accounts" },
-    { label: "Customer Transactions", icon: Database, to: "/customer-transactions" },
+interface SidebarItem {
+    label: string;
+    icon?: any;
+    to?: string;
+    permission?: string; // Key for permission checking (e.g., 'users' -> checks 'users.view')
+    items?: { label: string; to: string; permission?: string }[];
+}
+
+const sidebarItems: SidebarItem[] = [
     {
-        label: "Master Data",
-        icon: Database,
+        label: "Management",
+        icon: User,
         items: [
-            { label: "Colors", to: "/master-data/colors" },
-            { label: "Sizes", to: "/master-data/sizes" },
-            { label: "Locations", to: "/master-data/locations" },
+            { label: "Users", to: "/users", permission: "users" },
+            { label: "Delivery Boys", to: "/delivery-boys", permission: "delivery_boys" },
+            { label: "Customers", to: "/customers", permission: "customers" },
+            { label: "Roles", to: "/roles", permission: "roles" },
+        ]
+    },
+    {
+        label: "Inventory",
+        icon: Package,
+        items: [
+            { label: "Products", to: "/products", permission: "products" },
+            { label: "Colors", to: "/master-data/colors", permission: "colors" },
+            { label: "Sizes", to: "/master-data/sizes", permission: "sizes" },
+            { label: "Locations", to: "/master-data/locations", permission: "locations" },
         ]
     },
     {
         label: "Sales",
-        icon: Package,
+        icon: ShoppingCart,
         items: [
-            { label: "New Order", to: "/sales/new" },
-            { label: "Pre-Orders", to: "/sales/pre-orders" }
+            { label: "New Order", to: "/sales/new", permission: "sales_new" },
+            { label: "Pre-Orders", to: "/sales/pre-orders", permission: "sales_pre_orders" },
+            { label: "Confirmed Orders", to: "/sales/confirmed-orders", permission: "sales_confirmed" },
+            { label: "Dispatched Orders", to: "/sales/dispatched-orders", permission: "sales_dispatched" },
+            { label: "Out For Delivery", to: "/sales/out-for-delivery", permission: "sales_out_for_delivery" },
+            { label: "Completed Orders", to: "/sales/completed-orders", permission: "sales_completed" },
+            { label: "Cancelled Orders", to: "/sales/cancelled-orders", permission: "sales_cancelled" },
+            { label: "Orders", to: "/orders", permission: "orders" },
         ]
     },
-    { label: "Orders", icon: ShoppingCart, to: "/orders" }
+    {
+        label: "Finance",
+        icon: Database,
+        items: [
+            { label: "Petty Cash", to: "/petty-cash-accounts", permission: "petty_cash" },
+            { label: "Transactions", to: "/customer-transactions", permission: "customer_transactions" },
+            { label: "Accounts", to: "/accounts", permission: "accounts" },
+        ]
+    }
 ];
 
 export default function DashboardLayout() {
@@ -43,11 +71,52 @@ export default function DashboardLayout() {
         setIsMobileMenuOpen(false);
     }, [location.pathname]);
 
-    // Filter items based on role
-    const filteredItems = sidebarItems.filter(item => {
-        if (user?.role === 'staff') {
-            return !['Dashboard', 'Products', 'Staff', 'Settings'].includes(item.label);
+    // Filter items based on role/permissions
+    const filteredItems = sidebarItems.map(item => {
+        // Validation: Check checking role name (string or object)
+        // Ensure user.role is not null before checking if it is an object
+        const roleName = (user?.role && typeof user.role === 'object') ? (user.role as any).name : user?.role;
+
+        // Check for Admin (case insensitive)
+        const isAdmin = roleName?.toLowerCase() === 'admin';
+
+        if (isAdmin) return item;
+
+        // If not admin, check permissions
+        const userPermissions = (typeof user?.role === 'object' ? (user.role as any).permissions : []) || [];
+
+        // Filter sub-items
+        if (item.items) {
+            const filteredSubItems = item.items.filter(subItem => {
+                // If it has a specific permission key, check for .view
+                if (subItem.permission) {
+                    return userPermissions.includes(`${subItem.permission}.view`);
+                }
+                // If no permission key (like Dashboard/Settings if un-keyed), allow by default? 
+                // Or maybe Dashboard is always allowed.
+                // In my module list, Dashboard has key 'dashboard'.
+                return true;
+            });
+
+            // If the parent item also has a permission (though currently only sub-items do in my list except maybe future),
+            // we could check that too. But currently structure is Group -> Items.
+
+            return { ...item, items: filteredSubItems };
         }
+
+        // If it's a top level item with no sub-items (none in my list currently but good for robust code)
+        if (item.permission) {
+            if (!userPermissions.includes(`${item.permission}.view`)) {
+                return null; // Filter out
+            }
+        }
+
+        return item;
+    }).filter((item): item is SidebarItem => {
+        // Remove nulls
+        if (!item) return false;
+        // Remove items that are empty after filtering sub-items
+        if (item.items && item.items.length === 0) return false;
         return true;
     });
 
@@ -57,22 +126,28 @@ export default function DashboardLayout() {
     };
 
     const SidebarContent = () => (
-        <div className="flex flex-col h-full">
-            <div className="h-20 flex items-center px-8 border-b border-white/10 shrink-0">
-                <div className="flex items-center gap-3">
-                    <img src="/logo.png" alt="Logo" className="h-8 w-8 object-contain" />
-                    <span className="text-xl font-bold text-white tracking-tight">F-Trade CRM</span>
+        <div className="flex flex-col h-full bg-[#0B1120] text-slate-300">
+            {/* Logo Section */}
+            <div className="h-24 flex items-center px-6 shrink-0">
+                <div className="flex items-center gap-3 w-full p-4 rounded-xl bg-gradient-to-r from-blue-600/10 to-indigo-600/10 border border-blue-500/10 backdrop-blur-sm">
+                    <div className="relative">
+                        <div className="absolute inset-0 bg-blue-500/20 blur-lg rounded-full" />
+                        <img src="/logo.png" alt="Logo" className="relative h-8 w-8 object-contain" />
+                    </div>
+                    <div className="flex flex-col">
+                        <span className="text-lg font-bold text-white tracking-tight leading-none">F-Trade</span>
+                        <span className="text-[10px] font-medium text-blue-400 uppercase tracking-widest mt-1">Enterprise</span>
+                    </div>
                 </div>
             </div>
 
-            <div className="flex-1 py-8 px-4 space-y-8 overflow-y-auto">
-                <div className="space-y-6">
+            <div className="flex-1 px-4 py-6 space-y-8 overflow-y-auto scrollbar-none">
+                <div className="space-y-2">
                     {filteredItems.map((item, index) => (
-                        <div key={index}>
+                        <div key={index} className="space-y-2">
                             {item.items ? (
-                                <>
-                                    <h3 className="mb-2 px-4 text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-2">
-                                        {item.icon && <item.icon className="h-4 w-4" />}
+                                <div className="space-y-2 pt-4 first:pt-0">
+                                    <h3 className="px-4 text-[11px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
                                         {item.label}
                                     </h3>
                                     <nav className="space-y-1">
@@ -82,27 +157,35 @@ export default function DashboardLayout() {
                                                 to={subItem.to}
                                                 className={({ isActive }) =>
                                                     cn(
-                                                        "group flex items-center gap-3 px-4 py-2 mx-2 rounded-lg text-sm font-medium transition-all duration-200",
+                                                        "group flex items-center gap-3 px-4 py-2.5 mx-2 rounded-lg text-sm font-medium transition-all duration-300 relative overflow-hidden",
                                                         isActive
-                                                            ? "bg-blue-600/10 text-blue-400"
-                                                            : "text-slate-400 hover:bg-white/5 hover:text-white"
+                                                            ? "text-white bg-blue-600"
+                                                            : "text-slate-400 hover:text-white hover:bg-white/5"
                                                     )
                                                 }
                                             >
-                                                <span className="truncate">{subItem.label}</span>
+                                                {({ isActive }) => (
+                                                    <>
+                                                        <span className={cn(
+                                                            "absolute left-0 top-1/2 -translate-y-1/2 w-1 h-0 bg-white/50 rounded-r-full transition-all duration-300",
+                                                            isActive && "h-1/2"
+                                                        )} />
+                                                        <span className="relative z-10 truncate">{subItem.label}</span>
+                                                    </>
+                                                )}
                                             </NavLink>
                                         ))}
                                     </nav>
-                                </>
+                                </div>
                             ) : (
                                 <NavLink
                                     to={item.to!}
                                     className={({ isActive }) =>
                                         cn(
-                                            "group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-200",
+                                            "group flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 relative overflow-hidden",
                                             isActive
-                                                ? "bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-500/30"
-                                                : "text-slate-300 hover:bg-white/5 hover:text-white"
+                                                ? "text-white shadow-[0_0_20px_rgba(37,99,235,0.3)] bg-gradient-to-r from-blue-600 to-indigo-600"
+                                                : "text-slate-400 hover:text-white hover:bg-white/5"
                                         )
                                     }
                                 >
@@ -111,12 +194,15 @@ export default function DashboardLayout() {
                                             {item.icon && (
                                                 <item.icon
                                                     className={cn(
-                                                        "h-5 w-5 transition-transform duration-200",
-                                                        isActive ? "scale-110" : "group-hover:scale-105"
+                                                        "h-5 w-5 transition-all duration-300",
+                                                        isActive ? "text-white scale-110" : "text-slate-500 group-hover:text-white group-hover:scale-110"
                                                     )}
                                                 />
                                             )}
-                                            <span>{item.label}</span>
+                                            <span className="font-medium tracking-wide">{item.label}</span>
+                                            {isActive && (
+                                                <div className="absolute right-2 h-1.5 w-1.5 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.5)] animate-pulse" />
+                                            )}
                                         </>
                                     )}
                                 </NavLink>
@@ -127,26 +213,33 @@ export default function DashboardLayout() {
             </div>
 
             {/* User Info at Bottom */}
-            <div className="p-4 border-t border-white/10 shrink-0">
-                <div className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 hover:bg-white/10 transition-colors">
-                    <div className="flex-shrink-0">
-                        <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                            <User className="h-5 w-5 text-white" />
+            <div className="p-4 shrink-0">
+                <div className="group relative overflow-hidden rounded-2xl bg-[#0F1629] p-4 transition-all duration-300 hover:bg-[#1E293B] border border-slate-800/50 hover:border-slate-700">
+                    <div className="flex items-center gap-3 relative z-10">
+                        <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 p-[2px]">
+                            <div className="h-full w-full rounded-full bg-[#0B1120] flex items-center justify-center">
+                                <User className="h-5 w-5 text-blue-400" />
+                            </div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-white truncate">{user?.name || "User"}</p>
+                            <p className="text-xs text-slate-400 truncate font-medium">
+                                {typeof user?.role === 'object' ? (user.role as any).name : user?.role || "Staff"}
+                            </p>
                         </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-white truncate">{user?.name || "User"}</p>
-                        <p className="text-xs text-slate-400 truncate">{user?.email || ""}</p>
-                    </div>
+                </div>
+                <div className="mt-2 text-center">
+                    <p className="text-[10px] text-slate-600 font-medium">v1.2.0 • F-Trade Inc.</p>
                 </div>
             </div>
         </div>
     );
 
     return (
-        <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-50 overflow-hidden">
+        <div className="flex h-screen bg-[#F1F5F9] dark:bg-[#020617] overflow-hidden">
             {/* Desktop Sidebar */}
-            <aside className="hidden lg:flex lg:flex-col lg:w-72 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800 border-r border-white/10 shadow-2xl">
+            <aside className="hidden lg:flex lg:flex-col lg:w-[280px] bg-[#0B1120] border-r border-[#1E293B] shadow-2xl relative z-50">
                 <SidebarContent />
             </aside>
 
@@ -154,16 +247,16 @@ export default function DashboardLayout() {
             {isMobileMenuOpen && (
                 <>
                     <div
-                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden"
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 lg:hidden transition-opacity duration-300"
                         onClick={() => setIsMobileMenuOpen(false)}
                     />
-                    <aside className="fixed inset-y-0 left-0 w-72 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-800 z-50 lg:hidden shadow-2xl">
-                        <div className="absolute top-4 right-4">
+                    <aside className="fixed inset-y-0 left-0 w-[280px] bg-[#0B1120] z-50 lg:hidden shadow-2xl border-r border-[#1E293B]">
+                        <div className="absolute top-4 right-4 z-50">
                             <Button
                                 variant="ghost"
                                 size="icon"
                                 onClick={() => setIsMobileMenuOpen(false)}
-                                className="text-white hover:bg-white/10"
+                                className="text-slate-400 hover:text-white hover:bg-white/10"
                             >
                                 <X className="h-5 w-5" />
                             </Button>
@@ -174,21 +267,21 @@ export default function DashboardLayout() {
             )}
 
             {/* Main Content */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden bg-[#F8FAFC]">
                 {/* Header */}
-                <header className="h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm shrink-0 z-10">
+                <header className="h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm shrink-0 z-10 sticky top-0">
                     <div className="h-full px-4 lg:px-8 flex items-center justify-between">
                         <div className="flex items-center gap-4">
                             <Button
                                 variant="ghost"
                                 size="icon"
-                                className="lg:hidden"
+                                className="lg:hidden -ml-2 text-slate-600 hover:text-slate-900"
                                 onClick={() => setIsMobileMenuOpen(true)}
                             >
-                                <Menu className="h-5 w-5" />
+                                <Menu className="h-6 w-6" />
                             </Button>
-                            <h1 className="text-lg font-semibold text-slate-900">
-                                {filteredItems.flatMap(item => item.items ? item.items : [item]).find(item =>
+                            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+                                {filteredItems.flatMap(item => item.items || []).find(item =>
                                     item.to === "/"
                                         ? location.pathname === "/"
                                         : location.pathname.startsWith(item.to || '')
@@ -196,12 +289,21 @@ export default function DashboardLayout() {
                             </h1>
                         </div>
 
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
+                            <CreateTransactionModal
+                                collectedBy={user?.id}
+                                trigger={
+                                    <Button variant="outline" size="sm" className="gap-2 bg-slate-900 border-slate-900 text-white hover:bg-slate-800 hover:text-white shadow-sm">
+                                        <Plus className="h-4 w-4" />
+                                        <span className="hidden sm:inline">Add Transaction</span>
+                                    </Button>
+                                }
+                            />
                             <Button
                                 variant="ghost"
                                 size="sm"
                                 onClick={handleLogout}
-                                className="gap-2 text-slate-600 hover:text-slate-900"
+                                className="gap-2 text-slate-600 hover:text-red-500 hover:bg-red-50 transition-colors font-medium"
                             >
                                 <LogOut className="h-4 w-4" />
                                 <span className="hidden sm:inline">Logout</span>
@@ -212,7 +314,7 @@ export default function DashboardLayout() {
 
                 {/* Page Content */}
                 <main className="flex-1 overflow-auto">
-                    <div className="p-4 lg:p-8">
+                    <div className="p-4 lg:p-8 max-w-7xl mx-auto w-full">
                         <Outlet />
                     </div>
                 </main>

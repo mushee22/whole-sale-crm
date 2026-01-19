@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Check, Plus, Trash2 } from "lucide-react";
 import { cn } from "../../../lib/utils";
@@ -8,8 +8,8 @@ import { Label } from "../../../components/ui/label";
 import { Input } from "../../../components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
-import { getCustomers } from "../../customers/api/customers";
-import { getProducts } from "../../master-data/api/products";
+import { getCustomers, getCustomer, type Customer } from "../../customers/api/customers";
+import { getProducts, type Product } from "../../products/api/products";
 import { createPreOrder } from "../api/sales";
 import { CreateCustomerModal } from "../components/CreateCustomerModal";
 import { toast } from "sonner";
@@ -23,6 +23,7 @@ export function SalesOrderPage() {
     const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
     const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+    const [createdPreOrderId, setCreatedPreOrderId] = useState<number | null>(null);
 
     // Order Item State
     const [selectedProductId, setSelectedProductId] = useState<string>("");
@@ -43,21 +44,25 @@ export function SalesOrderPage() {
         queryFn: () => getCustomers({ per_page: 100 })
     });
 
-    const { data: products } = useQuery({
+    const { data: productsData } = useQuery({
         queryKey: ["products"],
-        queryFn: getProducts
+        queryFn: () => getProducts({ per_page: 100 })
     });
 
     const createPreOrderMutation = useMutation({
         mutationFn: createPreOrder,
-        onSuccess: () => {
+        onSuccess: (data) => {
             toast.success("Pre-order created successfully");
+            if (data && data.id) {
+                setCreatedPreOrderId(data.id);
+            }
             setIsConfirmationOpen(true);
         },
         onError: () => toast.error("Failed to create pre-order"),
     });
 
-    const customers = customersData?.data || [];
+    const customers: Customer[] = customersData?.data || [];
+    const products: Product[] = productsData?.data || [];
 
     // Filter customers based on search term
     const filteredCustomers = customers.filter(c =>
@@ -65,7 +70,61 @@ export function SalesOrderPage() {
         c.phone.includes(searchTerm)
     );
 
+    // Fetch Full Customer Details (including product_prices)
+    const { data: customerDetails } = useQuery({
+        queryKey: ['customer', selectedCustomerId],
+        queryFn: () => getCustomer(parseInt(selectedCustomerId)),
+        enabled: !!selectedCustomerId && !isNaN(parseInt(selectedCustomerId))
+    });
+
     const selectedCustomer = customers.find((c) => c.id.toString() === selectedCustomerId);
+
+    // Auto-update prices of existing items when customer details (special prices) load
+    useEffect(() => {
+        if (customerDetails && customerDetails.product_prices && orderItems.length > 0) {
+            setOrderItems(prevItems => prevItems.map(item => {
+                const specialPrice = customerDetails.product_prices?.find(pp => pp.product_id === parseInt(item.productId));
+                if (specialPrice) {
+                    const newPrice = Number(specialPrice.price);
+                    return {
+                        ...item,
+                        price: newPrice,
+                        total: newPrice * item.quantity
+                    };
+                }
+                return item;
+            }));
+        }
+    }, [customerDetails]);
+
+    // Auto-fill price input when Product is selected OR Customer changes
+    useEffect(() => {
+        if (!selectedProductId) return;
+
+        const product = products?.find(p => p.id.toString() === selectedProductId);
+        if (!product) return;
+
+        let effectivePrice = Number(product.price);
+
+        // 1. Check for special customer price
+        if (customerDetails && customerDetails.product_prices) {
+            const specialPrice = customerDetails.product_prices.find(pp => pp.product_id === parseInt(selectedProductId));
+            if (specialPrice) {
+                effectivePrice = Number(specialPrice.price);
+            } else if (product.discount_price) {
+                // 2. Fallback to discount price
+                effectivePrice = Number(product.discount_price);
+            }
+        } else {
+            // Customer not loaded or no special price, usage discount if exists
+            if (product.discount_price) {
+                effectivePrice = Number(product.discount_price);
+            }
+        }
+
+        setPrice(effectivePrice.toString());
+
+    }, [selectedProductId, customerDetails, products]);
 
     const handleCustomerCreated = (newCustomer: any) => {
         if (newCustomer?.id) {
@@ -132,10 +191,11 @@ export function SalesOrderPage() {
     };
 
     const handleCreateOrder = () => {
-        // Logic to convert pre-order to order
-        // For now, closing dialog
-        toast.info("Create Order feature coming soon");
-        handleConfirmationClose();
+        if (createdPreOrderId) {
+            navigate(`/sales/pre-orders/${createdPreOrderId}/create`);
+        } else {
+            handleConfirmationClose();
+        }
     };
 
     const grandTotal = orderItems.reduce((sum, item) => sum + item.total, 0);
@@ -215,119 +275,117 @@ export function SalesOrderPage() {
                                         <span className="text-gray-500 block text-xs uppercase tracking-wide">Phone</span>
                                         <span className="font-medium">{selectedCustomer.phone}</span>
                                     </div>
-                                    <div>
-                                        <span className="text-gray-500 block text-xs uppercase tracking-wide">Points</span>
-                                        <span className="font-medium">{selectedCustomer.total_earned_points - selectedCustomer.total_used_points}</span>
-                                    </div>
                                 </div>
                             </div>
                         )}
                     </CardContent>
                 </Card>
 
-                {/* Products Section */}
-                <Card className="w-full">
-                    <CardHeader>
-                        <CardTitle>Order Items</CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        {/* Add Item Form */}
-                        <div className="p-4 bg-slate-50/50 rounded-lg border border-slate-100 space-y-4">
-                            <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                                <div className="md:col-span-6 space-y-2">
-                                    <Label>Product</Label>
-                                    <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-                                        <SelectTrigger className="bg-white">
-                                            <SelectValue placeholder="Select Product" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {products?.map((p) => (
-                                                <SelectItem key={p.id} value={p.id.toString()}>
-                                                    {p.name} {p.color?.name ? `(${p.color.name})` : ''} {p.size?.name ? `[${p.size.name}]` : ''}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
+                {/* Products Section - Only show when customer is selected */}
+                {selectedCustomerId && (
+                    <Card className="w-full">
+                        <CardHeader>
+                            <CardTitle>Order Items</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-6">
+                            {/* Add Item Form */}
+                            <div className="p-4 bg-slate-50/50 rounded-lg border border-slate-100 space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
+                                    <div className="md:col-span-6 space-y-2">
+                                        <Label>Product</Label>
+                                        <Select value={selectedProductId} onValueChange={setSelectedProductId}>
+                                            <SelectTrigger className="bg-white">
+                                                <SelectValue placeholder="Select Product" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {products?.map((p) => (
+                                                    <SelectItem key={p.id} value={p.id.toString()}>
+                                                        {p.name} {p.color?.name ? `(${p.color.name})` : ''} {p.size?.name ? `[${p.size.name}]` : ''}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
 
-                                <div className="md:col-span-5 space-y-2">
-                                    <Label>Price</Label>
-                                    <Input
-                                        type="number"
-                                        value={price}
-                                        onChange={(e) => setPrice(e.target.value)}
-                                        placeholder="0.00"
-                                        className="bg-white"
-                                    />
-                                </div>
+                                    <div className="md:col-span-5 space-y-2">
+                                        <Label>Price</Label>
+                                        <Input
+                                            type="number"
+                                            value={price}
+                                            onChange={(e) => setPrice(e.target.value)}
+                                            placeholder="0.00"
+                                            className="bg-white"
+                                        />
+                                    </div>
 
-                                <div className="md:col-span-1">
-                                    <Button onClick={handleAddItem} className="w-full" variant="outline">
-                                        <Plus className="h-4 w-4" />
-                                    </Button>
+                                    <div className="md:col-span-1">
+                                        <Button onClick={handleAddItem} className="w-full" variant="outline">
+                                            <Plus className="h-4 w-4" />
+                                        </Button>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
 
-                        {/* Items Table */}
-                        <div className="rounded-md border">
-                            <Table>
-                                <TableHeader>
-                                    <TableRow>
-                                        <TableHead className="w-[60%]">Product</TableHead>
-                                        <TableHead>Price</TableHead>
-                                        <TableHead className="text-right">Total</TableHead>
-                                        <TableHead className="w-[50px]"></TableHead>
-                                    </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                    {orderItems.length === 0 ? (
+                            {/* Items Table */}
+                            <div className="rounded-md border">
+                                <Table>
+                                    <TableHeader>
                                         <TableRow>
-                                            <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
-                                                No items added yet
-                                            </TableCell>
+                                            <TableHead className="w-[60%]">Product</TableHead>
+                                            <TableHead>Price</TableHead>
+                                            <TableHead className="text-right">Total</TableHead>
+                                            <TableHead className="w-[50px]"></TableHead>
                                         </TableRow>
-                                    ) : (
-                                        orderItems.map((item, index) => (
-                                            <TableRow key={index}>
-                                                <TableCell className="font-medium">{item.productName}</TableCell>
-                                                <TableCell>{item.price.toFixed(2)}</TableCell>
-                                                <TableCell className="text-right">{item.total.toFixed(2)}</TableCell>
-                                                <TableCell>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-                                                        onClick={() => handleRemoveItem(index)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {orderItems.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={4} className="text-center text-muted-foreground py-8">
+                                                    No items added yet
                                                 </TableCell>
                                             </TableRow>
-                                        ))
-                                    )}
-                                </TableBody>
-                            </Table>
-                        </div>
-
-                        {/* Totals & Submit */}
-                        <div className="flex flex-col items-end gap-4 pt-4 border-t">
-                            <div className="flex items-center gap-8 text-lg font-semibold">
-                                <span>Grand Total:</span>
-                                <span>{grandTotal.toFixed(2)}</span>
+                                        ) : (
+                                            orderItems.map((item, index) => (
+                                                <TableRow key={index}>
+                                                    <TableCell className="font-medium">{item.productName}</TableCell>
+                                                    <TableCell>{item.price.toFixed(2)}</TableCell>
+                                                    <TableCell className="text-right">{item.total.toFixed(2)}</TableCell>
+                                                    <TableCell>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                                                            onClick={() => handleRemoveItem(index)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))
+                                        )}
+                                    </TableBody>
+                                </Table>
                             </div>
 
-                            <Button
-                                size="lg"
-                                className="w-full md:w-auto min-w-[200px] bg-green-600 hover:bg-green-700"
-                                onClick={handleSubmit}
-                                disabled={createPreOrderMutation.isPending || orderItems.length === 0}
-                            >
-                                {createPreOrderMutation.isPending ? "Saving..." : "Save Order"}
-                            </Button>
-                        </div>
-                    </CardContent>
-                </Card>
+                            {/* Totals & Submit */}
+                            <div className="flex flex-col items-end gap-4 pt-4 border-t">
+                                <div className="flex items-center gap-8 text-lg font-semibold">
+                                    <span>Grand Total:</span>
+                                    <span>{grandTotal.toFixed(2)}</span>
+                                </div>
+
+                                <Button
+                                    size="lg"
+                                    className="w-full md:w-auto min-w-[200px] bg-green-600 hover:bg-green-700"
+                                    onClick={handleSubmit}
+                                    disabled={createPreOrderMutation.isPending || orderItems.length === 0}
+                                >
+                                    {createPreOrderMutation.isPending ? "Saving..." : "Save Order"}
+                                </Button>
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
             </div>
 
             <CreateCustomerModal

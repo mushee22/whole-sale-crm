@@ -1,16 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { createRole } from "../api/roles";
+import { getRole, updateRole } from "../api/roles";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Checkbox } from "../../../components/ui/checkbox";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Shield } from "lucide-react";
 
 const modules = [
@@ -48,40 +48,61 @@ const modules = [
 
 const actions = ["view", "add", "update", "delete"];
 
-const createRoleSchema = z.object({
+const updateRoleSchema = z.object({
     name: z.string().min(1, "Role name is required"),
     permissions: z.array(z.string()).min(1, "Select at least one permission"),
 });
 
-type CreateRoleData = z.infer<typeof createRoleSchema>;
+type UpdateRoleData = z.infer<typeof updateRoleSchema>;
 
-export default function CreateRolePage() {
+export default function EditRolePage() {
+    const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [selectedPermissions, setSelectedPermissions] = useState<string[]>([]);
 
-    // Check 'All' state helper
+    const { data: roleData, isLoading } = useQuery({
+        queryKey: ["role", id],
+        queryFn: () => getRole(Number(id)),
+        enabled: !!id
+    });
+
     const isModuleAllSelected = (moduleKey: string) => {
         return actions.every(action => selectedPermissions.includes(`${moduleKey}.${action}`));
     };
 
-    const { register, handleSubmit, formState: { errors }, setValue } = useForm<CreateRoleData>({
-        resolver: zodResolver(createRoleSchema),
+    const { register, handleSubmit, formState: { errors }, setValue } = useForm<UpdateRoleData>({
+        resolver: zodResolver(updateRoleSchema),
         defaultValues: {
             name: "",
             permissions: [],
         },
     });
 
-    const createMutation = useMutation({
-        mutationFn: createRole,
+    useEffect(() => {
+        if (roleData) {
+            const role = roleData;
+            // Assuming role.permissions is an array of strings like "users.view"
+            // If the API returns objects, we need to map them. 
+            // Based on roles.ts API interface: permissions: string[]
+            const permissions = role.permissions || [];
+
+            setValue("name", role.name);
+            setValue("permissions", permissions);
+            setSelectedPermissions(permissions);
+        }
+    }, [roleData, setValue]);
+
+    const updateMutation = useMutation({
+        mutationFn: (data: UpdateRoleData) => updateRole(Number(id), data),
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: ["roles"] });
-            toast.success("Role created successfully");
+            queryClient.invalidateQueries({ queryKey: ["role", id] });
+            toast.success("Role updated successfully");
             navigate("/roles");
         },
         onError: (error: any) => {
-            toast.error(error.response?.data?.message || "Failed to create role");
+            toast.error(error.response?.data?.message || "Failed to update role");
         },
     });
 
@@ -101,21 +122,21 @@ export default function CreateRolePage() {
         const modulePermissions = actions.map(action => `${moduleKey}.${action}`);
 
         if (checked) {
-            // Add all missing permissions for this module
             modulePermissions.forEach(p => {
                 if (!newPermissions.includes(p)) newPermissions.push(p);
             });
         } else {
-            // Remove all permissions for this module
             newPermissions = newPermissions.filter(p => !modulePermissions.includes(p));
         }
         setSelectedPermissions(newPermissions);
         setValue("permissions", newPermissions, { shouldValidate: true });
     };
 
-    const onSubmit = (data: CreateRoleData) => {
-        createMutation.mutate(data);
+    const onSubmit = (data: UpdateRoleData) => {
+        updateMutation.mutate(data);
     };
+
+    if (isLoading) return <div className="p-8 text-center text-gray-500">Loading role details...</div>;
 
     return (
         <div className="max-w-5xl mx-auto space-y-6 pb-20">
@@ -124,8 +145,8 @@ export default function CreateRolePage() {
                     <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-900">Create New Role</h1>
-                    <p className="text-slate-500">Define role details and permissions.</p>
+                    <h1 className="text-2xl font-bold tracking-tight text-slate-900">Edit Role</h1>
+                    <p className="text-slate-500">Update role details and permissions.</p>
                 </div>
             </div>
 
@@ -203,8 +224,8 @@ export default function CreateRolePage() {
 
                 <div className="flex justify-end gap-4 max-w-5xl">
                     <Button type="button" variant="ghost" onClick={() => navigate("/roles")}>Cancel</Button>
-                    <Button type="submit" className="min-w-[150px]" disabled={createMutation.isPending}>
-                        {createMutation.isPending ? "Creating..." : "Save Role"}
+                    <Button type="submit" className="min-w-[150px]" disabled={updateMutation.isPending}>
+                        {updateMutation.isPending ? "Saving..." : "Save Changes"}
                     </Button>
                 </div>
             </form>

@@ -11,6 +11,7 @@ import { Pagination } from "../../components/ui/pagination";
 import { Plus, Pencil, Trash2, User as UserIcon, Eye } from "lucide-react";
 import { toast } from "sonner";
 import UserForm from "./components/UserForm";
+import { PermissionGuard } from "../../hooks/usePermission";
 
 export default function UsersListPage() {
     const navigate = useNavigate();
@@ -90,12 +91,14 @@ export default function UsersListPage() {
                         <CardTitle className="text-xl font-bold">User Management</CardTitle>
                         <p className="text-sm text-gray-500">Manage system users and access.</p>
                     </div>
-                    <Button
-                        onClick={openCreate}
-                        className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20"
-                    >
-                        <Plus className="mr-2 h-4 w-4" /> Add User
-                    </Button>
+                    <PermissionGuard module="users" action="add">
+                        <Button
+                            onClick={openCreate}
+                            className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20"
+                        >
+                            <Plus className="mr-2 h-4 w-4" /> Add User
+                        </Button>
+                    </PermissionGuard>
                 </CardHeader>
 
                 <CardContent className="p-0">
@@ -145,22 +148,26 @@ export default function UsersListPage() {
                                             >
                                                 <Eye className="h-4 w-4 mr-2" /> Details
                                             </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-8 text-blue-600 border-blue-200 hover:bg-blue-50"
-                                                onClick={() => openEdit(user)}
-                                            >
-                                                <Pencil className="h-4 w-4 mr-2" /> Edit
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-8 text-red-600 border-red-200 hover:bg-red-50"
-                                                onClick={() => setDeleteId(user.id)}
-                                            >
-                                                <Trash2 className="h-4 w-4 mr-2" /> Delete
-                                            </Button>
+                                            <PermissionGuard module="users" action="update">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 text-blue-600 border-blue-200 hover:bg-blue-50"
+                                                    onClick={() => openEdit(user)}
+                                                >
+                                                    <Pencil className="h-4 w-4 mr-2" /> Edit
+                                                </Button>
+                                            </PermissionGuard>
+                                            <PermissionGuard module="users" action="delete">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 text-red-600 border-red-200 hover:bg-red-50"
+                                                    onClick={() => setDeleteId(user.id)}
+                                                >
+                                                    <Trash2 className="h-4 w-4 mr-2" /> Delete
+                                                </Button>
+                                            </PermissionGuard>
                                         </div>
                                     </div>
                                 ))}
@@ -215,22 +222,26 @@ export default function UsersListPage() {
                                                         >
                                                             <Eye className="h-4 w-4" />
                                                         </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                            onClick={() => openEdit(user)}
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                            onClick={() => setDeleteId(user.id)}
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
+                                                        <PermissionGuard module="users" action="update">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                                onClick={() => openEdit(user)}
+                                                            >
+                                                                <Pencil className="h-4 w-4" />
+                                                            </Button>
+                                                        </PermissionGuard>
+                                                        <PermissionGuard module="users" action="delete">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                                onClick={() => setDeleteId(user.id)}
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </PermissionGuard>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>

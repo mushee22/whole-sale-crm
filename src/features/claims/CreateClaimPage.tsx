@@ -28,7 +28,7 @@ function CustomerSelect({ onSelect, selectedCustomer }: CustomerSelectProps) {
 
     const { data: customersData } = useQuery({
         queryKey: ['customers', 'autocomplete', search],
-        queryFn: () => getCustomers({ search, per_page: 5 }),
+        queryFn: () => getCustomers({ per_page: 5 }),
         enabled: open,
     });
 
@@ -82,7 +82,7 @@ function CustomerSelect({ onSelect, selectedCustomer }: CustomerSelectProps) {
                                         </div>
                                         <div className="text-xs font-semibold text-green-600">
                                             {/* Calculate Available Points */}
-                                            {(customer.total_earned_points + (customer.total_referral_points || 0) - customer.total_used_points)} pts
+                                            {((customer?.total_earned_points || 0) + (customer.total_referral_points || 0) - (customer.total_used_points || 0))} pts
                                         </div>
                                     </li>
                                 ))}
@@ -101,7 +101,7 @@ function CustomerSelect({ onSelect, selectedCustomer }: CustomerSelectProps) {
                     <div className="text-right">
                         <div className="text-sm text-slate-500 uppercase tracking-wider font-medium">Available Balance</div>
                         <div className="text-2xl font-bold text-green-600">
-                            {(selectedCustomer.total_earned_points + (selectedCustomer.total_referral_points || 0) - selectedCustomer.total_used_points)}
+                            {((selectedCustomer?.total_earned_points || 0) + (selectedCustomer.total_referral_points || 0) - (selectedCustomer.total_used_points || 0))}
                         </div>
                     </div>
                 </div>
@@ -233,7 +233,7 @@ export default function CreateClaimPage() {
 
     // Helper: Calculate customer balance
     const customerBalance = selectedCustomer
-        ? (selectedCustomer.total_earned_points + (selectedCustomer.total_referral_points || 0) - selectedCustomer.total_used_points)
+        ? ((selectedCustomer?.total_earned_points || 0) + (selectedCustomer.total_referral_points || 0) - (selectedCustomer.total_used_points || 0))
         : 0;
 
     // Helper: Calculate total cost of selected rewards

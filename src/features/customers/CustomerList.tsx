@@ -21,7 +21,7 @@ export default function CustomerList() {
 
     const { data, isLoading } = useQuery({
         queryKey: ['customers', page, search],
-        queryFn: () => getCustomers({ page, per_page: 15, search }),
+        queryFn: () => getCustomers({ page, per_page: 15 }),
     });
 
     const openEdit = (customer: any) => {
@@ -71,7 +71,7 @@ export default function CustomerList() {
                                 <div className="flex justify-between items-start">
                                     <div>
                                         <div className="font-semibold text-gray-900">{customer.name}</div>
-                                        <div className="text-xs text-gray-500">ID: {customer.unique_id}</div>
+                                        <div className="text-xs text-gray-500">ID: {customer.unique_id || `#${customer.id}`}</div>
                                         <div className="text-sm text-gray-600 mt-1">{customer.phone}</div>
                                         {customer.whatsapp_no && (
                                             <div className="text-xs text-green-600 flex items-center gap-1 mt-0.5">
@@ -94,15 +94,15 @@ export default function CustomerList() {
                                 <div className="grid grid-cols-3 gap-2">
                                     <div className="text-center p-2 bg-green-50 rounded-lg border border-green-100">
                                         <div className="text-xs text-green-700 font-medium uppercase">Earned</div>
-                                        <div className="font-bold text-green-800">{customer.total_earned_points}</div>
+                                        <div className="font-bold text-green-800">{customer.total_earned_points || 0}</div>
                                     </div>
                                     <div className="text-center p-2 bg-blue-50 rounded-lg border border-blue-100">
                                         <div className="text-xs text-blue-700 font-medium uppercase">Referral</div>
-                                        <div className="font-bold text-blue-800">{customer.total_referral_points}</div>
+                                        <div className="font-bold text-blue-800">{customer.total_referral_points || 0}</div>
                                     </div>
                                     <div className="text-center p-2 bg-amber-50 rounded-lg border border-amber-100">
                                         <div className="text-xs text-amber-700 font-medium uppercase">Used</div>
-                                        <div className="font-bold text-amber-800">{customer.total_used_points}</div>
+                                        <div className="font-bold text-amber-800">{customer.total_used_points || 0}</div>
                                     </div>
                                 </div>
 
@@ -141,7 +141,7 @@ export default function CustomerList() {
                                     <TableRow key={customer.id}>
                                         <TableCell>
                                             <div className="font-medium text-gray-900">{customer.name}</div>
-                                            <div className="text-xs text-gray-500">ID: {customer.unique_id}</div>
+                                            <div className="text-xs text-gray-500">ID: {customer.unique_id || `#${customer.id}`}</div>
                                         </TableCell>
                                         <TableCell>
                                             <div className="text-sm text-gray-900">{customer.phone}</div>
@@ -155,22 +155,22 @@ export default function CustomerList() {
                                         <TableCell className="text-center">
                                             <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-50 text-green-700 text-sm font-semibold">
                                                 <Award className="h-3.5 w-3.5" />
-                                                {customer.total_earned_points}
+                                                {customer.total_earned_points || 0}
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-center">
                                             <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-sm font-semibold">
                                                 <Award className="h-3.5 w-3.5" />
-                                                {customer.total_referral_points}
+                                                {customer.total_referral_points || 0}
                                             </div>
                                         </TableCell>
                                         <TableCell className="text-center">
                                             <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 text-amber-700 text-sm font-semibold">
                                                 <Award className="h-3.5 w-3.5" />
-                                                {customer.total_used_points}
+                                                {customer.total_used_points || 0}
                                             </div>
                                         </TableCell>
-                                        <TableCell>{new Date(customer.created_at).toLocaleDateString()}</TableCell>
+                                        <TableCell>{customer.created_at ? new Date(customer.created_at).toLocaleDateString() : 'N/A'}</TableCell>
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-2">
                                                 {user?.role !== 'staff' && (

@@ -141,7 +141,13 @@ export function PreOrderListPage() {
                                                 >
                                                     Create Order
                                                 </Button>
-                                                <Button variant="ghost" size="sm">View</Button>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    onClick={() => navigate(`/sales/pre-orders/${order.id}`)}
+                                                >
+                                                    View
+                                                </Button>
                                             </TableCell>
                                         </TableRow>
                                     ))

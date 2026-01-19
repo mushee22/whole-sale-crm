@@ -13,22 +13,33 @@ export interface CreateCustomerTransactionParams {
 export interface CustomerTransaction {
     id: number;
     customer_id: number;
+    invoice_id: number | null;
     amount: string;
     type: string;
     payment_mode: string;
-    collected_by: number;
+    collected_by: {
+        id: number;
+        name: string;
+        email?: string;
+    } | null;
     date: string;
     note: string;
     created_at: string;
     updated_at: string;
-    customer?: {
+    customer: {
         id: number;
         name: string;
+        phone: string;
+        location_id: number;
+        outstanding_amount: string;
     };
-    collector?: {
+    invoice: {
         id: number;
-        name: string;
-    };
+        order_id: number;
+        invoice_date: string;
+        total_amount: string;
+        pdf_path: string;
+    } | null;
 }
 
 export interface CustomerTransactionsResponse {
@@ -51,5 +62,10 @@ export const getCustomerTransactions = async (page = 1) => {
 
 export const createCustomerTransaction = async (data: CreateCustomerTransactionParams) => {
     const response = await api.post("/customer-transactions", data);
+    return response.data;
+};
+
+export const updateCustomerTransaction = async (id: number, data: { amount?: number; note?: string }) => {
+    const response = await api.put(`/customer-transactions/${id}`, data);
     return response.data;
 };

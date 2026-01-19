@@ -7,6 +7,7 @@ import { Pagination } from "../../../components/ui/pagination";
 import { Plus, Shield } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { PermissionGuard } from "../../../hooks/usePermission";
 
 export default function RolesListPage() {
     const [page, setPage] = useState(1);
@@ -71,6 +72,7 @@ export default function RolesListPage() {
                                             <TableHead className="font-semibold text-gray-600">Name</TableHead>
                                             <TableHead className="font-semibold text-gray-600">Permissions Count</TableHead>
                                             <TableHead className="font-semibold text-gray-600">Created At</TableHead>
+                                            <TableHead className="w-[100px] text-right pr-6 font-semibold text-gray-600">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -85,6 +87,18 @@ export default function RolesListPage() {
                                                 </TableCell>
                                                 <TableCell className="text-slate-600 text-sm">
                                                     {new Date(role.created_at).toLocaleDateString()}
+                                                </TableCell>
+                                                <TableCell className="text-right pr-6">
+                                                    <PermissionGuard module="roles" action="update">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            onClick={() => navigate(`/roles/${role.id}`)}
+                                                            className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                        >
+                                                            Edit
+                                                        </Button>
+                                                    </PermissionGuard>
                                                 </TableCell>
                                             </TableRow>
                                         ))}

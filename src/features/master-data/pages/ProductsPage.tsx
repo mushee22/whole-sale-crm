@@ -10,6 +10,7 @@ import { Plus, Pencil, Trash2, AlertTriangle, Layers } from "lucide-react";
 import { toast } from "sonner";
 import { type Product } from "../types";
 import { Badge } from "../../../components/ui/badge";
+import { PermissionGuard } from "../../../hooks/usePermission";
 
 export function ProductsPage() {
     const queryClient = useQueryClient();
@@ -87,12 +88,16 @@ export function ProductsPage() {
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-gray-100">
                     <CardTitle className="text-lg font-bold">Products</CardTitle>
                     <div className="flex gap-2">
-                        <Button size="sm" onClick={handleCreateMain} className="bg-slate-900 text-white hover:bg-slate-800">
-                            <Plus className="mr-2 h-4 w-4" /> Add Main Product
-                        </Button>
-                        <Button size="sm" onClick={handleCreateVariant} variant="outline">
-                            <Plus className="mr-2 h-4 w-4" /> Add Variant Product
-                        </Button>
+                        <PermissionGuard module="products" action="add">
+                            <Button size="sm" onClick={handleCreateMain} className="bg-slate-900 text-white hover:bg-slate-800">
+                                <Plus className="mr-2 h-4 w-4" /> Add Main Product
+                            </Button>
+                        </PermissionGuard>
+                        <PermissionGuard module="products" action="add">
+                            <Button size="sm" onClick={handleCreateVariant} variant="outline">
+                                <Plus className="mr-2 h-4 w-4" /> Add Variant Product
+                            </Button>
+                        </PermissionGuard>
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -162,22 +167,26 @@ export function ProductsPage() {
                                             </TableCell>
                                             <TableCell className="text-right">
                                                 <div className="flex justify-end gap-1">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-blue-600 hover:bg-blue-50"
-                                                        onClick={() => handleEdit(product)}
-                                                    >
-                                                        <Pencil className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-red-600 hover:bg-red-50"
-                                                        onClick={() => setDeleteId(product.id)}
-                                                    >
-                                                        <Trash2 className="h-4 w-4" />
-                                                    </Button>
+                                                    <PermissionGuard module="products" action="update">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-blue-600 hover:bg-blue-50"
+                                                            onClick={() => handleEdit(product)}
+                                                        >
+                                                            <Pencil className="h-4 w-4" />
+                                                        </Button>
+                                                    </PermissionGuard>
+                                                    <PermissionGuard module="products" action="delete">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-red-600 hover:bg-red-50"
+                                                            onClick={() => setDeleteId(product.id)}
+                                                        >
+                                                            <Trash2 className="h-4 w-4" />
+                                                        </Button>
+                                                    </PermissionGuard>
                                                 </div>
                                             </TableCell>
                                         </TableRow>

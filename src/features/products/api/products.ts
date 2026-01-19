@@ -26,6 +26,8 @@ export interface Product {
     created_at: string;
     updated_at: string;
     deleted_at: string | null;
+    color?: { name: string; id: number };
+    size?: { name: string; id: number };
 }
 
 export interface ProductListResponse {
@@ -62,7 +64,7 @@ export const getProducts = async (params: GetProductsParams = {}) => {
     if (params.is_active !== undefined) queryParams.append('is_active', params.is_active.toString());
     if (params.per_page) queryParams.append('per_page', params.per_page.toString());
 
-    const response = await api.get<ProductListResponse>(`admin/products?${queryParams.toString()}`);
+    const response = await api.get<ProductListResponse>(`products?${queryParams.toString()}`);
     return response.data;
 };
 

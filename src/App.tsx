@@ -29,10 +29,22 @@ import { AuthProvider, useAuth } from "./context/AuthContext";
 import { SalesOrderPage } from "./features/sales/pages/SalesOrderPage";
 import { PreOrderListPage } from "./features/sales/pages/PreOrderListPage";
 import { CreateOrderFromPreOrderPage } from "./features/sales/pages/CreateOrderFromPreOrderPage";
+import { PreOrderDetailsPage } from "./features/sales/pages/PreOrderDetailsPage";
+import ConfirmedOrdersPage from "./features/orders/ConfirmedOrdersPage";
+import DispatchedOrdersPage from "./features/orders/DispatchedOrdersPage";
+import DispatchCheckPage from "./features/orders/DispatchCheckPage";
+import OutForDeliveryOrdersPage from "./features/orders/OutForDeliveryOrdersPage";
+import DeliveryCheckPage from "./features/orders/DeliveryCheckPage";
+import CompletedOrdersPage from "./features/orders/CompletedOrdersPage";
+import CancelledOrdersPage from "./features/orders/CancelledOrdersPage";
 import RolesListPage from "./features/roles/pages/RolesListPage";
 import CreateRolePage from "./features/roles/components/CreateRolePage";
+import EditRolePage from "./features/roles/components/EditRolePage";
 import { PettyCashPage } from "./features/finance/pages/PettyCashPage";
+import { PettyCashDetailsPage } from "./features/finance/pages/PettyCashDetailsPage";
 import { CustomerTransactionsPage } from "./features/finance/pages/CustomerTransactionsPage";
+import InvoicesListPage from "./features/accounts/pages/InvoicesListPage";
+import { InvoiceDetailsPage } from "./features/accounts/pages/InvoiceDetailsPage";
 
 const queryClient = new QueryClient();
 
@@ -191,6 +203,14 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "roles/:id",
+        element: (
+          <StaffRestricted>
+            <EditRolePage />
+          </StaffRestricted>
+        ),
+      },
+      {
         path: "products",
         element: (
           <StaffRestricted>
@@ -215,6 +235,14 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "petty-cash-accounts/:id",
+        element: (
+          <StaffRestricted>
+            <PettyCashDetailsPage />
+          </StaffRestricted>
+        ),
+      },
+      {
         path: "customer-transactions",
         element: (
           <StaffRestricted>
@@ -223,17 +251,67 @@ const router = createBrowserRouter([
         ),
       },
       {
+        path: "accounts",
+        element: (
+          <StaffRestricted>
+            <InvoicesListPage />
+          </StaffRestricted>
+        ),
+      },
+      {
+        path: "accounts/:id",
+        element: (
+          <StaffRestricted>
+            <InvoiceDetailsPage />
+          </StaffRestricted>
+        ),
+      },
+      {
         path: "sales/new",
         element: <SalesOrderPage />,
       },
+
       {
         path: "sales/pre-orders",
         element: <PreOrderListPage />,
       },
       {
+        path: "sales/pre-orders/:id",
+        element: <PreOrderDetailsPage />,
+      },
+      {
         path: "sales/pre-orders/:id/create",
         element: <CreateOrderFromPreOrderPage />,
       },
+      {
+        path: "sales/confirmed-orders",
+        element: <ConfirmedOrdersPage />,
+      },
+      {
+        path: "sales/dispatched-orders",
+        element: <DispatchedOrdersPage />,
+      },
+      {
+        path: "sales/dispatched-orders/:id/check",
+        element: <DispatchCheckPage />,
+      },
+      {
+        path: "sales/out-for-delivery",
+        element: <OutForDeliveryOrdersPage />,
+      },
+      {
+        path: "sales/out-for-delivery/:id/check",
+        element: <DeliveryCheckPage />,
+      },
+      {
+        path: "sales/completed-orders",
+        element: <CompletedOrdersPage />,
+      },
+      {
+        path: "sales/cancelled-orders",
+        element: <CancelledOrdersPage />,
+      },
+
       {
         path: "master-data",
         children: [

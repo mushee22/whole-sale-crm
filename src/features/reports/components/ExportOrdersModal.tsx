@@ -114,7 +114,7 @@ export default function ExportOrdersModal({ isOpen, onClose }: ExportOrdersModal
                             <option value="">All Staff</option>
                             {users?.data.map((user) => (
                                 <option key={user.id} value={user.id}>
-                                    {user.name} ({user.role})
+                                    {user.name} ({user.role_id})
                                 </option>
                             ))}
                         </select>

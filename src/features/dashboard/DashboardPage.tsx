@@ -1,10 +1,4 @@
-import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { getDashboardMetrics, getProductSales } from "./api/dashboard";
-import { getProducts } from "../products/api/products";
-import { getUsers } from "../users/api/users";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { DollarSign, Package, Users } from "lucide-react";
+
 
 export default function DashboardPage() {
     // const [selectedProductId, setSelectedProductId] = useState<string>("");

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getUsers, createUser, updateUser, deleteUser, type User, type CreateUserData } from "./api/users";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
@@ -8,12 +7,12 @@ import { Button } from "../../components/ui/button";
 import { Modal } from "../../components/ui/modal";
 import { AlertDialog } from "../../components/ui/alert-dialog";
 import { Pagination } from "../../components/ui/pagination";
-import { Plus, Pencil, Trash2, User as UserIcon, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, User as UserIcon } from "lucide-react";
 import { toast } from "sonner";
 import UserForm from "./components/UserForm";
+import { PermissionGuard } from "../../hooks/usePermission";
 
 export default function DeliveryBoysListPage() {
-    const navigate = useNavigate();
     const queryClient = useQueryClient();
     const [page, setPage] = useState(1);
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -89,12 +88,14 @@ export default function DeliveryBoysListPage() {
                         <CardTitle className="text-xl font-bold">Delivery Boys</CardTitle>
                         <p className="text-sm text-gray-500">Manage delivery personnel.</p>
                     </div>
-                    <Button
-                        onClick={openCreate}
-                        className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20"
-                    >
-                        <Plus className="mr-2 h-4 w-4" /> Add Delivery Boy
-                    </Button>
+                    <PermissionGuard module="delivery_boys" action="add">
+                        <Button
+                            onClick={openCreate}
+                            className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20"
+                        >
+                            <Plus className="mr-2 h-4 w-4" /> Add Delivery Boy
+                        </Button>
+                    </PermissionGuard>
                 </CardHeader>
 
                 <CardContent className="p-0">
@@ -132,22 +133,26 @@ export default function DeliveryBoysListPage() {
                                         </div>
 
                                         <div className="flex justify-end gap-2 pt-2 border-t border-gray-50">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-8 text-blue-600 border-blue-200 hover:bg-blue-50"
-                                                onClick={() => openEdit(user)}
-                                            >
-                                                <Pencil className="h-4 w-4 mr-2" /> Edit
-                                            </Button>
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-8 text-red-600 border-red-200 hover:bg-red-50"
-                                                onClick={() => setDeleteId(user.id)}
-                                            >
-                                                <Trash2 className="h-4 w-4 mr-2" /> Delete
-                                            </Button>
+                                            <PermissionGuard module="delivery_boys" action="update">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 text-blue-600 border-blue-200 hover:bg-blue-50"
+                                                    onClick={() => openEdit(user)}
+                                                >
+                                                    <Pencil className="h-4 w-4 mr-2" /> Edit
+                                                </Button>
+                                            </PermissionGuard>
+                                            <PermissionGuard module="delivery_boys" action="delete">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 text-red-600 border-red-200 hover:bg-red-50"
+                                                    onClick={() => setDeleteId(user.id)}
+                                                >
+                                                    <Trash2 className="h-4 w-4 mr-2" /> Delete
+                                                </Button>
+                                            </PermissionGuard>
                                         </div>
                                     </div>
                                 ))}
@@ -191,22 +196,26 @@ export default function DeliveryBoysListPage() {
                                                 </TableCell>
                                                 <TableCell className="text-right pr-6">
                                                     <div className="flex justify-end gap-1">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                            onClick={() => openEdit(user)}
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                            onClick={() => setDeleteId(user.id)}
-                                                        >
-                                                            <Trash2 className="h-4 w-4" />
-                                                        </Button>
+                                                        <PermissionGuard module="delivery_boys" action="update">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                                onClick={() => openEdit(user)}
+                                                            >
+                                                                <Pencil className="h-4 w-4" />
+                                                            </Button>
+                                                        </PermissionGuard>
+                                                        <PermissionGuard module="delivery_boys" action="delete">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                                onClick={() => setDeleteId(user.id)}
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </PermissionGuard>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>

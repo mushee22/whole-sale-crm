@@ -1,29 +1,8 @@
-import { Navigate, useLocation } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { getUser } from "../../features/auth/api/auth";
-import { useEffect, type ReactNode } from "react";
+import { useAuth } from "../../context/AuthContext";
+import { type ReactNode } from "react";
 
 export default function ProtectedRoute({ children }: { children: ReactNode }) {
-    const token = localStorage.getItem("token");
-    const location = useLocation();
-
-    // 1. If no token immediately, redirect.
-    if (!token) {
-        return <Navigate to="/login" state={{ from: location }} replace />;
-    }
-
-    // 2. If token exists, validate it.
-    const { isError, isLoading } = useQuery({
-        queryKey: ['auth', 'me'],
-        queryFn: getUser,
-        retry: false, // Don't retry if 401
-    });
-
-    useEffect(() => {
-        if (isError) {
-            localStorage.removeItem("token");
-        }
-    }, [isError]);
+    const { isAuthenticated, isLoading, error } = useAuth();
 
     if (isLoading) {
         return (
@@ -33,10 +12,34 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
         );
     }
 
-    if (isError) {
-        // Redirect to login if token invalid
-        return <Navigate to="/login" state={{ from: location }} replace />;
+    // If there was an error loading the user (but authentication might be valid),
+    // we should show an error state instead of redirecting to login.
+    if (error && !isAuthenticated) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+                <div className="text-red-500 mb-2 font-semibold">Failed to load user profile</div>
+                <p className="text-gray-500 text-sm mb-4">Please check your connection and try again.</p>
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="px-4 py-2 bg-slate-900 text-white rounded hover:bg-slate-800 transition"
+                    >
+                        Retry
+                    </button>
+                    <button
+                        onClick={() => window.location.href = '/login'}
+                        className="px-4 py-2 border border-slate-300 rounded hover:bg-gray-50 transition"
+                    >
+                        Go to Login
+                    </button>
+                </div>
+            </div>
+        );
     }
+
+    // if (!isAuthenticated) {
+    //     return <Navigate to="/login" state={{ from: location }} replace />;
+    // }
 
     return children;
 }

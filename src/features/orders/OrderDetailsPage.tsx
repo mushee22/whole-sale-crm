@@ -8,8 +8,9 @@ import { ArrowLeft, Pencil, Trash2, User, Phone, Mail, Award } from "lucide-reac
 import { toast } from "sonner";
 import { cn } from "../../lib/utils";
 import { useAuth } from "../../context/AuthContext";
-import { AssignDeliveryModal } from "./components/AssignDeliveryModal";
-import { Truck } from "lucide-react";
+import { UpdateStatusModal } from "./components/UpdateStatusModal";
+import { Truck, FileText, ExternalLink } from "lucide-react";
+import { downloadInvoice } from "../accounts/api/invoices";
 
 export default function OrderDetailsPage() {
     const { id } = useParams();
@@ -53,19 +54,16 @@ export default function OrderDetailsPage() {
                 </Button>
                 {user?.role !== 'staff' && (
                     <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                        <AssignDeliveryModal
+                        <UpdateStatusModal
                             orderId={orderId}
+                            currentStatus={order.status}
                             trigger={
-                                <Button variant="outline" className="flex-1 sm:flex-none gap-2 text-slate-700 bg-blue-50 hover:bg-blue-100 border-blue-200">
-                                    <Truck className="h-4 w-4 text-blue-600" />
-                                    Assign Delivery
+                                <Button variant="outline" className="flex-1 sm:flex-none gap-2 text-slate-700">
+                                    <Pencil className="h-4 w-4" />
+                                    Update Status
                                 </Button>
                             }
                         />
-                        <Button variant="outline" className="flex-1 sm:flex-none gap-2 text-slate-700" onClick={() => navigate(`/orders/edit/${orderId}`)}>
-                            <Pencil className="h-4 w-4" />
-                            Edit
-                        </Button>
                         <Button variant="destructive" className="flex-1 sm:flex-none gap-2 bg-red-600 hover:bg-red-700" onClick={handleDelete} disabled={deleteMutation.isPending}>
                             <Trash2 className="h-4 w-4" />
                             Delete
@@ -77,8 +75,25 @@ export default function OrderDetailsPage() {
             {/* Title & Status */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 pb-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{order.order_number}</h1>
-                    <p className="text-slate-500 mt-1">Placed on {new Date(order.order_date).toLocaleString()}</p>
+                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
+                        {order.unique_id || order.order_number || `Order #${order.id}`}
+                        <span className="text-base font-normal px-3 py-1 rounded-full bg-slate-100 text-slate-600 border border-slate-200">
+                            #{order.id}
+                        </span>
+                    </h1>
+                    <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm text-slate-500 mt-2">
+                        <span>Placed: {new Date(order.order_date).toLocaleString()}</span>
+                        {order.estimated_delivery_date && (
+                            <span>Est. Delivery: {new Date(order.estimated_delivery_date).toLocaleDateString()}</span>
+                        )}
+                        <span className={cn(
+                            "px-2 py-0.5 rounded text-xs font-semibold uppercase",
+                            order.status === 'out_for_delivery' ? "bg-amber-100 text-amber-700" :
+                                order.status === 'delivered' ? "bg-green-100 text-green-700" :
+                                    order.status === 'dispatched' ? "bg-blue-100 text-blue-700" :
+                                        "bg-gray-100 text-gray-700"
+                        )}>{order.status.replace(/_/g, ' ')}</span>
+                    </div>
                 </div>
                 <div className="flex items-center gap-3">
                     <div className="text-right">
@@ -98,23 +113,43 @@ export default function OrderDetailsPage() {
                         <CardContent className="p-0">
                             {/* Mobile Item List */}
                             <div className="md:hidden divide-y divide-gray-100">
-                                {order.order_items?.map((item) => (
-                                    <div key={item.id} className="p-4 space-y-2">
-                                        <div className="flex justify-between items-start">
-                                            <div>
-                                                <div className="font-medium text-slate-900">{item.product.name}</div>
-                                                <div className="text-xs text-gray-500">SKU: {item.product.sku}</div>
+                                {order.items?.map((item) => {
+                                    const deliveryCheck = order.delivery_checks?.find((dc: any) => dc.order_item_id === item.id);
+                                    return (
+                                        <div key={item.id} className="p-4 space-y-2">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <div className="font-medium text-slate-900">{item.product.name}</div>
+                                                    <div className="text-xs text-gray-500">SKU: {item.product.sku}</div>
+                                                    <div className="flex gap-2 mt-1">
+                                                        {item.product.color_id && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">Color: {item.product.color_id}</span>}
+                                                        {item.product.size_id && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">Size: {item.product.size_id}</span>}
+                                                    </div>
+                                                </div>
+                                                <div className="text-right font-medium text-slate-900">
+                                                    ₹{(Number(item.price) * item.quantity).toFixed(2)}
+                                                </div>
                                             </div>
-                                            <div className="text-right font-medium text-slate-900">
-                                                ₹{(Number(item.unit_price) * item.quantity).toFixed(2)}
+                                            <div className="flex justify-between items-center text-sm text-gray-500">
+                                                <span>Price: ₹{item.price}</span>
+                                                <span>Qty: {item.quantity}</span>
+                                            </div>
+                                            {/* Status Chips */}
+                                            <div className="flex gap-2 mt-2">
+                                                {item.dispatch_check?.is_checked && (
+                                                    <span className="text-[10px] bg-blue-50 text-blue-600 px-2 py-0.5 rounded border border-blue-100 flex items-center gap-1">
+                                                        ✓ Dispatched
+                                                    </span>
+                                                )}
+                                                {deliveryCheck?.is_delivered && (
+                                                    <span className="text-[10px] bg-green-50 text-green-600 px-2 py-0.5 rounded border border-green-100 flex items-center gap-1">
+                                                        ✓ Delivered
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
-                                        <div className="flex justify-between text-sm text-gray-500">
-                                            <span>Price: ₹{item.unit_price}</span>
-                                            <span>Qty: {item.quantity}</span>
-                                        </div>
-                                    </div>
-                                ))}
+                                    )
+                                })}
                             </div>
 
                             {/* Desktop Table */}
@@ -126,27 +161,148 @@ export default function OrderDetailsPage() {
                                             <TableHead className="text-right">Price</TableHead>
                                             <TableHead className="text-center">Qty</TableHead>
                                             <TableHead className="text-right">Total</TableHead>
+                                            <TableHead className="text-center">Status</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
-                                        {order.order_items?.map((item) => (
-                                            <TableRow key={item.id}>
-                                                <TableCell>
-                                                    <div className="font-medium text-slate-900">{item.product.name}</div>
-                                                    <div className="text-xs text-gray-500">SKU: {item.product.sku}</div>
-                                                </TableCell>
-                                                <TableCell className="text-right">₹{item.unit_price}</TableCell>
-                                                <TableCell className="text-center">{item.quantity}</TableCell>
-                                                <TableCell className="text-right font-medium">
-                                                    ₹{(Number(item.unit_price) * item.quantity).toFixed(2)}
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
+                                        {order.items?.map((item) => {
+                                            const deliveryCheck = order.delivery_checks?.find((dc: any) => dc.order_item_id === item.id);
+                                            return (
+                                                <TableRow key={item.id}>
+                                                    <TableCell>
+                                                        <div className="font-medium text-slate-900">{item.product.name}</div>
+                                                        <div className="text-xs text-gray-500">SKU: {item.product.sku}</div>
+                                                        <div className="flex gap-2 mt-1">
+                                                            {item.product.color_id && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">Color: {item.product.color_id}</span>}
+                                                            {item.product.size_id && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">Size: {item.product.size_id}</span>}
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="text-right">₹{item.price}</TableCell>
+                                                    <TableCell className="text-center">{item.quantity}</TableCell>
+                                                    <TableCell className="text-right font-medium">
+                                                        ₹{(Number(item.price) * item.quantity).toFixed(2)}
+                                                    </TableCell>
+                                                    <TableCell className="text-center">
+                                                        <div className="flex flex-col gap-1 items-center">
+                                                            {item.dispatch_check?.is_checked && (
+                                                                <span className="text-[10px] font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">
+                                                                    Dispatched
+                                                                </span>
+                                                            )}
+                                                            {deliveryCheck?.is_delivered && (
+                                                                <span className="text-[10px] font-medium text-green-600 bg-green-50 px-2 py-0.5 rounded-full border border-green-100">
+                                                                    Delivered
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            )
+                                        })}
                                     </TableBody>
                                 </Table>
                             </div>
                         </CardContent>
                     </Card>
+
+                    {/* Delivery & Logistics Info */}
+                    {order.deliveries && order.deliveries.length > 0 && (
+                        <Card className="shadow-sm border-gray-100">
+                            <CardHeader>
+                                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                                    <Truck className="h-5 w-5 text-indigo-500" />
+                                    Delivery Details
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-4">
+                                    {order.deliveries.map((delivery: any) => (
+                                        <div key={delivery.id} className="bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                            <div className="flex justify-between items-start mb-2">
+                                                <span className="text-sm font-semibold text-slate-800">Assigned Delivery Boy</span>
+                                                <span className="text-xs text-slate-500">Assigned: {new Date(delivery.created_at).toLocaleDateString()}</span>
+                                            </div>
+                                            <div className="flex items-center gap-3">
+                                                <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 uppercase font-bold text-xs">
+                                                    {delivery.delivery_boy.name.substring(0, 2)}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-slate-900">{delivery.delivery_boy.name}</p>
+                                                    <div className="flex gap-3 text-xs text-slate-500">
+                                                        <span>{delivery.delivery_boy.phone}</span>
+                                                        <span>{delivery.delivery_boy.email}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="mt-3 text-xs text-slate-600">
+                                                <strong>Scheduled Date:</strong> {new Date(delivery.delivery_date).toDateString()}
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
+
+                    {/* Invoice Info */}
+                    {order.invoice && (
+                        <Card className="shadow-sm border-gray-100">
+                            <CardHeader>
+                                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                                    <FileText className="h-5 w-5 text-gray-500" />
+                                    Invoice Details
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between bg-slate-50 p-4 rounded-lg border border-slate-100">
+                                    <div>
+                                        <p className="text-sm font-semibold text-slate-900">Invoice #{order.invoice.id}</p>
+                                        <p className="text-xs text-slate-500">
+                                            Date: {new Date(order.invoice.invoice_date).toLocaleDateString()}
+                                        </p>
+                                        <p className="text-sm font-bold text-slate-900 mt-1">
+                                            Amount: ₹{order.invoice.total_amount}
+                                        </p>
+                                    </div>
+                                    <div className="flex gap-2 w-full sm:w-auto">
+
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="flex-1 sm:flex-none gap-2"
+                                            onClick={async () => {
+                                                try {
+                                                    if (!order.invoice) return;
+                                                    const blob = await downloadInvoice(order.invoice.id);
+                                                    const url = window.URL.createObjectURL(new Blob([blob]));
+                                                    const link = document.createElement('a');
+                                                    link.href = url;
+                                                    link.setAttribute('download', `invoice-${order.unique_id || order.id}.pdf`);
+                                                    document.body.appendChild(link);
+                                                    link.click();
+                                                    link.remove();
+                                                } catch (error) {
+                                                    console.error("Failed to download invoice", error);
+                                                    toast.error("Failed to download invoice");
+                                                }
+                                            }}
+                                        >
+                                            <FileText className="h-4 w-4" />
+                                            Download
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="secondary"
+                                            className="flex-1 sm:flex-none gap-2"
+                                            onClick={() => navigate(`/accounts/${order.invoice?.id}`)}
+                                        >
+                                            View Details <ExternalLink className="h-3 w-3" />
+                                        </Button>
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
 
                     {/* Points Ledger */}
                     {order.points_ledger && order.points_ledger.length > 0 && (
@@ -206,6 +362,30 @@ export default function OrderDetailsPage() {
                                         {order.customer.email}
                                     </div>
                                 )}
+                                {order.customer.outstanding_amount && (
+                                    <div className="flex flex-col gap-1 mt-2 p-2 bg-red-50 rounded border border-red-100">
+                                        <span className="text-xs text-red-600 font-medium">Outstanding Amount</span>
+                                        <span className="text-sm font-bold text-red-700">₹{order.customer.outstanding_amount}</span>
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Creator Info */}
+                    <Card className="shadow-sm border-gray-100">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-sm font-semibold text-slate-500 uppercase tracking-widest">Order Created By</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="flex items-center gap-3">
+                                <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                                    <User className="h-4 w-4" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium text-slate-900">{order.creator?.name || "Unknown"}</p>
+                                    <p className="text-xs text-slate-500">{order.creator?.role_id === 1 ? "Admin" : "Staff"}</p>
+                                </div>
                             </div>
                         </CardContent>
                     </Card>

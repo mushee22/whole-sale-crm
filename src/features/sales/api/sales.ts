@@ -39,6 +39,8 @@ export interface PreOrderItem {
         id: number;
         name: string;
         image_url?: string;
+        color?: { name: string };
+        size?: { name: string };
     };
 }
 
@@ -52,6 +54,7 @@ export interface PreOrder {
         id: number;
         name: string;
         phone: string;
+        email?: string;
         location_id?: number;
     };
     items?: PreOrderItem[];

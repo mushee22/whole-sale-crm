@@ -82,6 +82,7 @@ export default function PettyCashList() {
                                             <TableHead className="font-semibold text-gray-600">Opening Balance</TableHead>
                                             <TableHead className="font-semibold text-gray-600">Current Balance</TableHead>
                                             <TableHead className="font-semibold text-gray-600">Created At</TableHead>
+                                            <TableHead className="font-semibold text-gray-600">Actions</TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -105,6 +106,11 @@ export default function PettyCashList() {
                                                 <TableCell className="text-slate-600">{parseFloat(account.current_balance).toFixed(2)}</TableCell>
                                                 <TableCell className="text-slate-500 text-sm">
                                                     {new Date(account.created_at).toLocaleDateString()}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Button variant="ghost" size="sm" onClick={() => window.location.href = `/petty-cash-accounts/${account.id}`}>
+                                                        View
+                                                    </Button>
                                                 </TableCell>
                                             </TableRow>
                                         ))}

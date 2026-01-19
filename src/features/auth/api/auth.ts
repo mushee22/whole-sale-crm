@@ -8,11 +8,17 @@ export const loginSchema = z.object({
 
 export type LoginCredentials = z.infer<typeof loginSchema>;
 
+export interface Role {
+    id: number;
+    name: string;
+    permissions: string[];
+}
+
 export interface User {
     id: number;
     name: string;
     email: string;
-    role: string;
+    role: string | Role; // Handle both string (if legacy) and object
 }
 
 export interface AuthResponse {
@@ -26,7 +32,7 @@ export const loginWithEmail = async (data: LoginCredentials): Promise<AuthRespon
     return response.data;
 };
 
-export const getUser = async (): Promise<{ user: User }> => {
-    const response = await api.get<{ user: User }>('me');
+export const getUser = async (): Promise<User> => {
+    const response = await api.get<User>('me');
     return response.data;
 };

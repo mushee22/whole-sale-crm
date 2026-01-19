@@ -4,9 +4,10 @@ import { getCustomerTransactions } from "../api/customerTransactions";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { Pagination } from "../../../components/ui/pagination";
-import { Plus } from "lucide-react";
+import { Plus, Edit } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { CreateTransactionModal } from "./CreateTransactionModal";
+import { EditTransactionModal } from "./EditTransactionModal";
 
 export default function CustomerTransactionList() {
     const [page, setPage] = useState(1);
@@ -84,6 +85,7 @@ export default function CustomerTransactionList() {
                                             <TableHead className="font-semibold text-gray-600">Mode</TableHead>
                                             <TableHead className="font-semibold text-gray-600">Collected By</TableHead>
                                             <TableHead className="font-semibold text-gray-600">Note</TableHead>
+                                            <TableHead className="font-semibold text-gray-600 w-[50px]"></TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -104,9 +106,19 @@ export default function CustomerTransactionList() {
                                                 </TableCell>
                                                 <TableCell className="text-slate-900 font-medium">{parseFloat(transaction.amount).toFixed(2)}</TableCell>
                                                 <TableCell className="text-slate-600 capitalize">{transaction.payment_mode.replace('_', ' ')}</TableCell>
-                                                <TableCell className="text-slate-600">{transaction.collector?.name || transaction.collected_by}</TableCell>
+                                                <TableCell className="text-slate-600">{transaction.collected_by?.name || "-"}</TableCell>
                                                 <TableCell className="text-slate-500 text-sm truncate max-w-[200px]" title={transaction.note}>
                                                     {transaction.note || "-"}
+                                                </TableCell>
+                                                <TableCell className="text-right">
+                                                    <EditTransactionModal
+                                                        transaction={transaction}
+                                                        trigger={
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-blue-600">
+                                                                <Edit className="h-4 w-4" />
+                                                            </Button>
+                                                        }
+                                                    />
                                                 </TableCell>
                                             </TableRow>
                                         ))}

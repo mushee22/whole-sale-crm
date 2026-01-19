@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { getOrder } from "../api/orders";
 import { Modal } from "../../../components/ui/modal";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
+import { Table, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { Award, ShoppingBag, Calendar } from "lucide-react";
 import { Badge } from "../../../components/ui/badge";
 
@@ -41,7 +41,7 @@ export default function OrderDetailsModal({ orderId, isOpen, onClose }: OrderDet
                             </div>
                             <div className="flex items-center gap-2">
                                 <Badge variant="outline" className="bg-slate-100 text-slate-700">
-                                    {order.order_items.length} Items
+                                    Items
                                 </Badge>
                                 <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
                                     Total: ₹{order.total_amount}
@@ -66,7 +66,7 @@ export default function OrderDetailsModal({ orderId, isOpen, onClose }: OrderDet
                                         <TableHead className="py-2 h-9 text-xs text-right">Total</TableHead>
                                     </TableRow>
                                 </TableHeader>
-                                <TableBody>
+                                {/* <TableBody>
                                     {order.order_items.map((item) => (
                                         <TableRow key={item.id}>
                                             <TableCell className="py-2">
@@ -80,7 +80,7 @@ export default function OrderDetailsModal({ orderId, isOpen, onClose }: OrderDet
                                             </TableCell>
                                         </TableRow>
                                     ))}
-                                </TableBody>
+                                </TableBody> */}
                             </Table>
                         </div>
                     </div>
