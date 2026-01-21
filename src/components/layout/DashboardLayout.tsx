@@ -226,7 +226,7 @@ export default function DashboardLayout() {
 
             {/* User Info at Bottom */}
             <div className="p-4 shrink-0">
-                <div className="group relative overflow-hidden rounded-2xl bg-[#0F1629] p-4 transition-all duration-300 hover:bg-[#1E293B] border border-slate-800/50 hover:border-slate-700">
+                <NavLink to="/profile" className="block group relative overflow-hidden rounded-2xl bg-[#0F1629] p-4 transition-all duration-300 hover:bg-[#1E293B] border border-slate-800/50 hover:border-slate-700 cursor-pointer">
                     <div className="flex items-center gap-3 relative z-10">
                         <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 p-[2px]">
                             <div className="h-full w-full rounded-full bg-[#0B1120] flex items-center justify-center">
@@ -240,7 +240,7 @@ export default function DashboardLayout() {
                             </p>
                         </div>
                     </div>
-                </div>
+                </NavLink>
                 <div className="mt-2 text-center">
                     <p className="text-[10px] text-slate-600 font-medium">v1.2.0 • F-Trade Inc.</p>
                 </div>
@@ -311,6 +311,15 @@ export default function DashboardLayout() {
                                     </Button>
                                 }
                             />
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => navigate('/profile')}
+                                className="gap-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors font-medium"
+                            >
+                                <User className="h-4 w-4" />
+                                <span className="hidden sm:inline">Profile</span>
+                            </Button>
                             <Button
                                 variant="ghost"
                                 size="sm"

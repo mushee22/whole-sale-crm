@@ -19,6 +19,7 @@ import SettingsPage from "./features/settings/SettingsPage";
 import PublicCustomerPage from "./pages/PublicCustomerPage";
 import UsersListPage from "./features/users/UsersListPage";
 import DeliveryBoysListPage from "./features/users/DeliveryBoysListPage";
+import UserProfilePage from "./features/users/UserProfilePage";
 import StaffDetailsPage from "./features/users/StaffDetailsPage";
 import { ProductsPage } from "./features/master-data/pages/ProductsPage";
 import { ProductVariantsPage } from "./features/master-data/pages/ProductVariantsPage";
@@ -104,6 +105,14 @@ const router = createBrowserRouter([
       {
         path: "orders/edit/:id",
         element: <CreateOrderPage />,
+      },
+      {
+        path: "orders/edit/:id",
+        element: <CreateOrderPage />,
+      },
+      {
+        path: "profile",
+        element: <UserProfilePage />,
       },
       {
         path: "customers",

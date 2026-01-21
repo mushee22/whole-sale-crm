@@ -1,8 +1,10 @@
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { type ReactNode } from "react";
 
 export default function ProtectedRoute({ children }: { children: ReactNode }) {
     const { isAuthenticated, isLoading, error } = useAuth();
+    const location = useLocation();
 
     if (isLoading) {
         return (
@@ -10,6 +12,10 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
             </div>
         );
+    }
+    // ...
+    if (!isAuthenticated) {
+        return <Navigate to="/login" state={{ from: location }} replace />;
     }
 
     // If there was an error loading the user (but authentication might be valid),
@@ -37,9 +43,9 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
         );
     }
 
-    // if (!isAuthenticated) {
-    //     return <Navigate to="/login" state={{ from: location }} replace />;
-    // }
+    if (!isAuthenticated) {
+        return <Navigate to="/login" state={{ from: location }} replace />;
+    }
 
     return children;
 }
