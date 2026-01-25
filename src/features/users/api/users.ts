@@ -69,7 +69,7 @@ export interface GetUsersParams {
     search?: string;
     per_page?: number;
     role_id?: number;
-    status?: string;
+    is_active?: string;
 }
 
 export interface UsersListResponse {
@@ -103,7 +103,7 @@ export const getUsers = async (params: GetUsersParams = {}) => {
     if (params.search) queryParams.append('search', params.search);
     if (params.per_page) queryParams.append('per_page', params.per_page.toString());
     if (params.role_id) queryParams.append('role_id', params.role_id.toString());
-    if (params.status) queryParams.append('status', params.status);
+    if (params.is_active) queryParams.append('status', params.is_active);
 
     const response = await api.get<UsersListResponse>(`/users?${queryParams.toString()}`);
     return response.data;

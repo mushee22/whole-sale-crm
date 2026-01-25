@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CheckSquare } from "lucide-react";
+import { CheckSquare, Pencil, Eye } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Pagination } from "../../components/ui/pagination";
 import { Button } from "../../components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle } from "../../components/ui/card";
-import { Badge } from "../../components/ui/badge";
 import { format } from "date-fns";
 import { getOrders } from "./api/orders";
 import { useNavigate } from "react-router-dom";
+import { PermissionGuard } from "../../hooks/usePermission";
 
 export default function DispatchedOrdersPage() {
     const [page, setPage] = useState(1);
@@ -91,22 +91,24 @@ export default function DispatchedOrdersPage() {
                                     <TableHead>Customer</TableHead>
                                     <TableHead>Date</TableHead>
                                     <TableHead>Est. Delivery</TableHead>
+                                    <TableHead>Delivery Boy</TableHead>
                                     <TableHead>Items</TableHead>
                                     <TableHead>Total Amount</TableHead>
-                                    <TableHead>Status</TableHead>
+                                    {/* <TableHead>Status</TableHead> */}
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {orders.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                                        <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                                             No dispatched orders found.
                                         </TableCell>
                                     </TableRow>
                                 ) : (
                                     orders.map((order) => {
                                         const calculatedTotal = order.items?.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0) || 0;
+                                        const deliveryBoy = order.deliveries?.[0]?.delivery_boy?.name || "-";
                                         return (
                                             <TableRow key={order.id}>
                                                 <TableCell className="font-medium cursor-pointer hover:underline" onClick={() => navigate(`/orders/${order.id}`)}>#{order.id}</TableCell>
@@ -114,35 +116,58 @@ export default function DispatchedOrdersPage() {
                                                     <div className="flex flex-col">
                                                         <span className="font-medium">{order.customer?.name}</span>
                                                         <span className="text-xs text-muted-foreground">{order.customer?.phone}</span>
+                                                        {order.customer?.location && (
+                                                            <span className="text-xs text-slate-500 mt-0.5">📍 {order.customer.location.name}</span>
+                                                        )}
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>{order.order_date ? format(new Date(order.order_date), "PPP") : "-"}</TableCell>
                                                 <TableCell>{order.estimated_delivery_date ? format(new Date(order.estimated_delivery_date), "PPP") : "-"}</TableCell>
+                                                <TableCell>
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-sm font-medium text-slate-700">{deliveryBoy}</span>
+                                                    </div>
+                                                </TableCell>
                                                 <TableCell>{order.items?.length || 0} items</TableCell>
                                                 <TableCell>₹{calculatedTotal.toFixed(2)}</TableCell>
-                                                <TableCell>
+                                                {/* <TableCell>
                                                     <Badge className="bg-blue-100 text-blue-800 border-blue-200">
                                                         {order.status}
                                                     </Badge>
-                                                </TableCell>
+                                                </TableCell> */}
                                                 <TableCell className="text-right">
                                                     <div className="flex justify-end gap-2">
+                                                        <PermissionGuard module="orders" action="update">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="ghost"
+                                                                className="text-slate-600"
+                                                                onClick={() => navigate(`/orders/edit/${order.id}`)}
+                                                                title="Edit Order"
+                                                            >
+                                                                <Pencil className="h-4 w-4" />
+                                                            </Button>
+                                                        </PermissionGuard>
                                                         <Button
                                                             size="sm"
                                                             variant="ghost"
+                                                            className="text-slate-600"
                                                             onClick={() => navigate(`/orders/${order.id}`)}
+                                                            title="View Details"
                                                         >
-                                                            View Details
+                                                            <Eye className="h-4 w-4" />
                                                         </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            className="gap-2 text-indigo-600 border-indigo-200 hover:bg-indigo-50"
-                                                            onClick={() => navigate(`/sales/dispatched-orders/${order.id}/check`)}
-                                                        >
-                                                            <CheckSquare className="h-4 w-4" />
-                                                            Check
-                                                        </Button>
+                                                        <PermissionGuard module="sales" action="dispatch_check">
+                                                            <Button
+                                                                size="sm"
+                                                                variant="outline"
+                                                                className="gap-2 text-indigo-600 border-indigo-200 hover:bg-indigo-50"
+                                                                onClick={() => navigate(`/sales/dispatched-orders/${order.id}/check`)}
+                                                            >
+                                                                <CheckSquare className="h-4 w-4" />
+                                                                Check
+                                                            </Button>
+                                                        </PermissionGuard>
                                                     </div>
                                                 </TableCell>
                                             </TableRow>
@@ -157,6 +182,7 @@ export default function DispatchedOrdersPage() {
                     <div className="md:hidden divide-y divide-gray-100">
                         {orders.map((order) => {
                             const calculatedTotal = order.items?.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0) || 0;
+                            const deliveryBoy = order.deliveries?.[0]?.delivery_boy?.name || "-";
                             return (
                                 <div key={order.id} className="p-4 space-y-3 bg-white">
                                     <div className="flex justify-between items-start">
@@ -164,9 +190,7 @@ export default function DispatchedOrdersPage() {
                                             <div className="font-semibold text-gray-900" onClick={() => navigate(`/orders/${order.id}`)}>Order #{order.id}</div>
                                             <div className="text-xs text-gray-500">{new Date(order.order_date).toLocaleDateString()}</div>
                                         </div>
-                                        <Badge className="bg-blue-100 text-blue-800 border-blue-200">
-                                            {order.status}
-                                        </Badge>
+                                        {/* Status removed in mobile view */}
                                     </div>
                                     <div className="grid grid-cols-2 gap-2 text-sm">
                                         <div>
@@ -177,8 +201,26 @@ export default function DispatchedOrdersPage() {
                                             <span className="text-gray-500 text-xs block">Total</span>
                                             <span className="font-medium text-gray-900">₹{calculatedTotal.toFixed(2)}</span>
                                         </div>
+                                        <div>
+                                            <span className="text-gray-500 text-xs block">Location</span>
+                                            <span className="font-medium text-gray-900">{order.customer?.location?.name || "-"}</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-gray-500 text-xs block">Delivery Boy</span>
+                                            <span className="font-medium text-gray-900">{deliveryBoy}</span>
+                                        </div>
                                     </div>
                                     <div className="pt-2 flex gap-2">
+                                        <PermissionGuard module="orders" action="update">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="flex-1 gap-2"
+                                                onClick={() => navigate(`/orders/edit/${order.id}`)}
+                                            >
+                                                <Pencil className="h-4 w-4" /> Edit
+                                            </Button>
+                                        </PermissionGuard>
                                         <Button
                                             size="sm"
                                             variant="outline"
@@ -187,15 +229,17 @@ export default function DispatchedOrdersPage() {
                                         >
                                             View Details
                                         </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="default"
-                                            className="flex-1 gap-2 bg-indigo-600 hover:bg-indigo-700"
-                                            onClick={() => navigate(`/sales/dispatched-orders/${order.id}/check`)}
-                                        >
-                                            <CheckSquare className="h-4 w-4" />
-                                            Check
-                                        </Button>
+                                        <PermissionGuard module="sales" action="dispatch_check">
+                                            <Button
+                                                size="sm"
+                                                variant="default"
+                                                className="flex-1 gap-2 bg-indigo-600 hover:bg-indigo-700"
+                                                onClick={() => navigate(`/sales/dispatched-orders/${order.id}/check`)}
+                                            >
+                                                <CheckSquare className="h-4 w-4" />
+                                                Check
+                                            </Button>
+                                        </PermissionGuard>
                                     </div>
                                 </div>
                             )

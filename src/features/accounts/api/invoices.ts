@@ -29,6 +29,7 @@ export interface Invoice {
             };
         }[];
     };
+    is_moved_to_system?: boolean;
 }
 
 export interface InvoicesResponse {
@@ -44,6 +45,7 @@ export const getInvoices = async (params?: {
     per_page?: number;
     date_from?: string;
     date_to?: string;
+    is_moved_to_system?: boolean;
 }) => {
     const response = await api.get<InvoicesResponse>("/invoices", { params });
     return response.data;
@@ -51,6 +53,11 @@ export const getInvoices = async (params?: {
 
 export const getInvoice = async (id: number) => {
     const response = await api.get<Invoice>(`/invoices/${id}`);
+    return response.data;
+};
+
+export const updateInvoice = async (id: number, data: Partial<Invoice>) => {
+    const response = await api.put<Invoice>(`/invoices/${id}`, data);
     return response.data;
 };
 

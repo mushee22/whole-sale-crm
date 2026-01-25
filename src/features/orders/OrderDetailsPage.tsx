@@ -11,6 +11,7 @@ import { useAuth } from "../../context/AuthContext";
 import { UpdateStatusModal } from "./components/UpdateStatusModal";
 import { Truck, FileText, ExternalLink } from "lucide-react";
 import { downloadInvoice } from "../accounts/api/invoices";
+import { PermissionGuard } from "../../hooks/usePermission";
 
 export default function OrderDetailsPage() {
     const { id } = useParams();
@@ -54,20 +55,30 @@ export default function OrderDetailsPage() {
                 </Button>
                 {user?.role !== 'staff' && (
                     <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                        <UpdateStatusModal
-                            orderId={orderId}
-                            currentStatus={order.status}
-                            trigger={
-                                <Button variant="outline" className="flex-1 sm:flex-none gap-2 text-slate-700">
-                                    <Pencil className="h-4 w-4" />
-                                    Update Status
-                                </Button>
-                            }
-                        />
-                        <Button variant="destructive" className="flex-1 sm:flex-none gap-2 bg-red-600 hover:bg-red-700" onClick={handleDelete} disabled={deleteMutation.isPending}>
-                            <Trash2 className="h-4 w-4" />
-                            Delete
-                        </Button>
+                        <PermissionGuard module="orders" action="update">
+                            <Button variant="outline" className="flex-1 sm:flex-none gap-2 text-slate-700" onClick={() => navigate(`/orders/edit/${orderId}`)}>
+                                <Pencil className="h-4 w-4" />
+                                Edit Order
+                            </Button>
+                        </PermissionGuard>
+                        <PermissionGuard module="orders" action="update_status">
+                            <UpdateStatusModal
+                                orderId={orderId}
+                                currentStatus={order.status}
+                                trigger={
+                                    <Button variant="outline" className="flex-1 sm:flex-none gap-2 text-slate-700">
+                                        <Pencil className="h-4 w-4" />
+                                        Update Status
+                                    </Button>
+                                }
+                            />
+                        </PermissionGuard>
+                        <PermissionGuard module="orders" action="delete">
+                            <Button variant="destructive" className="flex-1 sm:flex-none gap-2 bg-red-600 hover:bg-red-700" onClick={handleDelete} disabled={deleteMutation.isPending}>
+                                <Trash2 className="h-4 w-4" />
+                                Delete
+                            </Button>
+                        </PermissionGuard>
                     </div>
                 )}
             </div>
@@ -125,6 +136,18 @@ export default function OrderDetailsPage() {
                                                         {item.product.color_id && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">Color: {item.product.color_id}</span>}
                                                         {item.product.size_id && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">Size: {item.product.size_id}</span>}
                                                     </div>
+                                                    {item.comment && (
+                                                        <div className="text-xs text-slate-600 mt-1 italic bg-amber-50 px-2 py-1 rounded border border-amber-100 inline-block">
+                                                            <span className="font-semibold not-italic">Note:</span> {item.comment}
+                                                        </div>
+                                                    )}
+                                                    {item.attachment_url && (
+                                                        <div className="mt-1">
+                                                            <a href={item.attachment_url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                                                                <FileText className="h-3 w-3" /> View Attachment
+                                                            </a>
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="text-right font-medium text-slate-900">
                                                     ₹{(Number(item.price) * item.quantity).toFixed(2)}
@@ -176,6 +199,18 @@ export default function OrderDetailsPage() {
                                                             {item.product.color_id && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">Color: {item.product.color_id}</span>}
                                                             {item.product.size_id && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">Size: {item.product.size_id}</span>}
                                                         </div>
+                                                        {item.comment && (
+                                                            <div className="text-xs text-slate-600 mt-1 italic bg-amber-50 px-2 py-1 rounded border border-amber-100 inline-block">
+                                                                <span className="font-semibold not-italic">Note:</span> {item.comment}
+                                                            </div>
+                                                        )}
+                                                        {item.attachment_url && (
+                                                            <div className="mt-1">
+                                                                <a href={item.attachment_url} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-600 hover:underline flex items-center gap-1">
+                                                                    <FileText className="h-3 w-3" /> View Attachment
+                                                                </a>
+                                                            </div>
+                                                        )}
                                                     </TableCell>
                                                     <TableCell className="text-right">₹{item.price}</TableCell>
                                                     <TableCell className="text-center">{item.quantity}</TableCell>
@@ -342,12 +377,15 @@ export default function OrderDetailsPage() {
                             <CardTitle className="text-lg font-semibold">Customer Details</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div className="flex items-center gap-3">
-                                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                            <div
+                                className="flex items-center gap-3 cursor-pointer group p-2 -mx-2 rounded-lg hover:bg-slate-50 transition-colors"
+                                onClick={() => navigate(`/customers/${order.customer.id}`)}
+                            >
+                                <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 group-hover:bg-blue-200 transition-colors">
                                     <User className="h-5 w-5" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-slate-900">{order.customer.name}</p>
+                                    <p className="text-sm font-medium text-slate-900 group-hover:text-blue-700 transition-colors">{order.customer.name}</p>
                                     <p className="text-xs text-slate-500">Customer ID: #{order.customer.id}</p>
                                 </div>
                             </div>

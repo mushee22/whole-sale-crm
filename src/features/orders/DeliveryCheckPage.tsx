@@ -53,7 +53,7 @@ export default function DeliveryCheckPage() {
         onSuccess: (_data, status) => {
             const message = status === 'delivered' ? "Order marked as Delivered" : "Order Cancelled";
             toast.success(message);
-            navigate('/sales/out-for-delivery');
+            navigate(`/orders/${orderId}`);
         },
         onError: (error: any) => {
             toast.error(error.response?.data?.message || "Failed to update order status");

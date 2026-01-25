@@ -15,6 +15,13 @@ export interface OrderUser {
     status?: string;
     email_verified_at?: string | null;
     whatsapp_no?: string | null; // Added to fix TS error
+    location?: { // Added location object structure
+        id: number;
+        name: string;
+        created_at: string;
+        updated_at: string;
+        deleted_at: string | null;
+    } | null;
 }
 
 export interface OrderItemProduct {
@@ -134,10 +141,7 @@ export const deleteOrder = async (id: number) => {
     await axios.delete(`/orders/${id}`);
 };
 
-export const updateOrder = async (id: number, data: CreateOrderData) => {
-    const response = await axios.put(`/orders/${id}`, data);
-    return response.data;
-};
+
 
 
 // --- Types for Creation ---
@@ -150,6 +154,7 @@ export const orderItemSchema = z.object({
     unit_price: z.number().optional(),
     comment: z.string().optional(),
     attachment_url: z.string().optional(),
+    attachment: z.any().optional(),
 });
 
 export const createOrderSchema = z.object({
@@ -164,11 +169,13 @@ export const createOrderSchema = z.object({
     total_amount: z.number().optional().nullable(),
     order_date: z.string(),
     estimated_delivery_date: z.string().optional(), // Added estimated_delivery_date
+    items_to_delete: z.array(z.number()).optional(),
 });
 
 export type CreateOrderData = z.infer<typeof createOrderSchema>;
 
-export const createOrder = async (data: CreateOrderData) => {
+export const createOrder = async (data: any) => {
+    // If data is FormData, axios handles headers automatically
     const response = await axios.post("/orders", data);
     return response.data;
 };
@@ -193,7 +200,30 @@ export const updateOrderStatus = async (orderId: number, status: string) => {
     return response.data;
 };
 
+// Updated updateOrder to support FormData (POST with _method=PUT is safer for files in some frameworks, but user asked for update)
+// We will try PUT. If backend is PHP/Laravel, it might need POST + _method: PUT for files.
+// For now, let's stick to standard PUT, unless we encounter issues.
+// Actually, safely, we can check if it's FormData.
+export const updateOrder = async (id: number, data: any) => {
+    const response = await axios.post(`/orders/${id}`, data, {
+        params: {
+            _method: 'PUT'
+        }
+    });
+    return response.data;
+};
 
+
+
+export const getDeliveryOrders = async (userId: number, params?: {
+    status?: string;
+    order_date_from?: string;
+    per_page?: number;
+    page?: number;
+}) => {
+    const response = await axios.get<OrdersResponse>(`/deliveries/${userId}/orders`, { params });
+    return response.data;
+};
 
 export const getMyDeliveryOrders = async (params?: { status?: string }) => {
     const response = await axios.get<OrdersResponse>("/deliveries/my-orders", { params });

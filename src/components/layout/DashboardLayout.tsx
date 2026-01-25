@@ -1,6 +1,7 @@
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Menu, LogOut, User, X, Database, Package, ShoppingCart, Plus, Truck } from "lucide-react";
 import { CreateTransactionModal } from "../../features/finance/components/CreateTransactionModal";
+import { TransferPettyCashModal } from "../../features/finance/components/TransferPettyCashModal";
 import { cn } from "../../lib/utils";
 import { Button } from "../ui/button";
 import { useAuth } from "../../context/AuthContext";
@@ -30,7 +31,6 @@ const sidebarItems: SidebarItem[] = [
         label: "My Orders",
         icon: Truck,
         to: "/my-orders",
-        allowedRoles: ['delivery boy', 'delivery_boy']
     },
     {
         label: "Inventory",
@@ -46,8 +46,8 @@ const sidebarItems: SidebarItem[] = [
         label: "Sales",
         icon: ShoppingCart,
         items: [
-            { label: "New Order", to: "/sales/new", permission: "sales_new" },
-            { label: "Pre-Orders", to: "/sales/pre-orders", permission: "sales_pre_orders" },
+            { label: "Create Quote", to: "/sales/create-quote", permission: "sales_pre_orders" },
+            { label: "New Order", to: "/orders/create", permission: "sales_new" },
             { label: "Confirmed Orders", to: "/sales/confirmed-orders", permission: "sales_confirmed" },
             { label: "Dispatched Orders", to: "/sales/dispatched-orders", permission: "sales_dispatched" },
             { label: "Out For Delivery", to: "/sales/out-for-delivery", permission: "sales_out_for_delivery" },
@@ -302,15 +302,23 @@ export default function DashboardLayout() {
                         </div>
 
                         <div className="flex items-center gap-3">
-                            <CreateTransactionModal
-                                collectedBy={user?.id}
-                                trigger={
-                                    <Button variant="outline" size="sm" className="gap-2 bg-slate-900 border-slate-900 text-white hover:bg-slate-800 hover:text-white shadow-sm">
-                                        <Plus className="h-4 w-4" />
-                                        <span className="hidden sm:inline">Add Transaction</span>
-                                    </Button>
-                                }
-                            />
+                            {user?.petty_cash_account && (
+                                <>
+                                    <CreateTransactionModal
+                                        collectedBy={user?.id}
+                                        trigger={
+                                            <Button variant="outline" size="sm" className="gap-2 bg-slate-900 border-slate-900 text-white hover:bg-slate-800 hover:text-white shadow-sm">
+                                                <Plus className="h-4 w-4" />
+                                                <span className="hidden sm:inline">Add Transaction</span>
+                                            </Button>
+                                        }
+                                    />
+                                    <TransferPettyCashModal
+                                        fromAccountId={(user.petty_cash_account as any).id}
+                                        currentBalance={(user.petty_cash_account as any).current_balance || "0"}
+                                    />
+                                </>
+                            )}
                             <Button
                                 variant="ghost"
                                 size="sm"

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CheckSquare } from "lucide-react";
+import { CheckSquare, Pencil } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Pagination } from "../../components/ui/pagination";
 import { Button } from "../../components/ui/button";
@@ -89,18 +89,20 @@ export default function OutForDeliveryOrdersPage() {
                                 <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
                                     <TableHead>Order ID</TableHead>
                                     <TableHead>Customer</TableHead>
-                                    <TableHead>Date</TableHead>
+                                    <TableHead>Location</TableHead>
+                                    <TableHead>Order Date</TableHead>
+                                    <TableHead>Delivery Date</TableHead>
                                     <TableHead>Delivery Boy</TableHead>
                                     <TableHead>Items</TableHead>
                                     <TableHead>Total Amount</TableHead>
-                                    <TableHead>Status</TableHead>
+                                    {/* <TableHead>Status</TableHead> */}
                                     <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {orders.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                                        <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
                                             No orders currently out for delivery.
                                         </TableCell>
                                     </TableRow>
@@ -108,6 +110,10 @@ export default function OutForDeliveryOrdersPage() {
                                     orders.map((order) => {
                                         const calculatedTotal = order.items?.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0) || 0;
                                         const deliveryBoy = order.deliveries?.[0]?.delivery_boy?.name || "-";
+                                        const deliveryDate = order.deliveries?.[0]?.delivery_date
+                                            ? format(new Date(order.deliveries[0].delivery_date), "PPP")
+                                            : (order.estimated_delivery_date ? format(new Date(order.estimated_delivery_date), "PPP") : "-");
+
                                         return (
                                             <TableRow key={order.id}>
                                                 <TableCell className="font-medium cursor-pointer hover:underline" onClick={() => navigate(`/orders/${order.id}`)}>#{order.id}</TableCell>
@@ -117,17 +123,38 @@ export default function OutForDeliveryOrdersPage() {
                                                         <span className="text-xs text-muted-foreground">{order.customer?.phone}</span>
                                                     </div>
                                                 </TableCell>
+                                                <TableCell>
+                                                    {order.customer?.location ? (
+                                                        <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200">
+                                                            {order.customer.location.name}
+                                                        </Badge>
+                                                    ) : "-"}
+                                                </TableCell>
                                                 <TableCell>{order.order_date ? format(new Date(order.order_date), "PPP") : "-"}</TableCell>
-                                                <TableCell>{deliveryBoy}</TableCell>
+                                                <TableCell>{deliveryDate}</TableCell>
+                                                <TableCell>
+                                                    <div className="flex items-center gap-1">
+                                                        <span className="text-sm font-medium text-slate-700">{deliveryBoy}</span>
+                                                    </div>
+                                                </TableCell>
                                                 <TableCell>{order.items?.length || 0} items</TableCell>
                                                 <TableCell>₹{calculatedTotal.toFixed(2)}</TableCell>
-                                                <TableCell>
+                                                {/* <TableCell>
                                                     <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
                                                         {order.status}
                                                     </Badge>
-                                                </TableCell>
+                                                </TableCell> */}
                                                 <TableCell className="text-right">
                                                     <div className="flex justify-end gap-2">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="ghost"
+                                                            className="text-slate-600"
+                                                            onClick={() => navigate(`/orders/edit/${order.id}`)}
+                                                            title="Edit Order"
+                                                        >
+                                                            <Pencil className="h-4 w-4" />
+                                                        </Button>
                                                         <Button
                                                             size="sm"
                                                             variant="ghost"
@@ -159,6 +186,10 @@ export default function OutForDeliveryOrdersPage() {
                         {orders.map((order) => {
                             const calculatedTotal = order.items?.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0) || 0;
                             const deliveryBoy = order.deliveries?.[0]?.delivery_boy?.name || "-";
+                            const deliveryDate = order.deliveries?.[0]?.delivery_date
+                                ? format(new Date(order.deliveries[0].delivery_date), "PPP")
+                                : (order.estimated_delivery_date ? format(new Date(order.estimated_delivery_date), "PPP") : "-");
+
                             return (
                                 <div key={order.id} className="p-4 space-y-3 bg-white">
                                     <div className="flex justify-between items-start">
@@ -179,12 +210,28 @@ export default function OutForDeliveryOrdersPage() {
                                             <span className="text-gray-500 text-xs block">Total</span>
                                             <span className="font-medium text-gray-900">₹{calculatedTotal.toFixed(2)}</span>
                                         </div>
+                                        <div>
+                                            <span className="text-gray-500 text-xs block">Location</span>
+                                            <span className="font-medium text-gray-900">{order.customer?.location?.name || "-"}</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-gray-500 text-xs block">Delivery Date</span>
+                                            <span className="font-medium text-gray-900">{deliveryDate}</span>
+                                        </div>
                                         <div className="col-span-2">
                                             <span className="text-gray-500 text-xs block">Delivery Boy</span>
                                             <span className="font-medium text-gray-900">{deliveryBoy}</span>
                                         </div>
                                     </div>
                                     <div className="pt-2 flex gap-2">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="flex-1 gap-2"
+                                            onClick={() => navigate(`/orders/edit/${order.id}`)}
+                                        >
+                                            <Pencil className="h-4 w-4" /> Edit
+                                        </Button>
                                         <Button
                                             size="sm"
                                             variant="outline"

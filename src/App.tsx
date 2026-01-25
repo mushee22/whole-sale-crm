@@ -28,7 +28,7 @@ import SizesPage from "./features/master-data/pages/SizesPage";
 import LocationsPage from "./features/master-data/pages/LocationsPage";
 import { AuthProvider } from "./context/AuthContext";
 import { SalesOrderPage } from "./features/sales/pages/SalesOrderPage";
-import { PreOrderListPage } from "./features/sales/pages/PreOrderListPage";
+import { CreateQuotePage } from "./features/sales/pages/CreateQuotePage";
 import { CreateOrderFromPreOrderPage } from "./features/sales/pages/CreateOrderFromPreOrderPage";
 import { PreOrderDetailsPage } from "./features/sales/pages/PreOrderDetailsPage";
 import ConfirmedOrdersPage from "./features/orders/ConfirmedOrdersPage";
@@ -44,7 +44,7 @@ import EditRolePage from "./features/roles/components/EditRolePage";
 import { PettyCashPage } from "./features/finance/pages/PettyCashPage";
 import { PettyCashDetailsPage } from "./features/finance/pages/PettyCashDetailsPage";
 import { CustomerTransactionsPage } from "./features/finance/pages/CustomerTransactionsPage";
-import InvoicesListPage from "./features/accounts/pages/InvoicesListPage";
+import AccountsPage from "./features/accounts/pages/AccountsPage";
 import { InvoiceDetailsPage } from "./features/accounts/pages/InvoiceDetailsPage";
 import MyOrdersPage from "./features/orders/pages/MyOrdersPage";
 import PettyCashTransactionsPage from "./features/finance/pages/PettyCashTransactionsPage";
@@ -232,7 +232,7 @@ const router = createBrowserRouter([
       {
         path: "accounts",
         element: (
-          <InvoicesListPage />
+          <AccountsPage />
         ),
       },
       {
@@ -247,9 +247,13 @@ const router = createBrowserRouter([
       },
 
       {
-        path: "sales/pre-orders",
-        element: <PreOrderListPage />,
+        path: "sales/create-quote",
+        element: <CreateQuotePage />,
       },
+      // {
+      //   path: "sales/pre-orders",
+      //   element: <PreOrderListPage />,
+      // },
       {
         path: "sales/pre-orders/:id",
         element: <PreOrderDetailsPage />,

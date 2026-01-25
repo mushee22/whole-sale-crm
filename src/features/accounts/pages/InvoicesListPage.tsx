@@ -1,19 +1,26 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { Pagination } from "../../../components/ui/pagination";
 import { Card, CardHeader, CardContent, CardTitle } from "../../../components/ui/card";
-import { FileText, Calendar } from "lucide-react";
+import { FileText, Calendar, CheckCircle } from "lucide-react";
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
-import { getInvoices } from "../api/invoices";
+import { getInvoices, updateInvoice } from "../api/invoices";
 import { Badge } from "../../../components/ui/badge";
-
+import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import {
+    Tabs,
+    TabsList,
+    TabsTrigger,
+} from "../../../components/ui/tabs";
+import { PermissionGuard } from "../../../hooks/usePermission";
 
 export default function InvoicesListPage() {
     const navigate = useNavigate();
     const [page, setPage] = useState(1);
+    const [viewFilter, setViewFilter] = useState<'all' | 'in_queue' | 'completed'>('all');
 
     // Default to current month
     const date = new Date();
@@ -23,14 +30,26 @@ export default function InvoicesListPage() {
     const [dateFrom, setDateFrom] = useState(firstDay);
     const [dateTo, setDateTo] = useState(lastDay);
 
+    const queryClient = useQueryClient();
+
     const { data: invoicesData, isLoading } = useQuery({
-        queryKey: ['invoices', page, dateFrom, dateTo],
+        queryKey: ['invoices', page, dateFrom, dateTo, viewFilter],
         queryFn: () => getInvoices({
             page,
             per_page: 15,
             date_from: dateFrom,
-            date_to: dateTo
+            date_to: dateTo,
+            is_moved_to_system: viewFilter === 'all' ? undefined : viewFilter === 'completed'
         }),
+    });
+
+    const moveSystemMutation = useMutation({
+        mutationFn: (id: number) => updateInvoice(id, { is_moved_to_system: true }),
+        onSuccess: () => {
+            toast.success("Invoice marked as moved to system");
+            queryClient.invalidateQueries({ queryKey: ['invoices'] });
+        },
+        onError: () => toast.error("Failed to update status"),
     });
 
     const invoices = invoicesData?.data || [];
@@ -78,14 +97,34 @@ export default function InvoicesListPage() {
                                 className="h-9 w-[150px]"
                             />
                         </div>
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-gray-500 flex items-center gap-1">
+                                <FileText className="h-3 w-3" /> View
+                            </label>
+                            <Tabs
+                                value={viewFilter}
+                                onValueChange={(val) => {
+                                    setViewFilter(val as 'all' | 'in_queue' | 'completed');
+                                    setPage(1);
+                                }}
+                                className="w-[300px]"
+                            >
+                                <TabsList className="grid w-full grid-cols-3 h-9">
+                                    <TabsTrigger value="all" className="text-xs">All</TabsTrigger>
+                                    <TabsTrigger value="in_queue" className="text-xs">In Queue</TabsTrigger>
+                                    <TabsTrigger value="completed" className="text-xs">Moved</TabsTrigger>
+                                </TabsList>
+                            </Tabs>
+                        </div>
                         <div className="ml-auto">
-                            {(dateFrom !== firstDay || dateTo !== lastDay) && (
+                            {(dateFrom !== firstDay || dateTo !== lastDay || viewFilter !== 'all') && (
                                 <Button
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => {
                                         setDateFrom(firstDay);
                                         setDateTo(lastDay);
+                                        setViewFilter('all');
                                         setPage(1);
                                     }}
                                     className="text-red-500 hover:text-red-700 hover:bg-red-50"
@@ -104,17 +143,19 @@ export default function InvoicesListPage() {
                                     <TableHead>Date</TableHead>
                                     <TableHead>Customer</TableHead>
                                     <TableHead>Status</TableHead>
+                                    <TableHead>Moved to System</TableHead>
                                     <TableHead className="text-right">Amount</TableHead>
+                                    <TableHead className="w-[100px]"></TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {isLoading ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="text-center py-8 text-gray-500">Loading invoices...</TableCell>
+                                        <TableCell colSpan={7} className="text-center py-8 text-gray-500">Loading invoices...</TableCell>
                                     </TableRow>
                                 ) : invoices.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                                        <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
                                             No invoices found for the selected period.
                                         </TableCell>
                                     </TableRow>
@@ -140,6 +181,26 @@ export default function InvoicesListPage() {
                                                 >
                                                     {invoice.order?.status || 'Unknown'}
                                                 </Badge>
+                                            </TableCell>
+                                            <TableCell>
+                                                {invoice.is_moved_to_system ? (
+                                                    <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                                        <CheckCircle className="h-3 w-3 mr-1" />
+                                                        Moved
+                                                    </Badge>
+                                                ) : (
+                                                    <PermissionGuard module="accounts" action="mark_moved_to_system">
+                                                        <Button
+                                                            variant="outline"
+                                                            size="sm"
+                                                            className="h-7 text-xs bg-slate-50 border-slate-200 text-slate-600 hover:bg-green-50 hover:text-green-700 hover:border-green-200"
+                                                            onClick={() => moveSystemMutation.mutate(invoice.id)}
+                                                            disabled={moveSystemMutation.isPending}
+                                                        >
+                                                            Mark as Moved
+                                                        </Button>
+                                                    </PermissionGuard>
+                                                )}
                                             </TableCell>
                                             <TableCell className="text-right font-bold text-slate-900">
                                                 {invoice.total_amount}

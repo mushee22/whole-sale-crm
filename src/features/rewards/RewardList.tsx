@@ -11,6 +11,7 @@ import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import RewardForm from "./components/RewardForm";
 import { useAuth } from "../../context/AuthContext";
+import { PermissionGuard } from "../../hooks/usePermission";
 
 export default function RewardList() {
     const queryClient = useQueryClient();
@@ -93,10 +94,12 @@ export default function RewardList() {
                         <p className="text-sm text-gray-500">Manage customer rewards and redemption options.</p>
                     </div>
                     {user?.role !== 'staff' && (
-                        <Button onClick={openCreate} className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20">
-                            <Plus className="h-4 w-4 mr-2" />
-                            Add Reward
-                        </Button>
+                        <PermissionGuard module="rewards" action="add">
+                            <Button onClick={openCreate} className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20">
+                                <Plus className="h-4 w-4 mr-2" />
+                                Add Reward
+                            </Button>
+                        </PermissionGuard>
                     )}
                 </CardHeader>
 
@@ -138,22 +141,26 @@ export default function RewardList() {
 
                                         {user?.role !== 'staff' && (
                                             <div className="flex justify-end gap-2 pt-2 border-t border-gray-50">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-8 text-blue-600 border-blue-200 hover:bg-blue-50"
-                                                    onClick={() => openEdit(reward)}
-                                                >
-                                                    <Pencil className="h-4 w-4 mr-2" /> Edit
-                                                </Button>
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-8 text-red-600 border-red-200 hover:bg-red-50"
-                                                    onClick={() => setDeleteId(reward.id)}
-                                                >
-                                                    <Trash2 className="h-4 w-4 mr-2" /> Delete
-                                                </Button>
+                                                <PermissionGuard module="rewards" action="update">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 text-blue-600 border-blue-200 hover:bg-blue-50"
+                                                        onClick={() => openEdit(reward)}
+                                                    >
+                                                        <Pencil className="h-4 w-4 mr-2" /> Edit
+                                                    </Button>
+                                                </PermissionGuard>
+                                                <PermissionGuard module="rewards" action="delete">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 text-red-600 border-red-200 hover:bg-red-50"
+                                                        onClick={() => setDeleteId(reward.id)}
+                                                    >
+                                                        <Trash2 className="h-4 w-4 mr-2" /> Delete
+                                                    </Button>
+                                                </PermissionGuard>
                                             </div>
                                         )}
                                     </div>
@@ -202,22 +209,26 @@ export default function RewardList() {
                                                     <div className="flex justify-end gap-1">
                                                         {user?.role !== 'staff' && (
                                                             <>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                                    onClick={() => openEdit(reward)}
-                                                                >
-                                                                    <Pencil className="h-4 w-4" />
-                                                                </Button>
-                                                                <Button
-                                                                    variant="ghost"
-                                                                    size="icon"
-                                                                    className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                                    onClick={() => setDeleteId(reward.id)}
-                                                                >
-                                                                    <Trash2 className="h-4 w-4" />
-                                                                </Button>
+                                                                <PermissionGuard module="rewards" action="update">
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                                        onClick={() => openEdit(reward)}
+                                                                    >
+                                                                        <Pencil className="h-4 w-4" />
+                                                                    </Button>
+                                                                </PermissionGuard>
+                                                                <PermissionGuard module="rewards" action="delete">
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                                        onClick={() => setDeleteId(reward.id)}
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                </PermissionGuard>
                                                             </>
                                                         )}
                                                     </div>

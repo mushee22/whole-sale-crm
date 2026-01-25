@@ -14,6 +14,7 @@ import { Pagination } from "../../components/ui/pagination";
 import CustomerOrdersList from "./components/CustomerOrdersList";
 import { CreateTransactionModal } from "../finance/components/CreateTransactionModal";
 import { EditTransactionModal } from "../finance/components/EditTransactionModal";
+import { EditCustomerPricesModal } from "./components/EditCustomerPricesModal";
 import { PermissionGuard } from "../../hooks/usePermission";
 
 export default function CustomerDetailsPage() {
@@ -22,6 +23,7 @@ export default function CustomerDetailsPage() {
     const customerId = Number(id);
     const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
     const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
+    const [isEditPriceModalOpen, setIsEditPriceModalOpen] = useState(false);
     const [transactionPage, setTransactionPage] = useState(1);
     const { user } = useAuth();
 
@@ -181,7 +183,7 @@ export default function CustomerDetailsPage() {
                                                         <Badge variant="outline" className={`capitalize
                                                             ${tx.type === 'credit' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}
                                                         `}>
-                                                            {tx.type}
+                                                            {tx.type === 'credit' ? 'Cash Collected' : 'Sale'}
                                                         </Badge>
                                                     </TableCell>
                                                     <TableCell className="capitalize text-sm text-gray-700">{tx.payment_mode}</TableCell>
@@ -191,20 +193,39 @@ export default function CustomerDetailsPage() {
                                                             setSelectedOrderId(tx.order!.id);
                                                             setIsOrderModalOpen(true);
                                                         }}>(Order #{tx.order.order_number})</span>}
+                                                        {tx.invoice && (
+                                                            <span
+                                                                className="ml-1 text-xs text-blue-500 cursor-pointer hover:underline"
+                                                                onClick={() => navigate(`/accounts/${tx.invoice!.id}`)}
+                                                            >
+                                                                (Invoice #{tx.invoice.id})
+                                                            </span>
+                                                        )}
                                                     </TableCell>
                                                     <TableCell className={`text-right font-bold ${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
                                                         {tx.type === 'credit' ? '+' : '-'}{tx.amount}
                                                     </TableCell>
                                                     <TableCell>
                                                         <PermissionGuard module="finance" action="update">
-                                                            <EditTransactionModal
-                                                                transaction={tx}
-                                                                trigger={
-                                                                    <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-blue-600">
-                                                                        <Edit className="h-3 w-3" />
-                                                                    </Button>
-                                                                }
-                                                            />
+                                                            {tx.invoice && tx.invoice.order_id ? (
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-6 w-6 text-gray-400 hover:text-blue-600"
+                                                                    onClick={() => navigate(`/orders/edit/${tx.invoice!.order_id}`)}
+                                                                >
+                                                                    <Edit className="h-3 w-3" />
+                                                                </Button>
+                                                            ) : (
+                                                                <EditTransactionModal
+                                                                    transaction={tx}
+                                                                    trigger={
+                                                                        <Button variant="ghost" size="icon" className="h-6 w-6 text-gray-400 hover:text-blue-600">
+                                                                            <Edit className="h-3 w-3" />
+                                                                        </Button>
+                                                                    }
+                                                                />
+                                                            )}
                                                         </PermissionGuard>
                                                     </TableCell>
                                                 </TableRow>
@@ -233,13 +254,16 @@ export default function CustomerDetailsPage() {
                 {/* Right Column: Special Pricing (Takes up 1 col) */}
                 < div className="space-y-6" >
                     <Card className="border-gray-100 shadow-sm flex flex-col h-full">
-                        <CardHeader className="border-b border-gray-100 bg-purple-50/30 pb-4">
+                        <CardHeader className="border-b border-gray-100 bg-purple-50/30 pb-4 flex flex-row items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <Badge variant="outline" className="bg-purple-100 text-purple-700 border-purple-200">
                                     Offers
                                 </Badge>
                                 <CardTitle className="text-lg font-semibold text-slate-800">Special Pricing</CardTitle>
                             </div>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-indigo-600" onClick={() => setIsEditPriceModalOpen(true)}>
+                                <Edit className="h-4 w-4" />
+                            </Button>
                         </CardHeader>
                         <CardContent className="p-0 flex-1 overflow-auto">
                             <div className="divide-y divide-gray-100">
@@ -277,6 +301,12 @@ export default function CustomerDetailsPage() {
                 orderId={selectedOrderId}
                 isOpen={isOrderModalOpen}
                 onClose={() => setIsOrderModalOpen(false)}
+            />
+
+            <EditCustomerPricesModal
+                customerId={customerId}
+                isOpen={isEditPriceModalOpen}
+                onClose={() => setIsEditPriceModalOpen(false)}
             />
         </div >
     );

@@ -9,6 +9,7 @@ import { Pagination } from "../../components/ui/pagination";
 import { Plus, Search, Calendar, User, Gift } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Badge } from "../../components/ui/badge";
+import { PermissionGuard } from "../../hooks/usePermission";
 
 export default function ClaimsListPage() {
     const navigate = useNavigate();
@@ -36,12 +37,14 @@ export default function ClaimsListPage() {
                         <CardTitle className="text-xl font-bold">Claims History</CardTitle>
                         <p className="text-sm text-gray-500">Manage reward redemptions.</p>
                     </div>
-                    <Button
-                        onClick={() => navigate("/claims/new")}
-                        className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20"
-                    >
-                        <Plus className="mr-2 h-4 w-4" /> New Claim
-                    </Button>
+                    <PermissionGuard module="claims" action="add">
+                        <Button
+                            onClick={() => navigate("/claims/new")}
+                            className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20"
+                        >
+                            <Plus className="mr-2 h-4 w-4" /> New Claim
+                        </Button>
+                    </PermissionGuard>
                 </CardHeader>
 
                 <CardContent className="p-0">

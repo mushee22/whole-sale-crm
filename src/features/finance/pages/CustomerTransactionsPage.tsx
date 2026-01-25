@@ -1,9 +1,13 @@
 import CustomerTransactionList from "../components/CustomerTransactionList";
 
-export const CustomerTransactionsPage = () => {
+interface CustomerTransactionsPageProps {
+    isAccountsMode?: boolean;
+}
+
+export const CustomerTransactionsPage = ({ isAccountsMode = false }: CustomerTransactionsPageProps) => {
     return (
         <div>
-            <CustomerTransactionList />
+            <CustomerTransactionList isAccountsMode={isAccountsMode} />
         </div>
     );
 };

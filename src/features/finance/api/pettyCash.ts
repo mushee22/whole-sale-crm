@@ -57,6 +57,7 @@ export interface PettyCashTransaction {
     updated_at: string;
     from_account: PettyCashAccount | null;
     to_account: PettyCashAccount | null;
+    is_moved_to_system?: boolean;
 }
 
 export interface PettyCashTransactionsResponse {
@@ -101,6 +102,7 @@ export const getAllPettyCashTransactions = async (params?: {
     date_to?: string;
     per_page?: number;
     page?: number;
+    is_moved_to_system?: boolean;
 }) => {
     const response = await api.get<PettyCashTransactionsResponse>("/petty-cash-transactions", { params });
     return response.data;
@@ -126,5 +128,20 @@ export const createPettyCashAccount = async (data: CreatePettyCashAccountParams)
 
 export const transferPettyCash = async (data: TransferPettyCashParams) => {
     const response = await api.post("/petty-cash/transfer", data);
+    return response.data;
+};
+
+export const updatePettyCashTransaction = async (id: number, data: { is_moved_to_system?: boolean }) => {
+    const response = await api.put(`/petty-cash-transactions/${id}`, data);
+    return response.data;
+};
+
+export const updatePettyCashAccount = async (id: number, data: { opening_balance?: number; is_amount_accepted?: boolean }) => {
+    const response = await api.put(`/petty-cash-accounts/${id}`, data);
+    return response.data;
+};
+
+export const deletePettyCashAccount = async (id: number) => {
+    const response = await api.delete(`/petty-cash-accounts/${id}`);
     return response.data;
 };

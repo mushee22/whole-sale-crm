@@ -9,8 +9,8 @@ import { getCustomers } from "./api/customers";
 import { useNavigate } from "react-router-dom";
 import { Modal } from "../../components/ui/modal";
 import CustomerForm from "./components/CustomerForm";
-
 import { useAuth } from "../../context/AuthContext";
+import { PermissionGuard } from "../../hooks/usePermission";
 
 export default function CustomerList() {
     const navigate = useNavigate();
@@ -42,12 +42,14 @@ export default function CustomerList() {
                         <p className="text-sm text-gray-500">Manage your customer base and loyalty points.</p>
                     </div>
                     {user?.role !== 'staff' && (
-                        <Button
-                            className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20"
-                            onClick={() => setIsModalOpen(true)}
-                        >
-                            + Add Customer
-                        </Button>
+                        <PermissionGuard module="customers" action="add">
+                            <Button
+                                className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20"
+                                onClick={() => setIsModalOpen(true)}
+                            >
+                                + Add Customer
+                            </Button>
+                        </PermissionGuard>
                     )}
                 </CardHeader>
                 <CardContent className="p-0">
@@ -108,14 +110,16 @@ export default function CustomerList() {
 
                                 {user?.role !== 'staff' && (
                                     <div className="pt-2 border-t border-gray-50 flex justify-end">
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 w-full"
-                                            onClick={() => openEdit(customer)}
-                                        >
-                                            <Pencil className="h-4 w-4 mr-2" /> Edit Customer
-                                        </Button>
+                                        <PermissionGuard module="customers" action="update">
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 w-full"
+                                                onClick={() => openEdit(customer)}
+                                            >
+                                                <Pencil className="h-4 w-4 mr-2" /> Edit Customer
+                                            </Button>
+                                        </PermissionGuard>
                                     </div>
                                 )}
                             </div>
@@ -174,14 +178,16 @@ export default function CustomerList() {
                                         <TableCell className="text-right">
                                             <div className="flex justify-end gap-2">
                                                 {user?.role !== 'staff' && (
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                        onClick={() => openEdit(customer)}
-                                                    >
-                                                        <Pencil className="h-4 w-4" />
-                                                    </Button>
+                                                    <PermissionGuard module="customers" action="update">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                            onClick={() => openEdit(customer)}
+                                                        >
+                                                            <Pencil className="h-4 w-4" />
+                                                        </Button>
+                                                    </PermissionGuard>
                                                 )}
                                                 <Button
                                                     variant="ghost"

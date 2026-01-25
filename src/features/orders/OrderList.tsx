@@ -12,6 +12,7 @@ import { Badge } from "../../components/ui/badge";
 import { format } from "date-fns";
 import { getOrders } from "./api/orders";
 import ExportOrdersModal from "../reports/components/ExportOrdersModal";
+import { PermissionGuard } from "../../hooks/usePermission";
 
 export default function OrderList() {
     const { user } = useAuth();
@@ -48,22 +49,26 @@ export default function OrderList() {
                         <p className="text-sm text-gray-500">View and manage all orders here.</p>
                     </div>
                     <div className="flex gap-2 w-full sm:w-auto">
-                        {user?.role !== 'staff' && (
+                        <PermissionGuard module="reports" action="export">
+                            {user?.role !== 'staff' && (
+                                <Button
+                                    variant="outline"
+                                    className="bg-white hover:bg-slate-50 text-slate-900 border-slate-200"
+                                    onClick={() => setIsExportModalOpen(true)}
+                                >
+                                    <Download className="mr-2 h-4 w-4" />
+                                    Export
+                                </Button>
+                            )}
+                        </PermissionGuard>
+                        <PermissionGuard module="orders" action="add">
                             <Button
-                                variant="outline"
-                                className="bg-white hover:bg-slate-50 text-slate-900 border-slate-200"
-                                onClick={() => setIsExportModalOpen(true)}
+                                className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20 w-full sm:w-auto"
+                                onClick={() => navigate('/orders/create')}
                             >
-                                <Download className="mr-2 h-4 w-4" />
-                                Export
+                                + Create Manual Order
                             </Button>
-                        )}
-                        <Button
-                            className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20 w-full sm:w-auto"
-                            onClick={() => navigate('/orders/create')}
-                        >
-                            + Create Manual Order
-                        </Button>
+                        </PermissionGuard>
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">

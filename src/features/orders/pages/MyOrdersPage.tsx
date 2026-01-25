@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-import { getMyDeliveryOrders } from "../api/orders";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
 import { Badge } from "../../../components/ui/badge";
@@ -14,13 +13,23 @@ import {
     SelectValue,
 } from "../../../components/ui/select";
 
+import { useAuth } from "../../../context/AuthContext";
+import { getDeliveryOrders } from "../api/orders";
+import { PermissionGuard } from "../../../hooks/usePermission";
+
 export default function MyOrdersPage() {
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [statusFilter, setStatusFilter] = useState<string>('out_for_delivery');
 
     const { data, isLoading } = useQuery({
-        queryKey: ['my-delivery-orders', statusFilter],
-        queryFn: () => getMyDeliveryOrders({ status: statusFilter }),
+        queryKey: ['my-delivery-orders', user?.id, statusFilter],
+        queryFn: () => getDeliveryOrders(user!.id, {
+            status: statusFilter,
+            order_date_from: '2024-01-01',
+            per_page: 15
+        }),
+        enabled: !!user?.id
     });
 
 
@@ -47,7 +56,6 @@ export default function MyOrdersPage() {
                         </SelectTrigger>
                         <SelectContent>
                             <SelectItem value="out_for_delivery">Out for Delivery</SelectItem>
-                            <SelectItem value="dispatched">Dispatched</SelectItem>
                             <SelectItem value="delivered">Delivered</SelectItem>
                             <SelectItem value="cancelled">Cancelled</SelectItem>
                         </SelectContent>
@@ -126,13 +134,15 @@ export default function MyOrdersPage() {
                                     View Details
                                 </Button>
                                 {order.status === 'out_for_delivery' && (
-                                    <Button
-                                        className="flex-1 bg-blue-600 hover:bg-blue-700"
-                                        onClick={() => navigate(`/sales/out-for-delivery/${order.id}/check`)}
-                                    >
-                                        <CheckCircle className="w-4 h-4 mr-2" />
-                                        Delivery Check
-                                    </Button>
+                                    <PermissionGuard module="sales" action="delivery_check">
+                                        <Button
+                                            className="flex-1 bg-blue-600 hover:bg-blue-700"
+                                            onClick={() => navigate(`/sales/out-for-delivery/${order.id}/check`)}
+                                        >
+                                            <CheckCircle className="w-4 h-4 mr-2" />
+                                            Delivery Check
+                                        </Button>
+                                    </PermissionGuard>
                                 )}
                             </div>
                         </CardContent>

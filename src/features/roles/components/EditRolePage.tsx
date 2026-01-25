@@ -15,39 +15,36 @@ import { ArrowLeft, Shield } from "lucide-react";
 
 const modules = [
     // Management
-    { key: "users", label: "Users" },
-    { key: "delivery_boys", label: "Delivery Boys" },
-    { key: "customers", label: "Customers" },
-    { key: "roles", label: "Roles" },
+    { key: "users", label: "Users", actions: ["view", "add", "update", "delete"] },
+    { key: "delivery_boys", label: "Delivery Boys", actions: ["view", "add", "update", "delete"] },
+    { key: "customers", label: "Customers", actions: ["add", "update"] },
+    { key: "roles", label: "Roles", actions: ["add", "update"] },
 
-    // Inventory
-    { key: "products", label: "Products" },
-    { key: "colors", label: "Colors" },
-    { key: "sizes", label: "Sizes" },
-    { key: "locations", label: "Locations" },
+    // Orders & Sales
+    { key: "orders", label: "Orders", actions: ["add", "update", "delete", "update_status"] },
+    { key: "sales", label: "Sales Operations", actions: ["dispatch_check", "delivery_check"] },
 
-    // Sales
-    { key: "sales_new", label: "New Orders" },
-    { key: "sales_pre_orders", label: "Pre-Orders" },
-    { key: "sales_confirmed", label: "Confirmed Orders" },
-    { key: "sales_dispatched", label: "Dispatched Orders" },
-    { key: "sales_out_for_delivery", label: "Out For Delivery" },
-    { key: "sales_completed", label: "Completed Orders" },
-    { key: "sales_cancelled", label: "Cancelled Orders" },
-    { key: "orders", label: "All Orders" },
+    // Finance & Accounts
+    { key: "finance", label: "Finance", actions: ["add", "update", "delete", "mark_moved_to_system"] },
+    { key: "accounts", label: "Accounts", actions: ["mark_moved_to_system"] },
 
-    // Finance
-    { key: "petty_cash", label: "Petty Cash" },
-    { key: "petty_cash_transactions", label: "Petty Cash Transactions" },
-    { key: "customer_transactions", label: "Customer Transactions" },
-    { key: "accounts", label: "Accounts" },
+    // Master Data - Inventory
+    { key: "products", label: "Products", actions: ["add", "update", "delete"] },
+    { key: "product_variants", label: "Product Variants", actions: ["add", "update", "delete"] },
+    { key: "colors", label: "Colors", actions: ["add", "update", "delete"] },
+    { key: "sizes", label: "Sizes", actions: ["add", "update", "delete"] },
+    { key: "locations", label: "Locations", actions: ["add", "update", "delete"] },
 
-    // Other / System
-    { key: "dashboard", label: "Dashboard" },
-    { key: "settings", label: "Settings" },
+    // Loyalty & Rewards
+    { key: "loyalties", label: "Loyalty Rules", actions: ["add", "update", "delete"] },
+    { key: "rewards", label: "Rewards", actions: ["add", "update", "delete"] },
+    { key: "claims", label: "Claims", actions: ["add"] },
+
+    // Reports & Other
+    { key: "reports", label: "Reports", actions: ["export"] },
+    { key: "dashboard", label: "Dashboard", actions: ["view"] },
+    { key: "settings", label: "Settings", actions: ["view", "update"] },
 ];
-
-const actions = ["view", "add", "update", "delete"];
 
 const updateRoleSchema = z.object({
     name: z.string().min(1, "Role name is required"),
@@ -69,7 +66,9 @@ export default function EditRolePage() {
     });
 
     const isModuleAllSelected = (moduleKey: string) => {
-        return actions.every(action => selectedPermissions.includes(`${moduleKey}.${action}`));
+        const module = modules.find(m => m.key === moduleKey);
+        if (!module) return false;
+        return module.actions.every(action => selectedPermissions.includes(`${moduleKey}.${action}`));
     };
 
     const { register, handleSubmit, formState: { errors }, setValue } = useForm<UpdateRoleData>({
@@ -119,8 +118,11 @@ export default function EditRolePage() {
     };
 
     const handleModuleToggle = (moduleKey: string, checked: boolean) => {
+        const module = modules.find(m => m.key === moduleKey);
+        if (!module) return;
+
         let newPermissions = [...selectedPermissions];
-        const modulePermissions = actions.map(action => `${moduleKey}.${action}`);
+        const modulePermissions = module.actions.map(action => `${moduleKey}.${action}`);
 
         if (checked) {
             modulePermissions.forEach(p => {
@@ -186,36 +188,39 @@ export default function EditRolePage() {
                             </div>
                         )}
                         <div className="rounded-md border border-slate-100 m-6 overflow-hidden">
-                            <div className="grid grid-cols-6 gap-4 bg-slate-50 p-4 border-b border-slate-100 text-sm font-semibold text-slate-700">
-                                <div className="col-span-2">Module</div>
-                                {actions.map(action => (
-                                    <div key={action} className="text-center capitalize">{action}</div>
-                                ))}
+                            <div className="grid grid-cols-1 gap-4 bg-slate-50 p-4 border-b border-slate-100 text-sm font-semibold text-slate-700">
+                                <div>Module & Permissions</div>
                             </div>
                             <div className="divide-y divide-slate-100">
                                 {modules.map((module) => (
-                                    <div key={module.key} className="grid grid-cols-6 gap-4 p-4 items-center hover:bg-slate-50/50 transition-colors">
-                                        <div className="col-span-2 flex items-center gap-3">
+                                    <div key={module.key} className="p-4 hover:bg-slate-50/50 transition-colors">
+                                        <div className="flex items-center gap-3 mb-3">
                                             <Checkbox
                                                 checked={isModuleAllSelected(module.key)}
                                                 onCheckedChange={(checked) => handleModuleToggle(module.key, checked as boolean)}
                                                 id={`module-${module.key}`}
                                             />
-                                            <Label htmlFor={`module-${module.key}`} className="font-medium cursor-pointer">
+                                            <Label htmlFor={`module-${module.key}`} className="font-medium cursor-pointer text-base">
                                                 {module.label}
                                             </Label>
                                         </div>
-                                        {actions.map(action => {
-                                            const permissionString = `${module.key}.${action}`;
-                                            return (
-                                                <div key={permissionString} className="flex justify-center">
-                                                    <Checkbox
-                                                        checked={selectedPermissions.includes(permissionString)}
-                                                        onCheckedChange={(checked) => handlePermissionChange(permissionString, checked as boolean)}
-                                                    />
-                                                </div>
-                                            );
-                                        })}
+                                        <div className="flex flex-wrap gap-4 ml-8">
+                                            {module.actions.map(action => {
+                                                const permissionString = `${module.key}.${action}`;
+                                                return (
+                                                    <div key={permissionString} className="flex items-center gap-2">
+                                                        <Checkbox
+                                                            checked={selectedPermissions.includes(permissionString)}
+                                                            onCheckedChange={(checked) => handlePermissionChange(permissionString, checked as boolean)}
+                                                            id={permissionString}
+                                                        />
+                                                        <Label htmlFor={permissionString} className="text-sm cursor-pointer capitalize">
+                                                            {action.replace(/_/g, ' ')}
+                                                        </Label>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
                                     </div>
                                 ))}
                             </div>

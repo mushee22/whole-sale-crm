@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getOrders } from "../../orders/api/orders";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
@@ -8,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { Input } from "../../../components/ui/input";
 import { Button } from "../../../components/ui/button";
 import { Package, Eye } from "lucide-react";
-import OrderDetailsModal from "../../orders/components/OrderDetailsModal";
 import { Pagination } from "../../../components/ui/pagination";
 
 interface CustomerOrdersListProps {
@@ -16,11 +16,10 @@ interface CustomerOrdersListProps {
 }
 
 export default function CustomerOrdersList({ customerId }: CustomerOrdersListProps) {
+    const navigate = useNavigate();
     const [page, setPage] = useState(1);
     const [status, setStatus] = useState<string>("all"); // Default to all
     const [dateFrom, setDateFrom] = useState<string>("");
-    const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
-    const [isOrderModalOpen, setIsOrderModalOpen] = useState(false);
 
     const { data: ordersData, isLoading } = useQuery({
         queryKey: ["customer-orders", customerId, page, status, dateFrom],
@@ -124,10 +123,7 @@ export default function CustomerOrdersList({ customerId }: CustomerOrdersListPro
                                                 variant="ghost"
                                                 size="icon"
                                                 className="h-8 w-8 text-slate-400 hover:text-blue-600"
-                                                onClick={() => {
-                                                    setSelectedOrderId(order.id);
-                                                    setIsOrderModalOpen(true);
-                                                }}
+                                                onClick={() => navigate(`/orders/${order.id}`)}
                                             >
                                                 <Eye className="h-4 w-4" />
                                             </Button>
@@ -155,12 +151,6 @@ export default function CustomerOrdersList({ customerId }: CustomerOrdersListPro
                     </div>
                 )}
             </CardContent>
-
-            <OrderDetailsModal
-                orderId={selectedOrderId}
-                isOpen={isOrderModalOpen}
-                onClose={() => setIsOrderModalOpen(false)}
-            />
         </Card>
     );
 }

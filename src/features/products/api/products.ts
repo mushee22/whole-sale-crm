@@ -68,6 +68,11 @@ export const getProducts = async (params: GetProductsParams = {}) => {
     return response.data;
 };
 
+export const getProduct = async (id: number) => {
+    const response = await api.get<{ data: Product }>(`products/${id}`);
+    return response.data.data;
+};
+
 export const createProduct = async (data: CreateProductData) => {
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {

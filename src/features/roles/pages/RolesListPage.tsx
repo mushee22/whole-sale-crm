@@ -30,12 +30,14 @@ export default function RolesListPage() {
                         </CardTitle>
                         <p className="text-sm text-gray-500">Manage system roles and their access levels.</p>
                     </div>
-                    <Button
-                        onClick={() => navigate("/roles/create")}
-                        className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20"
-                    >
-                        <Plus className="mr-2 h-4 w-4" /> Create Role
-                    </Button>
+                    <PermissionGuard module="roles" action="add">
+                        <Button
+                            onClick={() => navigate("/roles/create")}
+                            className="bg-slate-900 hover:bg-slate-800 text-white shadow-lg shadow-slate-900/20"
+                        >
+                            <Plus className="mr-2 h-4 w-4" /> Create Role
+                        </Button>
+                    </PermissionGuard>
                 </CardHeader>
 
                 <CardContent className="p-0">

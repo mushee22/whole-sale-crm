@@ -8,13 +8,15 @@ import { Badge } from "../../components/ui/badge";
 import { format } from "date-fns";
 import { getOrders } from "./api/orders";
 import { AssignDeliveryModal } from "./components/AssignDeliveryModal";
-import { Truck } from "lucide-react";
+import { Truck, Eye, Pencil } from "lucide-react";
+import OrderDetailsModal from "./components/OrderDetailsModal";
 import { useNavigate } from "react-router-dom";
 
 export default function ConfirmedOrdersPage() {
     const [page, setPage] = useState(1);
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
+    const [selectedOrder, setSelectedOrder] = useState<number | null>(null);
     const queryClient = useQueryClient();
     const navigate = useNavigate();
 
@@ -118,6 +120,7 @@ export default function ConfirmedOrdersPage() {
                                                     <div className="flex flex-col">
                                                         <span className="font-medium">{order.customer?.name}</span>
                                                         <span className="text-xs text-muted-foreground">{order.customer?.phone}</span>
+                                                        <span className="text-xs text-muted-foreground">{order.customer?.location?.name || "No Location"}</span>
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>{order.order_date ? format(new Date(order.order_date), "PPP") : "-"}</TableCell>
@@ -130,6 +133,24 @@ export default function ConfirmedOrdersPage() {
                                                     </Badge>
                                                 </TableCell>
                                                 <TableCell className="text-right">
+                                                    <Button
+                                                        size="sm" variant="ghost" className="mr-1 text-slate-600 hover:text-slate-900"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            navigate(`/orders/edit/${order.id}`);
+                                                        }}
+                                                    >
+                                                        <Pencil className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        size="sm" variant="ghost" className="mr-2 text-slate-600 hover:text-slate-900"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedOrder(order.id);
+                                                        }}
+                                                    >
+                                                        <Eye className="h-4 w-4" />
+                                                    </Button>
                                                     <AssignDeliveryModal
                                                         orderId={order.id}
                                                         onSuccess={() => queryClient.invalidateQueries({ queryKey: ['orders'] })}
@@ -168,23 +189,29 @@ export default function ConfirmedOrdersPage() {
                                         <div>
                                             <span className="text-gray-500 text-xs block">Customer</span>
                                             <span className="font-medium text-gray-900">{order.customer?.name}</span>
+                                            <span className="text-xs text-gray-500 block">{order.customer?.location?.name || "No Location"}</span>
                                         </div>
                                         <div className="text-right">
                                             <span className="text-gray-500 text-xs block">Total</span>
                                             <span className="font-medium text-gray-900">₹{calculatedTotal.toFixed(2)}</span>
                                         </div>
                                     </div>
-                                    <div className="pt-2">
-                                        <AssignDeliveryModal
-                                            orderId={order.id}
-                                            onSuccess={() => queryClient.invalidateQueries({ queryKey: ['orders'] })}
-                                            trigger={
-                                                <Button size="sm" variant="outline" className="w-full gap-2 text-blue-600 border-blue-200 hover:bg-blue-50">
-                                                    <Truck className="h-4 w-4" />
-                                                    Assign Delivery
-                                                </Button>
-                                            }
-                                        />
+                                    <div className="pt-2 flex gap-2">
+                                        <Button size="sm" variant="outline" className="flex-1 gap-2" onClick={() => navigate(`/orders/edit/${order.id}`)}>
+                                            <Pencil className="h-4 w-4" /> Edit
+                                        </Button>
+                                        <div className="flex-1">
+                                            <AssignDeliveryModal
+                                                orderId={order.id}
+                                                onSuccess={() => queryClient.invalidateQueries({ queryKey: ['orders'] })}
+                                                trigger={
+                                                    <Button size="sm" variant="outline" className="w-full gap-2 text-blue-600 border-blue-200 hover:bg-blue-50">
+                                                        <Truck className="h-4 w-4" />
+                                                        Assign Delivery
+                                                    </Button>
+                                                }
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                             )
@@ -200,6 +227,11 @@ export default function ConfirmedOrdersPage() {
                     </div>
                 </CardContent>
             </Card>
+            <OrderDetailsModal
+                orderId={selectedOrder}
+                isOpen={!!selectedOrder}
+                onClose={() => setSelectedOrder(null)}
+            />
         </div>
     );
 }

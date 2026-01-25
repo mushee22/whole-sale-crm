@@ -40,6 +40,7 @@ export interface CustomerTransaction {
         total_amount: string;
         pdf_path: string;
     } | null;
+    is_moved_to_system?: boolean;
 }
 
 export interface CustomerTransactionsResponse {
@@ -55,8 +56,10 @@ export interface CustomerTransactionsResponse {
     }[];
 }
 
-export const getCustomerTransactions = async (page = 1) => {
-    const response = await api.get<CustomerTransactionsResponse>(`/customer-transactions?page=${page}`);
+export const getCustomerTransactions = async (page = 1, is_moved_to_system?: boolean) => {
+    const params: any = { page };
+    if (is_moved_to_system !== undefined) params.is_moved_to_system = is_moved_to_system;
+    const response = await api.get<CustomerTransactionsResponse>(`/customer-transactions`, { params });
     return response.data;
 };
 
@@ -65,7 +68,7 @@ export const createCustomerTransaction = async (data: CreateCustomerTransactionP
     return response.data;
 };
 
-export const updateCustomerTransaction = async (id: number, data: { amount?: number; note?: string }) => {
+export const updateCustomerTransaction = async (id: number, data: { amount?: number; note?: string; is_moved_to_system?: boolean }) => {
     const response = await api.put(`/customer-transactions/${id}`, data);
     return response.data;
 };

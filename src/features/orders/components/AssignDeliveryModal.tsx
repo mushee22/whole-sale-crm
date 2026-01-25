@@ -52,8 +52,8 @@ export function AssignDeliveryModal({ orderId, trigger, open, onOpenChange, onSu
     });
 
     const { data: usersData, isLoading: isLoadingUsers } = useQuery({
-        queryKey: ["users-list", "delivery-boys"], // Added specific key to avoid caching issues with generic list
-        queryFn: () => getUsers({ per_page: 100, role_id: 3 }),
+        queryKey: ["users-list", "active-users"],
+        queryFn: () => getUsers({ per_page: 100, is_active: 'active' }),
     });
 
     const assignMutation = useMutation({

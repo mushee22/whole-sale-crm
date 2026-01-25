@@ -8,7 +8,7 @@ import { Badge } from "../../components/ui/badge";
 import { format } from "date-fns";
 import { getOrders } from "./api/orders";
 import { useNavigate } from "react-router-dom";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Pencil } from "lucide-react";
 
 export default function CompletedOrdersPage() {
     const [page, setPage] = useState(1);
@@ -128,6 +128,9 @@ export default function CompletedOrdersPage() {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="text-right">
+                                                <Button size="sm" variant="ghost" className="mr-2 text-slate-600 hover:text-slate-900" onClick={() => navigate(`/orders/edit/${order.id}`)}>
+                                                    <Pencil className="h-4 w-4" />
+                                                </Button>
                                                 <Button size="sm" variant="ghost" onClick={() => navigate(`/orders/${order.id}`)}>
                                                     View Details
                                                 </Button>
@@ -162,8 +165,11 @@ export default function CompletedOrdersPage() {
                                         <span className="font-medium text-gray-900">₹{(order.total_amount || 0).toFixed(2)}</span>
                                     </div>
                                 </div>
-                                <div className="pt-2">
-                                    <Button size="sm" variant="outline" className="w-full" onClick={() => navigate(`/orders/${order.id}`)}>
+                                <div className="pt-2 flex gap-2">
+                                    <Button size="sm" variant="outline" className="flex-1 gap-2" onClick={() => navigate(`/orders/edit/${order.id}`)}>
+                                        <Pencil className="h-4 w-4" /> Edit
+                                    </Button>
+                                    <Button size="sm" variant="outline" className="flex-1" onClick={() => navigate(`/orders/${order.id}`)}>
                                         View Details
                                     </Button>
                                 </div>

@@ -100,6 +100,18 @@ export const updateCustomer = async (id: number, data: Partial<CreateCustomerDat
     return response.data;
 };
 
+export interface CustomerPriceUpdatePayload {
+    prices: {
+        product_id: number;
+        price: number;
+    }[];
+}
+
+export const updateCustomerPrices = async (customerId: number, data: CustomerPriceUpdatePayload) => {
+    const response = await axios.post(`/customers/${customerId}/prices`, data);
+    return response.data;
+};
+
 export interface CustomerTransaction {
     id: number;
     customer_id: number;
@@ -113,6 +125,12 @@ export interface CustomerTransaction {
     order?: {
         id: number;
         order_number: string;
+    } | null;
+    invoice?: {
+        id: number;
+        order_id: number;
+        invoice_date: string;
+        total_amount: string;
     } | null;
 }
 
