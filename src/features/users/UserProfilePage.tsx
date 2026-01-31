@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
-import { User, Mail, Phone, Shield, Wallet, History, Eye } from "lucide-react";
+import { User, Mail, Phone, Shield, Wallet, History, Eye, LogOut } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getPettyCashTransactions } from "../finance/api/pettyCash";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
@@ -13,9 +13,12 @@ import { TransferPettyCashModal } from "../finance/components/TransferPettyCashM
 import { PettyCashTransactionDetailsModal } from "../finance/components/PettyCashTransactionDetailsModal";
 import type { PettyCashTransaction } from "../finance/api/pettyCash";
 import { getUser } from "../auth/api/auth";
+import { useNavigate } from "react-router-dom";
+import { AlertDialog } from "../../components/ui/alert-dialog";
 
 export default function UserProfilePage() {
-    const { user: authUser } = useAuth();
+    const { user: authUser, logout } = useAuth();
+    const navigate = useNavigate();
 
     // Fetch fresh user data to ensure we have the latest petty cash balance and details
     const { data: user } = useQuery({
@@ -28,6 +31,7 @@ export default function UserProfilePage() {
     const [page, setPage] = useState(1);
     const [selectedTransaction, setSelectedTransaction] = useState<PettyCashTransaction | null>(null);
     const [detailsOpen, setDetailsOpen] = useState(false);
+    const [logoutOpen, setLogoutOpen] = useState(false);
 
     const hasPettyCash = !!user?.petty_cash_account;
     const accountId = user?.petty_cash_account?.id;
@@ -45,16 +49,25 @@ export default function UserProfilePage() {
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto pb-10">
-            <h1 className="text-3xl font-bold text-slate-900">My Profile</h1>
+            <h1 className="text-xl md:text-3xl font-bold text-slate-900">My Profile</h1>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* User Details Card */}
                 <Card className="md:col-span-1 border-gray-100 shadow-sm h-fit">
-                    <CardHeader>
-                        <CardTitle className="flex items-center gap-2 text-lg">
+                    <CardHeader className="flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="flex items-center gap-2 text-base md:text-lg">
                             <User className="h-5 w-5 text-blue-600" />
                             Personal Details
                         </CardTitle>
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 p-2 h-auto"
+                            onClick={() => setLogoutOpen(true)}
+                        >
+                            <LogOut className="h-4 w-4 md:mr-2" />
+                            <span className="hidden md:inline">Logout</span>
+                        </Button>
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div className="flex flex-col space-y-1">
@@ -100,7 +113,7 @@ export default function UserProfilePage() {
                             <CardHeader className="pb-2">
                                 <div className="flex justify-between items-start">
                                     <div className="space-y-1">
-                                        <CardTitle className="text-lg font-medium text-slate-100 flex items-center gap-2">
+                                        <CardTitle className="text-base md:text-lg font-medium text-slate-100 flex items-center gap-2">
                                             <Wallet className="h-5 w-5 text-blue-400" />
                                             Petty Cash Account
                                         </CardTitle>
@@ -110,7 +123,7 @@ export default function UserProfilePage() {
                                     </div>
                                     <div className="text-right">
                                         <p className="text-slate-400 text-xs font-mono uppercase">Current Balance</p>
-                                        <p className="text-3xl font-bold tracking-tight mt-1">
+                                        <p className="text-2xl md:text-3xl font-bold tracking-tight mt-1">
                                             ₹{parseFloat(user.petty_cash_account?.current_balance || "0").toLocaleString()}
                                         </p>
                                     </div>
@@ -148,7 +161,7 @@ export default function UserProfilePage() {
                     {hasPettyCash && (
                         <Card className="border-gray-100 shadow-sm">
                             <CardHeader className="flex flex-row items-center justify-between border-b border-gray-100 pb-4">
-                                <CardTitle className="text-lg font-semibold flex items-center gap-2">
+                                <CardTitle className="text-base md:text-lg font-semibold flex items-center gap-2">
                                     <History className="h-5 w-5 text-gray-500" />
                                     Transaction History
                                 </CardTitle>
@@ -250,6 +263,19 @@ export default function UserProfilePage() {
                 transaction={selectedTransaction}
                 open={detailsOpen}
                 onOpenChange={setDetailsOpen}
+            />
+
+            <AlertDialog
+                isOpen={logoutOpen}
+                onClose={() => setLogoutOpen(false)}
+                onConfirm={() => {
+                    logout();
+                    navigate('/login');
+                }}
+                title="Are you sure you want to logout?"
+                description="You will be redirected to the login page."
+                confirmText="Logout"
+                cancelText="Cancel"
             />
         </div>
     );

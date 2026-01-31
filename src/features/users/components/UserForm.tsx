@@ -94,8 +94,12 @@ export default function UserForm({ onSubmit, initialData, isLoading, onCancel, d
                 <div className="space-y-2">
                     <Label htmlFor="role_id">Role</Label>
                     <Select
-                        value={watch("role_id")?.toString()}
-                        onValueChange={(value) => setValue("role_id", parseInt(value))}
+                        value={watch("role_id")?.toString() || ""}
+                        onValueChange={(value) => {
+                            if (value) {
+                                setValue("role_id", parseInt(value), { shouldValidate: true });
+                            }
+                        }}
                     >
                         <SelectTrigger>
                             <SelectValue placeholder={isLoadingRoles ? "Loading roles..." : "Select role"} />

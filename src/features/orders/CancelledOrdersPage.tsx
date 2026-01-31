@@ -161,6 +161,16 @@ export default function CancelledOrdersPage() {
                                         <span className="text-gray-500 text-xs block">Total</span>
                                         <span className="font-medium text-gray-900">₹{(order.total_amount || 0).toFixed(2)}</span>
                                     </div>
+                                    {/* Added Items */}
+                                    <div>
+                                        <span className="text-gray-500 text-xs block">Items</span>
+                                        <span className="font-medium text-gray-900">{order.items?.length || 0} items</span>
+                                    </div>
+                                    {/* Added Cancelled Date */}
+                                    <div className="text-right">
+                                        <span className="text-gray-500 text-xs block">Cancelled Date</span>
+                                        <span className="font-medium text-gray-900">{order.updated_at ? format(new Date(order.updated_at), "PPP") : "-"}</span>
+                                    </div>
                                 </div>
                                 <div className="pt-2">
                                     <Button size="sm" variant="outline" className="w-full" onClick={() => navigate(`/orders/${order.id}`)}>

@@ -218,9 +218,13 @@ export default function OutForDeliveryOrdersPage() {
                                             <span className="text-gray-500 text-xs block">Delivery Date</span>
                                             <span className="font-medium text-gray-900">{deliveryDate}</span>
                                         </div>
-                                        <div className="col-span-2">
+                                        <div>
                                             <span className="text-gray-500 text-xs block">Delivery Boy</span>
                                             <span className="font-medium text-gray-900">{deliveryBoy}</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-gray-500 text-xs block">Items</span>
+                                            <span className="font-medium text-gray-900">{order.items?.length || 0} items</span>
                                         </div>
                                     </div>
                                     <div className="pt-2 flex gap-2">

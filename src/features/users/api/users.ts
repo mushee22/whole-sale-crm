@@ -21,6 +21,11 @@ export interface User {
     status: string;
     created_at: string;
     updated_at: string;
+    role?: {
+        id: number;
+        name: string;
+        permissions: string[];
+    };
 }
 
 export interface OrderLog {

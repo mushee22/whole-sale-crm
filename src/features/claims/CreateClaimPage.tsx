@@ -100,7 +100,7 @@ function CustomerSelect({ onSelect, selectedCustomer }: CustomerSelectProps) {
                     </div>
                     <div className="text-right">
                         <div className="text-sm text-slate-500 uppercase tracking-wider font-medium">Available Balance</div>
-                        <div className="text-2xl font-bold text-green-600">
+                        <div className="text-xl md:text-2xl font-bold text-green-600">
                             {((selectedCustomer?.total_earned_points || 0) + (selectedCustomer.total_referral_points || 0) - (selectedCustomer.total_used_points || 0))}
                         </div>
                     </div>
@@ -282,7 +282,7 @@ export default function CreateClaimPage() {
                     <Button variant="ghost" className="pl-0 hover:bg-transparent -ml-2 mb-2 text-slate-500" onClick={() => navigate(-1)}>
                         <ArrowLeft className="h-4 w-4 mr-2" /> Back
                     </Button>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Claim Rewards</h1>
+                    <h1 className="text-xl md:text-3xl font-bold text-slate-900 tracking-tight">Claim Rewards</h1>
                     <p className="text-slate-500 mt-1">Process a reward redemption for a customer.</p>
                 </div>
             </div>
@@ -290,7 +290,7 @@ export default function CreateClaimPage() {
             <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <Card className="shadow-sm border-gray-100">
                     <CardHeader>
-                        <CardTitle className="text-lg font-semibold">1. Select Customer</CardTitle>
+                        <CardTitle className="text-base md:text-lg font-semibold">1. Select Customer</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <CustomerSelect
@@ -305,7 +305,7 @@ export default function CreateClaimPage() {
                 {selectedCustomer && (
                     <Card className="shadow-sm border-gray-100">
                         <CardHeader className="flex flex-row items-center justify-between">
-                            <CardTitle className="text-lg font-semibold">2. Select Rewards</CardTitle>
+                            <CardTitle className="text-base md:text-lg font-semibold">2. Select Rewards</CardTitle>
                             <div className={`text-sm font-medium ${remainingPoints < 0 ? 'text-red-500' : 'text-slate-500'}`}>
                                 Remaining Points: <span className="font-bold">{remainingPoints}</span>
                             </div>
@@ -355,7 +355,7 @@ export default function CreateClaimPage() {
 
                             <div className="flex justify-between items-center pt-2">
                                 <span className="font-medium text-slate-700">Total Points to Redeem</span>
-                                <span className="text-xl font-bold text-slate-900">{totalCost} pts</span>
+                                <span className="text-lg md:text-xl font-bold text-slate-900">{totalCost} pts</span>
                             </div>
                             <input type="hidden" {...register("reward_ids")} />
                             {errors.reward_ids && <p className="text-sm text-red-500 mt-1">{errors.reward_ids.message}</p>}
@@ -365,7 +365,7 @@ export default function CreateClaimPage() {
 
                 <Card className="shadow-sm border-gray-100">
                     <CardHeader>
-                        <CardTitle className="text-lg font-semibold">3. Remarks</CardTitle>
+                        <CardTitle className="text-base md:text-lg font-semibold">3. Remarks</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <div className="space-y-2">

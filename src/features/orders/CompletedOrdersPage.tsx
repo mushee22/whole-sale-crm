@@ -164,6 +164,14 @@ export default function CompletedOrdersPage() {
                                         <span className="text-gray-500 text-xs block">Total</span>
                                         <span className="font-medium text-gray-900">₹{(order.total_amount || 0).toFixed(2)}</span>
                                     </div>
+                                    <div>
+                                        <span className="text-gray-500 text-xs block">Items</span>
+                                        <span className="font-medium text-gray-900">{order.items?.length || 0} items</span>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="text-gray-500 text-xs block">Delivered Date</span>
+                                        <span className="font-medium text-gray-900">{order.updated_at ? format(new Date(order.updated_at), "PPP") : "-"}</span>
+                                    </div>
                                 </div>
                                 <div className="pt-2 flex gap-2">
                                     <Button size="sm" variant="outline" className="flex-1 gap-2" onClick={() => navigate(`/orders/edit/${order.id}`)}>

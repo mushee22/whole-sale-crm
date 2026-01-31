@@ -27,14 +27,23 @@ interface PermissionGuardProps {
     action: string;
     children: React.ReactNode;
     fallback?: React.ReactNode;
+    showMessage?: boolean;
 }
 
-export const PermissionGuard = ({ module, action, children, fallback = null }: PermissionGuardProps) => {
+export const PermissionGuard = ({ module, action, children, fallback = null, showMessage = false }: PermissionGuardProps) => {
     const { hasPermission } = usePermission();
 
     if (!hasPermission(module, action)) {
-        return <>{ fallback } </>;
+        if (showMessage) {
+            return (
+                <div className="flex flex-col items-center justify-center p-8 text-center bg-gray-50 rounded-lg border border-dashed border-gray-300">
+                    <div className="text-red-500 font-medium mb-1">Access Denied</div>
+                    <div className="text-gray-500 text-sm">You do not have permission to view this content.</div>
+                </div>
+            );
+        }
+        return <>{fallback}</>;
     }
 
-    return <>{ children } </>;
+    return <>{children}</>;
 };

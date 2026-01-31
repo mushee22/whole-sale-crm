@@ -203,7 +203,7 @@ export function SalesOrderPage() {
     return (
         <div className="space-y-6 lg:p-6 max-w-5xl mx-auto">
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold">New Sales Order</h1>
+                <h1 className="text-xl md:text-2xl font-bold">New Sales Order</h1>
             </div>
 
             <div className="flex flex-col gap-6">

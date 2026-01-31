@@ -38,7 +38,7 @@ export default function UserOrderLogsPage() {
             </div>
 
             <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-slate-900">Staff Order History</h1>
+                <h1 className="text-xl md:text-2xl font-bold text-slate-900">Staff Order History</h1>
             </div>
 
             <Card className="border-gray-100 shadow-sm">

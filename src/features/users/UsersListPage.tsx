@@ -86,9 +86,9 @@ export default function UsersListPage() {
     return (
         <div className="space-y-6">
             <Card className="border-gray-100 shadow-sm">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-gray-100">
+                <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 pb-4 border-b border-gray-100">
                     <div className="space-y-1">
-                        <CardTitle className="text-xl font-bold">User Management</CardTitle>
+                        <CardTitle className="text-lg md:text-3xl font-bold">User Management</CardTitle>
                         <p className="text-sm text-gray-500">Manage system users and access.</p>
                     </div>
                     <PermissionGuard module="users" action="add">
@@ -102,169 +102,175 @@ export default function UsersListPage() {
                 </CardHeader>
 
                 <CardContent className="p-0">
-                    {isLoading ? (
-                        <div className="p-12 text-center">
-                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-100 border-t-blue-600 mb-4"></div>
-                            <p className="text-gray-500">Loading users...</p>
-                        </div>
-                    ) : (
-                        <>
-                            {/* Mobile Card View */}
-                            <div className="md:hidden divide-y divide-gray-100">
-                                {usersData?.data.map((user) => (
-                                    <div key={user.id} className="p-4 space-y-3 bg-white">
-                                        <div className="flex justify-between items-start">
-                                            <div className="flex items-center gap-3">
-                                                <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                                                    <UserIcon className="h-5 w-5" />
-                                                </div>
-                                                <div>
-                                                    <div className="font-semibold text-gray-900">{user.name}</div>
-                                                    <div className="text-xs text-slate-500">#{user.id} • {user.email}</div>
-                                                </div>
-                                            </div>
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${user.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                                                {user.status}
-                                            </span>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-500 pt-1">
-                                            <div>
-                                                <span className="text-xs block">Phone</span>
-                                                <span className="font-medium text-gray-900">{user.phone}</span>
-                                            </div>
-                                            <div className="text-right">
-                                                <span className="text-xs block">Role ID</span>
-                                                <span className="font-medium text-gray-900">{user.role_id}</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex justify-end gap-2 pt-2 border-t border-gray-50">
-                                            <Button
-                                                variant="ghost"
-                                                size="sm"
-                                                className="h-8 text-slate-600 border-slate-200 hover:bg-slate-50"
-                                                onClick={() => navigate(`/users/${user.id}`)}
-                                            >
-                                                <Eye className="h-4 w-4 mr-2" /> Details
-                                            </Button>
-                                            <PermissionGuard module="users" action="update">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-8 text-blue-600 border-blue-200 hover:bg-blue-50"
-                                                    onClick={() => openEdit(user)}
-                                                >
-                                                    <Pencil className="h-4 w-4 mr-2" /> Edit
-                                                </Button>
-                                            </PermissionGuard>
-                                            <PermissionGuard module="users" action="delete">
-                                                <Button
-                                                    variant="ghost"
-                                                    size="sm"
-                                                    className="h-8 text-red-600 border-red-200 hover:bg-red-50"
-                                                    onClick={() => setDeleteId(user.id)}
-                                                >
-                                                    <Trash2 className="h-4 w-4 mr-2" /> Delete
-                                                </Button>
-                                            </PermissionGuard>
-                                        </div>
-                                    </div>
-                                ))}
+                    <PermissionGuard module="users" action="view" showMessage>
+                        {isLoading ? (
+                            <div className="p-12 text-center">
+                                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-100 border-t-blue-600 mb-4"></div>
+                                <p className="text-gray-500">Loading users...</p>
                             </div>
-
-                            {/* Desktop Table View */}
-                            <div className="hidden md:block overflow-x-auto">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow className="bg-gray-50 hover:bg-gray-50 border-gray-100">
-                                            <TableHead className="w-[80px] font-semibold text-gray-600 pl-6">ID</TableHead>
-                                            <TableHead className="font-semibold text-gray-600">Name</TableHead>
-                                            <TableHead className="font-semibold text-gray-600">Email</TableHead>
-                                            <TableHead className="font-semibold text-gray-600">Phone</TableHead>
-                                            <TableHead className="font-semibold text-gray-600">Role ID</TableHead>
-                                            <TableHead className="font-semibold text-gray-600">Status</TableHead>
-                                            <TableHead className="font-semibold text-gray-600">Joined Date</TableHead>
-                                            <TableHead className="text-right font-semibold text-gray-600 pr-6">Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {usersData?.data.map((user) => (
-                                            <TableRow key={user.id} className="hover:bg-slate-50 transition-colors border-gray-100">
-                                                <TableCell className="font-mono text-xs text-gray-400 pl-6">#{user.id}</TableCell>
-                                                <TableCell>
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
-                                                            <UserIcon className="h-4 w-4" />
-                                                        </div>
-                                                        <span className="font-medium text-slate-900">{user.name}</span>
+                        ) : (
+                            <>
+                                {/* Mobile Card View */}
+                                <div className="md:hidden divide-y divide-gray-100">
+                                    {usersData?.data.map((user) => (
+                                        <div key={user.id} className="p-4 space-y-3 bg-white">
+                                            <div className="flex justify-between items-start">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-10 w-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                                                        <UserIcon className="h-5 w-5" />
                                                     </div>
-                                                </TableCell>
-                                                <TableCell className="text-slate-600">{user.email}</TableCell>
-                                                <TableCell className="text-slate-600">{user.phone}</TableCell>
-                                                <TableCell className="text-slate-600">{user.role_id}</TableCell>
-                                                <TableCell>
-                                                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${user.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
-                                                        {user.status}
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell className="text-slate-500 text-sm">
-                                                    {new Date(user.created_at).toLocaleDateString()}
-                                                </TableCell>
-                                                <TableCell className="text-right pr-6">
-                                                    <div className="flex justify-end gap-1">
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900">{user.name}</div>
+                                                        <div className="text-xs text-slate-500">#{user.id} • {user.email}</div>
+                                                    </div>
+                                                </div>
+                                                <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium capitalize ${user.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                                                    {user.status}
+                                                </span>
+                                            </div>
+
+                                            <div className="grid grid-cols-2 gap-2 text-sm text-gray-500 pt-1">
+                                                <div>
+                                                    <span className="text-xs block">Phone</span>
+                                                    <span className="font-medium text-gray-900">{user.phone}</span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-xs block">Role</span>
+                                                    <span className="font-medium text-gray-900">{user.role?.name || user.role_id}</span>
+                                                </div>
+                                            </div>
+
+                                            <div className="flex justify-end gap-2 pt-2 border-t border-gray-50">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="h-8 text-slate-600 border-slate-200 hover:bg-slate-50"
+                                                    onClick={() => navigate(`/users/${user.id}`)}
+                                                >
+                                                    <Eye className="h-4 w-4 mr-2" /> Details
+                                                </Button>
+                                                <PermissionGuard module="users" action="update">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 text-blue-600 border-blue-200 hover:bg-blue-50"
+                                                        onClick={() => openEdit(user)}
+                                                    >
+                                                        <Pencil className="h-4 w-4 mr-2" /> Edit
+                                                    </Button>
+                                                </PermissionGuard>
+                                                <PermissionGuard module="users" action="delete">
+                                                    {user.role_id !== 1 && (
                                                         <Button
                                                             variant="ghost"
-                                                            size="icon"
-                                                            className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                            onClick={() => navigate(`/users/${user.id}`)}
-                                                            title="View User Details"
+                                                            size="sm"
+                                                            className="h-8 text-red-600 border-red-200 hover:bg-red-50"
+                                                            onClick={() => setDeleteId(user.id)}
                                                         >
-                                                            <Eye className="h-4 w-4" />
+                                                            <Trash2 className="h-4 w-4 mr-2" /> Delete
                                                         </Button>
-                                                        <PermissionGuard module="users" action="update">
+                                                    )}
+                                                </PermissionGuard>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* Desktop Table View */}
+                                <div className="hidden md:block overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow className="bg-gray-50 hover:bg-gray-50 border-gray-100">
+                                                <TableHead className="w-[80px] font-semibold text-gray-600 pl-6">ID</TableHead>
+                                                <TableHead className="font-semibold text-gray-600">Name</TableHead>
+                                                <TableHead className="font-semibold text-gray-600">Email</TableHead>
+                                                <TableHead className="font-semibold text-gray-600">Phone</TableHead>
+                                                <TableHead className="font-semibold text-gray-600">Role</TableHead>
+                                                <TableHead className="font-semibold text-gray-600">Status</TableHead>
+                                                <TableHead className="font-semibold text-gray-600">Joined Date</TableHead>
+                                                <TableHead className="text-right font-semibold text-gray-600 pr-6">Actions</TableHead>
+                                            </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                            {usersData?.data.map((user) => (
+                                                <TableRow key={user.id} className="hover:bg-slate-50 transition-colors border-gray-100">
+                                                    <TableCell className="font-mono text-xs text-gray-400 pl-6">#{user.id}</TableCell>
+                                                    <TableCell>
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="h-8 w-8 rounded-full bg-slate-100 flex items-center justify-center text-slate-500">
+                                                                <UserIcon className="h-4 w-4" />
+                                                            </div>
+                                                            <span className="font-medium text-slate-900">{user.name}</span>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="text-slate-600">{user.email}</TableCell>
+                                                    <TableCell className="text-slate-600">{user.phone}</TableCell>
+                                                    <TableCell className="text-slate-600">{user.role?.name || user.role_id}</TableCell>
+                                                    <TableCell>
+                                                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${user.status === 'active' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+                                                            {user.status}
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell className="text-slate-500 text-sm">
+                                                        {new Date(user.created_at).toLocaleDateString()}
+                                                    </TableCell>
+                                                    <TableCell className="text-right pr-6">
+                                                        <div className="flex justify-end gap-1">
                                                             <Button
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                                onClick={() => openEdit(user)}
+                                                                onClick={() => navigate(`/users/${user.id}`)}
+                                                                title="View User Details"
                                                             >
-                                                                <Pencil className="h-4 w-4" />
+                                                                <Eye className="h-4 w-4" />
                                                             </Button>
-                                                        </PermissionGuard>
-                                                        <PermissionGuard module="users" action="delete">
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
-                                                                onClick={() => setDeleteId(user.id)}
-                                                            >
-                                                                <Trash2 className="h-4 w-4" />
-                                                            </Button>
-                                                        </PermissionGuard>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        ))}
-                                        {usersData?.data.length === 0 && (
-                                            <TableRow>
-                                                <TableCell colSpan={8} className="h-32 text-center text-gray-400">
-                                                    No users found.
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                            <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-                                <Pagination
-                                    currentPage={usersData?.current_page || 1}
-                                    totalPages={usersData?.last_page || 1}
-                                    onPageChange={setPage}
-                                />
-                            </div>
-                        </>
-                    )}
+                                                            <PermissionGuard module="users" action="update">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                                    onClick={() => openEdit(user)}
+                                                                >
+                                                                    <Pencil className="h-4 w-4" />
+                                                                </Button>
+                                                            </PermissionGuard>
+                                                            <PermissionGuard module="users" action="delete">
+                                                                {user.role_id !== 1 && (
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
+                                                                        onClick={() => setDeleteId(user.id)}
+                                                                    >
+                                                                        <Trash2 className="h-4 w-4" />
+                                                                    </Button>
+                                                                )}
+                                                            </PermissionGuard>
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                            {usersData?.data.length === 0 && (
+                                                <TableRow>
+                                                    <TableCell colSpan={8} className="h-32 text-center text-gray-400">
+                                                        No users found.
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                                <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+                                    <Pagination
+                                        currentPage={usersData?.current_page || 1}
+                                        totalPages={usersData?.last_page || 1}
+                                        onPageChange={setPage}
+                                    />
+                                </div>
+                            </>
+                        )}
+                    </PermissionGuard>
                 </CardContent>
             </Card>
 

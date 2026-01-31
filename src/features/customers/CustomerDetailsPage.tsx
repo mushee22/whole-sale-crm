@@ -60,7 +60,7 @@ export default function CustomerDetailsPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="md:col-span-2 border-gray-100 shadow-sm bg-white">
                     <CardHeader className="border-b border-gray-100 pb-4">
-                        <CardTitle className="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        <CardTitle className="text-lg md:text-3xl font-bold text-slate-800 flex items-center gap-2">
                             {customer.name}
                             {customer.status && (
                                 <Badge variant={customer.status === 'active' ? 'default' : 'secondary'} className="ml-2 uppercase text-[10px]">
@@ -146,7 +146,7 @@ export default function CustomerDetailsPage() {
                         <CardHeader className="border-b border-gray-100 bg-gray-50/50 pb-4 flex flex-row items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <History className="h-5 w-5 text-slate-500" />
-                                <CardTitle className="text-lg font-semibold text-slate-800">Transaction History</CardTitle>
+                                <CardTitle className="text-base md:text-xl font-semibold text-slate-800">Transaction History</CardTitle>
                             </div>
                             <PermissionGuard module="finance" action="add">
                                 <CreateTransactionModal
@@ -161,7 +161,91 @@ export default function CustomerDetailsPage() {
                             </PermissionGuard>
                         </CardHeader>
                         <CardContent className="p-0">
-                            <div className="overflow-x-auto">
+                            {/* Mobile Card View */}
+                            <div className="md:hidden divide-y divide-gray-100">
+                                {transactions?.data && transactions.data.length > 0 ? (
+                                    transactions.data.map((tx) => (
+                                        <div key={tx.id} className="p-4 space-y-3 bg-white">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <div className="text-sm font-medium text-slate-900">
+                                                        {new Date(tx.created_at).toLocaleDateString()}
+                                                    </div>
+                                                    <div className="text-xs text-slate-500 mt-1">{tx.payment_mode}</div>
+                                                </div>
+                                                <Badge variant="outline" className={`capitalize
+                                                    ${tx.type === 'credit' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}
+                                                `}>
+                                                    {tx.type === 'credit' ? 'Cash Collected' : 'Sale'}
+                                                </Badge>
+                                            </div>
+
+                                            <div className="flex justify-between items-center text-sm">
+                                                <span className="text-slate-500">Amount</span>
+                                                <span className={`font-bold ${tx.type === 'credit' ? 'text-green-600' : 'text-red-600'}`}>
+                                                    {tx.type === 'credit' ? '+' : '-'}{tx.amount}
+                                                </span>
+                                            </div>
+
+                                            {(tx.description || tx.order || tx.invoice) && (
+                                                <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
+                                                    {tx.description && <div>{tx.description}</div>}
+                                                    {tx.order && (
+                                                        <div
+                                                            className="text-indigo-600 cursor-pointer hover:underline text-xs mt-1"
+                                                            onClick={() => {
+                                                                setSelectedOrderId(tx.order!.id);
+                                                                setIsOrderModalOpen(true);
+                                                            }}
+                                                        >
+                                                            Order #{tx.order.order_number}
+                                                        </div>
+                                                    )}
+                                                    {tx.invoice && (
+                                                        <div
+                                                            className="text-blue-600 cursor-pointer hover:underline text-xs mt-1"
+                                                            onClick={() => navigate(`/accounts/${tx.invoice!.id}`)}
+                                                        >
+                                                            Invoice #{tx.invoice.id}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+
+                                            <div className="flex justify-end pt-2 border-t border-gray-50">
+                                                <PermissionGuard module="finance" action="update">
+                                                    {tx.invoice && tx.invoice.order_id ? (
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="sm"
+                                                            className="h-8 text-gray-500 hover:text-blue-600"
+                                                            onClick={() => navigate(`/orders/edit/${tx.invoice!.order_id}`)}
+                                                        >
+                                                            <Edit className="h-4 w-4 mr-2" /> Edit Order
+                                                        </Button>
+                                                    ) : (
+                                                        <EditTransactionModal
+                                                            transaction={tx}
+                                                            trigger={
+                                                                <Button variant="ghost" size="sm" className="h-8 text-gray-500 hover:text-blue-600">
+                                                                    <Edit className="h-4 w-4 mr-2" /> Edit Transaction
+                                                                </Button>
+                                                            }
+                                                        />
+                                                    )}
+                                                </PermissionGuard>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="p-8 text-center text-gray-500">
+                                        No transactions found
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Desktop Table View */}
+                            <div className="hidden md:block overflow-x-auto">
                                 <Table>
                                     <TableHeader>
                                         <TableRow className="bg-gray-50/30">
@@ -170,6 +254,7 @@ export default function CustomerDetailsPage() {
                                             <TableHead>Mode</TableHead>
                                             <TableHead>Description</TableHead>
                                             <TableHead className="text-right">Amount</TableHead>
+                                            <TableHead className="w-[50px]"></TableHead>
                                         </TableRow>
                                     </TableHeader>
                                     <TableBody>
@@ -232,7 +317,7 @@ export default function CustomerDetailsPage() {
                                             ))
                                         ) : (
                                             <TableRow>
-                                                <TableCell colSpan={5} className="text-center py-8 text-gray-500">
+                                                <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                                                     No transactions found
                                                 </TableCell>
                                             </TableRow>
@@ -259,7 +344,7 @@ export default function CustomerDetailsPage() {
                                 <Badge variant="outline" className="bg-purple-100 text-purple-700 border-purple-200">
                                     Offers
                                 </Badge>
-                                <CardTitle className="text-lg font-semibold text-slate-800">Special Pricing</CardTitle>
+                                <CardTitle className="text-base md:text-xl font-semibold text-slate-800">Special Pricing</CardTitle>
                             </div>
                             <Button variant="ghost" size="icon" className="h-6 w-6 text-slate-400 hover:text-indigo-600" onClick={() => setIsEditPriceModalOpen(true)}>
                                 <Edit className="h-4 w-4" />

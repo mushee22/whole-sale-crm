@@ -32,14 +32,14 @@ export const PettyCashDetailsPage = () => {
 
             <div className="flex flex-col md:flex-row justify-between items-start gap-6">
                 <div>
-                    <h1 className="text-3xl font-bold text-slate-900 tracking-tight">{account.account_name}</h1>
+                    <h1 className="text-xl md:text-3xl font-bold text-slate-900 tracking-tight">{account.account_name}</h1>
                     <p className="text-slate-500 mt-1">Account ID: {account.account_id}</p>
                 </div>
                 <div className="flex gap-4">
                     <Card className="bg-slate-900 text-white border-none shadow-lg min-w-[200px]">
                         <CardContent className="p-6">
                             <p className="text-slate-400 text-sm font-medium">Current Balance</p>
-                            <p className="text-2xl font-bold mt-1">₹{parseFloat(account.current_balance).toFixed(2)}</p>
+                            <p className="text-lg md:text-2xl font-bold mt-1">₹{parseFloat(account.current_balance).toFixed(2)}</p>
                             <div className="mt-4">
                                 <PermissionGuard module="finance" action="update">
                                     <TransferPettyCashModal
@@ -95,7 +95,7 @@ export const PettyCashDetailsPage = () => {
                         <div className="grid grid-cols-2 gap-4">
                             <div className="p-4 bg-gray-50 rounded-lg">
                                 <p className="text-xs text-slate-500 mb-1">Opening Balance</p>
-                                <p className="text-lg font-bold text-slate-900">₹{parseFloat(account.opening_balance).toFixed(2)}</p>
+                                <p className="text-base md:text-lg font-bold text-slate-900">₹{parseFloat(account.opening_balance).toFixed(2)}</p>
                             </div>
                             <div className="p-4 bg-gray-50 rounded-lg">
                                 <p className="text-xs text-slate-500 mb-1">Status</p>
@@ -157,41 +157,43 @@ function PettyCashTransactionsList({ accountId }: { accountId: number }) {
                 </select>
             </div>
 
-            <div className="rounded-md border border-gray-100 overflow-hidden">
-                <table className="w-full text-sm">
-                    <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-100">
-                        <tr>
-                            <th className="py-3 px-4 text-left">Date</th>
-                            <th className="py-3 px-4 text-left">Description</th>
-                            <th className="py-3 px-4 text-left">Type</th>
-                            <th className="py-3 px-4 text-right">Amount</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                        {data?.data.map((tx) => (
-                            <tr key={tx.id} className="hover:bg-gray-50/50">
-                                <td className="py-3 px-4 text-gray-500">{new Date(tx.date).toLocaleDateString()}</td>
-                                <td className="py-3 px-4 text-slate-900">{tx.description}</td>
-                                <td className="py-3 px-4">
-                                    <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize ${tx.type === 'credit' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
-                                        }`}>
-                                        {tx.type}
-                                    </span>
-                                </td>
-                                <td className={`py-3 px-4 text-right font-medium ${tx.type === 'credit' ? 'text-green-600' : 'text-slate-900'
-                                    }`}>
-                                    {tx.type === 'credit' ? '+' : '-'}₹{parseFloat(tx.amount).toFixed(2)}
-                                </td>
-                            </tr>
-                        ))}
-                        {data?.data.length === 0 && (
+            <PermissionGuard module="petty_cash_transactions" action="view" showMessage>
+                <div className="rounded-md border border-gray-100 overflow-hidden">
+                    <table className="w-full text-sm">
+                        <thead className="bg-gray-50 text-gray-600 font-medium border-b border-gray-100">
                             <tr>
-                                <td colSpan={4} className="py-8 text-center text-gray-400">No transactions found</td>
+                                <th className="py-3 px-4 text-left">Date</th>
+                                <th className="py-3 px-4 text-left">Description</th>
+                                <th className="py-3 px-4 text-left">Type</th>
+                                <th className="py-3 px-4 text-right">Amount</th>
                             </tr>
-                        )}
-                    </tbody>
-                </table>
-            </div>
+                        </thead>
+                        <tbody className="divide-y divide-gray-50">
+                            {data?.data.map((tx) => (
+                                <tr key={tx.id} className="hover:bg-gray-50/50">
+                                    <td className="py-3 px-4 text-gray-500">{new Date(tx.date).toLocaleDateString()}</td>
+                                    <td className="py-3 px-4 text-slate-900">{tx.description}</td>
+                                    <td className="py-3 px-4">
+                                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize ${tx.type === 'credit' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                                            }`}>
+                                            {tx.type}
+                                        </span>
+                                    </td>
+                                    <td className={`py-3 px-4 text-right font-medium ${tx.type === 'credit' ? 'text-green-600' : 'text-slate-900'
+                                        }`}>
+                                        {tx.type === 'credit' ? '+' : '-'}₹{parseFloat(tx.amount).toFixed(2)}
+                                    </td>
+                                </tr>
+                            ))}
+                            {data?.data.length === 0 && (
+                                <tr>
+                                    <td colSpan={4} className="py-8 text-center text-gray-400">No transactions found</td>
+                                </tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
+            </PermissionGuard>
         </div>
     );
 }

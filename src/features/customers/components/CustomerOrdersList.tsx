@@ -75,7 +75,63 @@ export default function CustomerOrdersList({ customerId }: CustomerOrdersListPro
                 </div>
             </CardHeader>
             <CardContent className="p-0">
-                <div className="overflow-x-auto">
+                {/* Mobile Card View */}
+                <div className="md:hidden divide-y divide-gray-100">
+                    {isLoading ? (
+                        <div className="p-8 text-center text-gray-500">Loading orders...</div>
+                    ) : orders.length > 0 ? (
+                        orders.map((order) => (
+                            <div key={order.id} className="p-4 space-y-3 bg-white">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <div className="font-semibold text-slate-900">
+                                            {order.order_number || `#${order.id}`}
+                                        </div>
+                                        <div className="text-xs text-slate-500 mt-1">
+                                            {new Date(order.order_date).toLocaleDateString()}
+                                        </div>
+                                    </div>
+                                    <Badge variant={
+                                        order.status === 'delivered' ? 'default' :
+                                            order.status === 'cancelled' ? 'destructive' :
+                                                order.status === 'confirmed' ? 'secondary' : 'outline'
+                                    } className="capitalize">
+                                        {order.status.replace(/_/g, " ")}
+                                    </Badge>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                    <div>
+                                        <span className="text-gray-500 text-xs block">Items</span>
+                                        <span className="font-medium text-slate-900">{order.items?.length || 0} items</span>
+                                    </div>
+                                    <div className="text-right">
+                                        <span className="text-gray-500 text-xs block">Total Amount</span>
+                                        <span className="font-bold text-slate-900">{order.total_amount || '-'}</span>
+                                    </div>
+                                </div>
+
+                                <div className="flex justify-end pt-2 border-t border-gray-50">
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        className="h-8 text-blue-600 hover:bg-blue-50"
+                                        onClick={() => navigate(`/orders/${order.id}`)}
+                                    >
+                                        <Eye className="h-4 w-4 mr-2" /> View Order
+                                    </Button>
+                                </div>
+                            </div>
+                        ))
+                    ) : (
+                        <div className="p-8 text-center text-gray-500">
+                            No orders found matching criteria
+                        </div>
+                    )}
+                </div>
+
+                {/* Desktop Table View */}
+                <div className="hidden md:block overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow className="bg-gray-50/30">

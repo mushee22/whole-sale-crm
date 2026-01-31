@@ -66,7 +66,8 @@ export function TransferPettyCashModal({ fromAccountId, currentBalance }: Transf
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
                 <Button size="sm" className="bg-slate-900 text-white hover:bg-slate-800 gap-2">
-                    <ArrowLeftRight className="h-4 w-4" /> Transfer Balance
+                    <ArrowLeftRight className="h-4 w-4" />
+                    <span className="hidden md:inline">Transfer Balance</span>
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">

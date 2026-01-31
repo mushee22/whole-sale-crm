@@ -17,23 +17,26 @@ const modules = [
     // Management
     { key: "users", label: "Users", actions: ["view", "add", "update", "delete"] },
     { key: "delivery_boys", label: "Delivery Boys", actions: ["view", "add", "update", "delete"] },
-    { key: "customers", label: "Customers", actions: ["add", "update"] },
-    { key: "roles", label: "Roles", actions: ["add", "update"] },
+    { key: "customers", label: "Customers", actions: ["view", "add", "update", "delete"] },
+    { key: "roles", label: "Roles", actions: ["view", "add", "update", "delete"] },
 
     // Orders & Sales
-    { key: "orders", label: "Orders", actions: ["add", "update", "delete", "update_status"] },
+    { key: "orders", label: "Orders", actions: ["view_list", "view_detail", "add", "update", "delete", "update_status"] },
+    { key: "pre_orders", label: "Pre-Orders", actions: ["view", "convert"] },
     { key: "sales", label: "Sales Operations", actions: ["dispatch_check", "delivery_check"] },
 
     // Finance & Accounts
-    { key: "finance", label: "Finance", actions: ["add", "update", "delete", "mark_moved_to_system"] },
+    { key: "finance", label: "Finance", actions: ["view", "add", "update", "delete", "mark_moved_to_system"] },
     { key: "accounts", label: "Accounts", actions: ["mark_moved_to_system"] },
+    { key: "customer_transactions", label: "Customer Transactions", actions: ["view", "add", "update", "delete"] },
+    { key: "petty_cash_transactions", label: "Petty Cash Transactions", actions: ["view"] },
 
     // Master Data - Inventory
-    { key: "products", label: "Products", actions: ["add", "update", "delete"] },
-    { key: "product_variants", label: "Product Variants", actions: ["add", "update", "delete"] },
+    { key: "products", label: "Products", actions: ["view", "add", "update", "delete"] },
+    { key: "product_variants", label: "Product Variants", actions: ["view", "add", "update", "delete"] },
     { key: "colors", label: "Colors", actions: ["add", "update", "delete"] },
-    { key: "sizes", label: "Sizes", actions: ["add", "update", "delete"] },
-    { key: "locations", label: "Locations", actions: ["add", "update", "delete"] },
+    { key: "sizes", label: "Sizes", actions: ["view", "add", "update", "delete"] },
+    { key: "locations", label: "Locations", actions: ["view", "add", "update", "delete"] },
 
     // Loyalty & Rewards
     { key: "loyalties", label: "Loyalty Rules", actions: ["add", "update", "delete"] },
@@ -148,7 +151,7 @@ export default function EditRolePage() {
                     <ArrowLeft className="h-4 w-4" />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-bold tracking-tight text-slate-900">Edit Role</h1>
+                    <h1 className="text-xl md:text-2xl font-bold tracking-tight text-slate-900">Edit Role</h1>
                     <p className="text-slate-500">Update role details and permissions.</p>
                 </div>
             </div>

@@ -59,7 +59,7 @@ export default function InvoicesListPage() {
             <Card className="border-gray-100 shadow-sm">
                 <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-0 pb-4 border-b border-gray-100 gap-4 sm:gap-0">
                     <div className="space-y-1">
-                        <CardTitle className="text-xl font-bold flex items-center gap-2">
+                        <CardTitle className="text-lg md:text-3xl font-bold flex items-center gap-2">
                             <FileText className="h-5 w-5 text-indigo-600" />
                             Accounts & Invoices
                         </CardTitle>
@@ -135,7 +135,84 @@ export default function InvoicesListPage() {
                         </div>
                     </div>
 
-                    <div className="overflow-x-auto">
+                    {/* Mobile View */}
+                    <div className="md:hidden divide-y divide-gray-100">
+                        {isLoading ? (
+                            <div className="p-8 text-center text-gray-500">Loading invoices...</div>
+                        ) : invoices.length === 0 ? (
+                            <div className="p-8 text-center text-muted-foreground">
+                                No invoices found.
+                            </div>
+                        ) : (
+                            invoices.map((invoice) => (
+                                <div key={invoice.id} className="p-4 space-y-3 bg-white">
+                                    <div className="flex justify-between items-start">
+                                        <div>
+                                            <div className="font-semibold text-gray-900" onClick={() => navigate(`/accounts/${invoice.id}`)}>
+                                                {invoice.order?.unique_id || `INV-${invoice.id}`}
+                                            </div>
+                                            <div className="text-xs text-gray-500">
+                                                {new Date(invoice.invoice_date || invoice.created_at).toLocaleDateString()}
+                                            </div>
+                                        </div>
+                                        <Badge
+                                            variant={invoice.order?.status === 'delivered' ? 'default' : 'secondary'}
+                                            className="capitalize"
+                                        >
+                                            {invoice.order?.status || 'Unknown'}
+                                        </Badge>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2 text-sm">
+                                        <div>
+                                            <span className="text-gray-500 text-xs block">Customer</span>
+                                            <div className="font-medium text-gray-900">{invoice.order?.customer?.name || "Unknown"}</div>
+                                            <div className="text-xs text-gray-400">{invoice.order?.customer?.phone}</div>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-gray-500 text-xs block">Amount</span>
+                                            <span className="font-bold text-slate-900">{invoice.total_amount}</span>
+                                        </div>
+                                    </div>
+
+                                    <div className="pt-2 border-t border-gray-50 flex justify-between items-center mt-1">
+                                        <span className="text-xs text-slate-500">System Status</span>
+                                        {invoice.is_moved_to_system ? (
+                                            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                                                <CheckCircle className="h-3 w-3 mr-1" />
+                                                Moved
+                                            </Badge>
+                                        ) : (
+                                            <PermissionGuard module="accounts" action="mark_moved_to_system">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-7 text-xs bg-slate-50 border-slate-200 text-slate-600 hover:bg-green-50 hover:text-green-700 hover:border-green-200"
+                                                    onClick={() => moveSystemMutation.mutate(invoice.id)}
+                                                    disabled={moveSystemMutation.isPending}
+                                                >
+                                                    Mark as Moved
+                                                </Button>
+                                            </PermissionGuard>
+                                        )}
+                                    </div>
+
+                                    <div className="pt-2">
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            className="w-full"
+                                            onClick={() => navigate(`/accounts/${invoice.id}`)}
+                                        >
+                                            View Details
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                    </div>
+
+                    <div className="hidden md:block overflow-x-auto">
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-gray-50/50">

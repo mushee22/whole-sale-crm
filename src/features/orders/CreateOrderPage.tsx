@@ -480,7 +480,7 @@ export default function CreateOrderPage() {
                     <Button variant="ghost" className="pl-0 hover:bg-transparent -ml-2 mb-2 text-slate-500" onClick={() => navigate("/orders")}>
                         <ArrowLeft className="h-4 w-4 mr-2" /> Back
                     </Button>
-                    <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">{isEditMode ? "Edit Order" : "Create New Order"}</h1>
+                    <h1 className="text-xl md:text-3xl font-bold text-slate-900 tracking-tight">{isEditMode ? "Edit Order" : "Create New Order"}</h1>
                     <p className="text-sm md:text-base text-slate-500 mt-1">{isEditMode ? "Update order details." : "Select a customer and add products."}</p>
                 </div>
             </div>

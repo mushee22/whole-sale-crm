@@ -66,7 +66,7 @@ export default function StaffDetailsPage() {
             </div>
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h1 className="text-3xl font-bold text-slate-900">
+                <h1 className="text-lg md:text-3xl font-bold text-slate-900">
                     {user?.name || "User Details"}
                     <span className="block text-sm font-normal text-slate-500 mt-1">{user?.email}</span>
                 </h1>

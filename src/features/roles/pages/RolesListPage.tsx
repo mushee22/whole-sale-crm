@@ -1,17 +1,25 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { getRoles } from "../api/roles";
+import { getRoles, deleteRole } from "../api/roles";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { Pagination } from "../../../components/ui/pagination";
-import { Plus, Shield } from "lucide-react";
+
+import { Plus, Shield, Trash2 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { PermissionGuard } from "../../../hooks/usePermission";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { AlertDialog } from "../../../components/ui/alert-dialog";
 
 export default function RolesListPage() {
     const [page, setPage] = useState(1);
+
+
     const navigate = useNavigate();
+    const queryClient = useQueryClient();
+    const [deleteId, setDeleteId] = useState<number | null>(null);
 
     // Hardcoded per_page as per user request example url showing per_page=15
     const { data, isLoading } = useQuery({
@@ -19,12 +27,24 @@ export default function RolesListPage() {
         queryFn: () => getRoles({ page, per_page: 15 }),
     });
 
+    const deleteMutation = useMutation({
+        mutationFn: deleteRole,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ['roles'] });
+            setDeleteId(null);
+            toast.success("Role deleted successfully");
+        },
+        onError: () => {
+            toast.error("Failed to delete role");
+        }
+    });
+
     return (
         <div className="space-y-6">
             <Card className="border-gray-100 shadow-sm">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-gray-100">
+                <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0 pb-4 border-b border-gray-100">
                     <div className="space-y-1">
-                        <CardTitle className="text-xl font-bold flex items-center gap-2">
+                        <CardTitle className="text-lg md:text-2xl font-bold flex items-center gap-2">
                             <Shield className="h-5 w-5 text-blue-600" />
                             Roles & Permissions
                         </CardTitle>
@@ -41,90 +61,134 @@ export default function RolesListPage() {
                 </CardHeader>
 
                 <CardContent className="p-0">
-                    {isLoading ? (
-                        <div className="p-12 text-center">
-                            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-100 border-t-blue-600 mb-4"></div>
-                            <p className="text-gray-500">Loading roles...</p>
-                        </div>
-                    ) : (
-                        <>
-                            {/* Mobile View */}
-                            <div className="md:hidden divide-y divide-gray-100">
-                                {data?.data.map((role) => (
-                                    <div key={role.id} className="p-4 space-y-2 bg-white">
-                                        <div className="flex justify-between items-center">
-                                            <div className="font-semibold text-gray-900">{role.name}</div>
-                                            <div className="text-xs text-slate-500">ID: {role.id}</div>
-                                        </div>
-                                        <div className="text-xs text-gray-500">
-                                            {Array.isArray(role.permissions)
-                                                ? `${role.permissions.length} permissions`
-                                                : 'No permissions'}
-                                        </div>
-                                    </div>
-                                ))}
+                    <PermissionGuard module="roles" action="view" showMessage>
+                        {isLoading ? (
+                            <div className="p-12 text-center">
+                                <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-gray-100 border-t-blue-600 mb-4"></div>
+                                <p className="text-gray-500">Loading roles...</p>
                             </div>
+                        ) : (
+                            <>
+                                {/* Mobile View */}
+                                <div className="md:hidden divide-y divide-gray-100">
+                                    {data?.data.filter(r => r.id !== 1).map((role) => (
+                                        <div key={role.id} className="p-4 space-y-2 bg-white">
+                                            <div className="flex justify-between items-center">
+                                                <div className="font-semibold text-gray-900">{role.name}</div>
+                                                <div className="text-xs text-slate-500">ID: {role.id}</div>
+                                            </div>
+                                            <div className="flex justify-between items-center pt-2 mt-2 border-t border-gray-50">
+                                                <div className="text-xs text-gray-500">
+                                                    {Array.isArray(role.permissions)
+                                                        ? `${role.permissions.length} permissions`
+                                                        : 'No permissions'}
+                                                </div>
+                                                <PermissionGuard module="roles" action="update">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => navigate(`/roles/${role.id}`)}
+                                                        className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                    >
+                                                        Edit
+                                                    </Button>
+                                                </PermissionGuard>
+                                                <PermissionGuard module="roles" action="delete">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => setDeleteId(role.id)}
+                                                        className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50 ml-2"
+                                                    >
+                                                        Delete
+                                                    </Button>
+                                                </PermissionGuard>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
 
-                            {/* Desktop View */}
-                            <div className="hidden md:block overflow-x-auto">
-                                <Table>
-                                    <TableHeader>
-                                        <TableRow className="bg-gray-50 hover:bg-gray-50 border-gray-100">
-                                            <TableHead className="w-[80px] font-semibold text-gray-600 pl-6">ID</TableHead>
-                                            <TableHead className="font-semibold text-gray-600">Name</TableHead>
-                                            <TableHead className="font-semibold text-gray-600">Permissions Count</TableHead>
-                                            <TableHead className="font-semibold text-gray-600">Created At</TableHead>
-                                            <TableHead className="w-[100px] text-right pr-6 font-semibold text-gray-600">Actions</TableHead>
-                                        </TableRow>
-                                    </TableHeader>
-                                    <TableBody>
-                                        {data?.data.map((role) => (
-                                            <TableRow key={role.id} className="hover:bg-slate-50 transition-colors border-gray-100">
-                                                <TableCell className="font-mono text-xs text-gray-400 pl-6">#{role.id}</TableCell>
-                                                <TableCell className="font-medium text-slate-900">{role.name}</TableCell>
-                                                <TableCell className="text-slate-600">
-                                                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
-                                                        {Array.isArray(role.permissions) ? role.permissions.length : 0} permissions
-                                                    </span>
-                                                </TableCell>
-                                                <TableCell className="text-slate-600 text-sm">
-                                                    {new Date(role.created_at).toLocaleDateString()}
-                                                </TableCell>
-                                                <TableCell className="text-right pr-6">
-                                                    <PermissionGuard module="roles" action="update">
-                                                        <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => navigate(`/roles/${role.id}`)}
-                                                            className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                                                        >
-                                                            Edit
-                                                        </Button>
-                                                    </PermissionGuard>
-                                                </TableCell>
+                                {/* Desktop View */}
+                                <div className="hidden md:block overflow-x-auto">
+                                    <Table>
+                                        <TableHeader>
+                                            <TableRow className="bg-gray-50 hover:bg-gray-50 border-gray-100">
+                                                <TableHead className="w-[80px] font-semibold text-gray-600 pl-6">ID</TableHead>
+                                                <TableHead className="font-semibold text-gray-600">Name</TableHead>
+                                                <TableHead className="font-semibold text-gray-600">Permissions Count</TableHead>
+                                                <TableHead className="font-semibold text-gray-600">Created At</TableHead>
+                                                <TableHead className="w-[100px] text-right pr-6 font-semibold text-gray-600">Actions</TableHead>
                                             </TableRow>
-                                        ))}
-                                        {data?.data.length === 0 && (
-                                            <TableRow>
-                                                <TableCell colSpan={4} className="h-32 text-center text-gray-400">
-                                                    No roles found.
-                                                </TableCell>
-                                            </TableRow>
-                                        )}
-                                    </TableBody>
-                                </Table>
-                            </div>
-                            <div className="p-4 border-t border-gray-100 bg-gray-50/50">
-                                <Pagination
-                                    currentPage={data?.current_page || 1}
-                                    totalPages={data?.last_page || 1}
-                                    onPageChange={setPage}
-                                />
-                            </div>
-                        </>
-                    )}
+                                        </TableHeader>
+                                        <TableBody>
+                                            {data?.data.filter(r => r.id !== 1).map((role) => (
+                                                <TableRow key={role.id} className="hover:bg-slate-50 transition-colors border-gray-100">
+                                                    <TableCell className="font-mono text-xs text-gray-400 pl-6">#{role.id}</TableCell>
+                                                    <TableCell className="font-medium text-slate-900">{role.name}</TableCell>
+                                                    <TableCell className="text-slate-600">
+                                                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                                                            {Array.isArray(role.permissions) ? role.permissions.length : 0} permissions
+                                                        </span>
+                                                    </TableCell>
+                                                    <TableCell className="text-slate-600 text-sm">
+                                                        {new Date(role.created_at).toLocaleDateString()}
+                                                    </TableCell>
+                                                    <TableCell className="text-right pr-6">
+                                                        <PermissionGuard module="roles" action="update">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => navigate(`/roles/${role.id}`)}
+                                                                className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                                            >
+                                                                Edit
+                                                            </Button>
+                                                        </PermissionGuard>
+                                                        <PermissionGuard module="roles" action="delete">
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => setDeleteId(role.id)}
+                                                                className="h-8 text-red-600 hover:text-red-700 hover:bg-red-50 ml-1"
+                                                            >
+                                                                <Trash2 className="h-4 w-4" />
+                                                            </Button>
+                                                        </PermissionGuard>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                            {data?.data.length === 0 && (
+                                                <TableRow>
+                                                    <TableCell colSpan={4} className="h-32 text-center text-gray-400">
+                                                        No roles found.
+                                                    </TableCell>
+                                                </TableRow>
+                                            )}
+                                        </TableBody>
+                                    </Table>
+                                </div>
+                                <div className="p-4 border-t border-gray-100 bg-gray-50/50">
+                                    <Pagination
+                                        currentPage={data?.current_page || 1}
+                                        totalPages={data?.last_page || 1}
+                                        onPageChange={setPage}
+                                    />
+                                </div>
+                            </>
+                        )}
+                    </PermissionGuard>
                 </CardContent>
             </Card>
+
+            <AlertDialog
+                isOpen={!!deleteId}
+                onClose={() => setDeleteId(null)}
+                onConfirm={() => deleteId && deleteMutation.mutate(deleteId)}
+                title="Delete Role"
+                description="Are you sure you want to delete this role? This action cannot be undone."
+                confirmText="Delete"
+                cancelText="Cancel"
+            />
         </div>
     );
 }

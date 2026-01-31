@@ -209,6 +209,14 @@ export default function DispatchedOrdersPage() {
                                             <span className="text-gray-500 text-xs block">Delivery Boy</span>
                                             <span className="font-medium text-gray-900">{deliveryBoy}</span>
                                         </div>
+                                        <div>
+                                            <span className="text-gray-500 text-xs block">Items</span>
+                                            <span className="font-medium text-gray-900">{order.items?.length || 0} items</span>
+                                        </div>
+                                        <div className="text-right">
+                                            <span className="text-gray-500 text-xs block">Est. Delivery</span>
+                                            <span className="font-medium text-gray-900">{order.estimated_delivery_date ? format(new Date(order.estimated_delivery_date), "PPP") : "-"}</span>
+                                        </div>
                                     </div>
                                     <div className="pt-2 flex gap-2">
                                         <PermissionGuard module="orders" action="update">

@@ -138,7 +138,12 @@ export const getOrder = async (id: number) => {
 };
 
 export const deleteOrder = async (id: number) => {
-    await axios.delete(`/orders/${id}`);
+    // using POST with _method=DELETE as safe default for this project structure
+    await axios.post(`/orders/${id}`, {}, {
+        params: {
+            _method: 'DELETE'
+        }
+    });
 };
 
 
@@ -200,10 +205,6 @@ export const updateOrderStatus = async (orderId: number, status: string) => {
     return response.data;
 };
 
-// Updated updateOrder to support FormData (POST with _method=PUT is safer for files in some frameworks, but user asked for update)
-// We will try PUT. If backend is PHP/Laravel, it might need POST + _method: PUT for files.
-// For now, let's stick to standard PUT, unless we encounter issues.
-// Actually, safely, we can check if it's FormData.
 export const updateOrder = async (id: number, data: any) => {
     const response = await axios.post(`/orders/${id}`, data, {
         params: {

@@ -45,7 +45,7 @@ export default function MyOrdersPage() {
         <div className="space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-2xl font-bold tracking-tight">My Deliveries</h2>
+                    <h2 className="text-xl md:text-2xl font-bold tracking-tight">My Deliveries</h2>
                     <p className="text-muted-foreground">Orders assigned to you specifically for delivery.</p>
                 </div>
                 <div className="flex items-center gap-2">

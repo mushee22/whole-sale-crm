@@ -105,9 +105,9 @@ export default function DashboardLayout() {
         // Filter sub-items
         if (item.items) {
             const filteredSubItems = item.items.filter(subItem => {
-                // If it has a specific permission key, check for .view
+                // If it has a specific permission key, check for any permission starting with key.
                 if (subItem.permission) {
-                    return userPermissions.includes(`${subItem.permission}.view`);
+                    return userPermissions.some((p: string) => p.startsWith(`${subItem.permission}.`));
                 }
                 // If no permission key (like Dashboard/Settings if un-keyed), allow by default
                 return true;
@@ -118,7 +118,7 @@ export default function DashboardLayout() {
 
         // If it's a top level item with no sub-items
         if (item.permission) {
-            if (!userPermissions.includes(`${item.permission}.view`)) {
+            if (!userPermissions.some((p: string) => p.startsWith(`${item.permission}.`))) {
                 return null; // Filter out
             }
         }
@@ -282,8 +282,8 @@ export default function DashboardLayout() {
             <div className="flex-1 flex flex-col overflow-hidden bg-[#F8FAFC]">
                 {/* Header */}
                 <header className="h-16 bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm shrink-0 z-10 sticky top-0">
-                    <div className="h-full px-4 lg:px-8 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
+                    <div className="h-full px-3 lg:px-8 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
                             <Button
                                 variant="ghost"
                                 size="icon"
@@ -292,7 +292,7 @@ export default function DashboardLayout() {
                             >
                                 <Menu className="h-6 w-6" />
                             </Button>
-                            <h1 className="text-xl font-bold text-slate-900 tracking-tight">
+                            <h1 className="text-lg md:text-xl font-bold text-slate-900 tracking-tight truncate max-w-[140px] sm:max-w-none">
                                 {filteredItems.flatMap(item => item.items || []).find(item =>
                                     item.to === "/"
                                         ? location.pathname === "/"
@@ -301,13 +301,13 @@ export default function DashboardLayout() {
                             </h1>
                         </div>
 
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5 sm:gap-3">
                             {user?.petty_cash_account && (
                                 <>
                                     <CreateTransactionModal
                                         collectedBy={user?.id}
                                         trigger={
-                                            <Button variant="outline" size="sm" className="gap-2 bg-slate-900 border-slate-900 text-white hover:bg-slate-800 hover:text-white shadow-sm">
+                                            <Button variant="outline" size="sm" className="h-9 w-9 sm:w-auto px-0 sm:px-4 gap-2 bg-slate-900 border-slate-900 text-white hover:bg-slate-800 hover:text-white shadow-sm">
                                                 <Plus className="h-4 w-4" />
                                                 <span className="hidden sm:inline">Add Transaction</span>
                                             </Button>
@@ -323,7 +323,7 @@ export default function DashboardLayout() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => navigate('/profile')}
-                                className="gap-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors font-medium"
+                                className="h-9 w-9 sm:w-auto px-0 sm:px-3 gap-2 text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors font-medium"
                             >
                                 <User className="h-4 w-4" />
                                 <span className="hidden sm:inline">Profile</span>
@@ -332,7 +332,7 @@ export default function DashboardLayout() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={handleLogout}
-                                className="gap-2 text-slate-600 hover:text-red-500 hover:bg-red-50 transition-colors font-medium"
+                                className="h-9 w-9 sm:w-auto px-0 sm:px-3 gap-2 text-slate-600 hover:text-red-500 hover:bg-red-50 transition-colors font-medium"
                             >
                                 <LogOut className="h-4 w-4" />
                                 <span className="hidden sm:inline">Logout</span>

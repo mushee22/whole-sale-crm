@@ -6,7 +6,7 @@ import { Label } from "../../components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "../../components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
-import { loginWithEmail, loginSchema, type LoginCredentials } from "./api/auth";
+import { loginWithEmail, loginSchema, type LoginCredentials, getUser } from "./api/auth";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -27,8 +27,19 @@ export default function LoginPage() {
 
     const loginMutation = useMutation({
         mutationFn: loginWithEmail,
-        onSuccess: (data) => {
-            login(data.token, data.user);
+        onSuccess: async (data) => {
+            // Store token first so getUser can authenticate
+            localStorage.setItem('token', data.token);
+
+            try {
+                // Fetch fresh user data to ensure we have latest permissions/accounts
+                const freshUser = await getUser();
+                login(data.token, freshUser);
+            } catch (err) {
+                console.error("Failed to fetch fresh user data, using login response", err);
+                login(data.token, data.user);
+            }
+
             toast.success("Welcome back!", {
                 description: "You have successfully logged in."
             });
