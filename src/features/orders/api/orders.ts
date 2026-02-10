@@ -40,6 +40,8 @@ export interface OrderItemProduct {
     updated_at?: string;
     deleted_at?: string | null;
     sku?: string; // Added to fix TS error, though might be null in JSON
+    color?: { id: number; name: string } | null;
+    size?: { id: number; name: string } | null;
 }
 
 export interface DispatchCheck {

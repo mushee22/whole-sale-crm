@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
@@ -8,7 +8,9 @@ import { Modal } from "../../../components/ui/modal";
 import { createSalesCustomer } from "../api/sales";
 import { toast } from "sonner";
 import { getLocations } from "../../master-data/api/locations";
+import { getUsers } from "../../users/api/users";
 import { useQuery } from "@tanstack/react-query";
+import { useAuth } from "../../../context/AuthContext";
 
 interface CreateCustomerModalProps {
     isOpen: boolean;
@@ -21,11 +23,23 @@ export function CreateCustomerModal({ isOpen, onClose, onCustomerCreated }: Crea
     const [name, setName] = useState("");
     const [phone, setPhone] = useState("");
     const [locationId, setLocationId] = useState<string>("");
+    const [referenceId, setReferenceId] = useState<string>("");
+
+    const { user } = useAuth();
 
     const { data: locations } = useQuery({
         queryKey: ["locations"],
         queryFn: getLocations
     });
+
+    const { data: usersResponse } = useQuery({
+        queryKey: ['users', { per_page: 100 }],
+        queryFn: () => getUsers({ per_page: 100 })
+    });
+
+    useEffect(() => {
+        setReferenceId(user?.id.toString() || "");
+    }, [user])
 
     const createMutation = useMutation({
         mutationFn: createSalesCustomer,
@@ -49,6 +63,7 @@ export function CreateCustomerModal({ isOpen, onClose, onCustomerCreated }: Crea
             name,
             phone,
             location_id: parseInt(locationId),
+            reference_id: referenceId && referenceId !== "0" ? parseInt(referenceId) : null,
         });
     };
 
@@ -56,6 +71,7 @@ export function CreateCustomerModal({ isOpen, onClose, onCustomerCreated }: Crea
         setName("");
         setPhone("");
         setLocationId("");
+        setReferenceId("");
         onClose();
     };
 
@@ -92,6 +108,22 @@ export function CreateCustomerModal({ isOpen, onClose, onCustomerCreated }: Crea
                             {locations?.map((loc) => (
                                 <SelectItem key={loc.id} value={loc.id.toString()}>
                                     {loc.name}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="cust-reference">Reference User (Optional)</Label>
+                    <Select value={referenceId} onValueChange={setReferenceId}>
+                        <SelectTrigger id="cust-reference">
+                            <SelectValue placeholder="Select reference user" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="0">None</SelectItem>
+                            {usersResponse?.data?.map((u) => (
+                                <SelectItem key={u.id} value={u.id.toString()}>
+                                    {u.name} ({u.email})
                                 </SelectItem>
                             ))}
                         </SelectContent>

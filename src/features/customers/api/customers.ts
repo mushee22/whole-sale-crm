@@ -80,6 +80,7 @@ export const getCustomers = async (params?: {
     per_page?: number;
     name?: string;
     location_id?: number | string;
+    reference_id?: number | string;
 }) => {
     const response = await axios.get<CustomersResponse>("/customers", { params });
     return response.data;

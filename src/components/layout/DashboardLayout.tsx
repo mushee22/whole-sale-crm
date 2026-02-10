@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, LogOut, User, X, Database, Package, ShoppingCart, Plus, Truck } from "lucide-react";
+import { Menu, LogOut, User, X, Database, Package, ShoppingCart, Plus, Truck, LayoutDashboard } from "lucide-react";
 import { CreateTransactionModal } from "../../features/finance/components/CreateTransactionModal";
 import { TransferPettyCashModal } from "../../features/finance/components/TransferPettyCashModal";
 import { cn } from "../../lib/utils";
@@ -17,6 +17,12 @@ interface SidebarItem {
 }
 
 const sidebarItems: SidebarItem[] = [
+    {
+        label: "Dashboard",
+        icon: LayoutDashboard,
+        to: "/",
+        permission: "dashboard.view",
+    },
     {
         label: "Management",
         icon: User,

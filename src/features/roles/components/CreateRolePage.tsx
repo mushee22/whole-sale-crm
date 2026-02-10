@@ -39,7 +39,7 @@ const modules = [
     { key: "locations", label: "Locations", actions: ["view", "add", "update", "delete"] },
 
     // Loyalty & Rewards
-    { key: "loyalties", label: "Loyalty Rules", actions: ["add", "update", "delete"] },
+    { key: "loyalties", label: "Loyalty Rules", actions: ["view", "add", "update", "delete"] },
     { key: "rewards", label: "Rewards", actions: ["add", "update", "delete"] },
     { key: "claims", label: "Claims", actions: ["add"] },
 

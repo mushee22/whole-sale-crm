@@ -9,6 +9,7 @@ import CreateOrderPage from "./features/orders/CreateOrderPage";
 import OrderDetailsPage from "./features/orders/OrderDetailsPage";
 import CustomerList from "./features/customers/CustomerList";
 import CustomerDetailsPage from "./features/customers/CustomerDetailsPage";
+import CustomerLoyaltyPage from "./features/customers/pages/CustomerLoyaltyPage";
 import LoyaltyList from "./features/loyalties/LoyaltyList";
 import RewardList from "./features/rewards/RewardList";
 import CreateClaimPage from "./features/claims/CreateClaimPage";
@@ -121,6 +122,10 @@ const router = createBrowserRouter([
       {
         path: "customers/:id",
         element: <CustomerDetailsPage />,
+      },
+      {
+        path: "customers/:id/loyalty",
+        element: <CustomerLoyaltyPage />,
       },
       {
         path: "loyalties",

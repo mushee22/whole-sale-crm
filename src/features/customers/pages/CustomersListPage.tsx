@@ -5,10 +5,13 @@ import { Pagination } from "../../../components/ui/pagination";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Card, CardHeader, CardContent, CardTitle } from "../../../components/ui/card";
-import { Users, Search } from "lucide-react";
+import { Users, Search, Medal } from "lucide-react";
 import { getCustomers } from "../api/customers";
+import { useNavigate } from "react-router-dom";
+import { PermissionGuard } from "../../../hooks/usePermission";
 
 export default function CustomersListPage() {
+    const navigate = useNavigate();
     const [page, setPage] = useState(1);
     const [nameFilter, setNameFilter] = useState("");
     const [locationIdFilter, setLocationIdFilter] = useState("");
@@ -94,16 +97,17 @@ export default function CustomersListPage() {
                                     <TableHead className="text-right">Outstanding</TableHead>
                                     <TableHead className="text-center">Status</TableHead>
                                     <TableHead>Joined</TableHead>
+                                    <TableHead className="text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {isLoading ? (
                                     <TableRow>
-                                        <TableCell colSpan={8} className="text-center py-8 text-gray-500">Loading customers...</TableCell>
+                                        <TableCell colSpan={9} className="text-center py-8 text-gray-500">Loading customers...</TableCell>
                                     </TableRow>
                                 ) : customers.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                                        <TableCell colSpan={9} className="text-center py-8 text-muted-foreground">
                                             No customers found.
                                         </TableCell>
                                     </TableRow>
@@ -138,6 +142,22 @@ export default function CustomersListPage() {
                                             </TableCell>
                                             <TableCell className="text-xs text-gray-500">
                                                 {customer.created_at ? new Date(customer.created_at).toLocaleDateString() : "-"}
+                                            </TableCell>
+                                            <TableCell className="text-right">
+                                                <PermissionGuard module="loyalties" action="view">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="h-8 w-8 text-gray-400 hover:text-yellow-600"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            navigate(`/customers/${customer.id}/loyalty`);
+                                                        }}
+                                                        title="Manage Loyalty"
+                                                    >
+                                                        <Medal className="h-4 w-4" />
+                                                    </Button>
+                                                </PermissionGuard>
                                             </TableCell>
                                         </TableRow>
                                     ))
@@ -183,11 +203,27 @@ export default function CustomersListPage() {
                                             </div>
                                         )}
                                         <div className="col-span-2 pt-2 border-t border-gray-50 mt-1 flex justify-between items-center">
-                                            <span className="text-xs text-gray-400">Outstanding</span>
-                                            <span className={`font-medium ${customer.outstanding_amount && parseFloat(customer.outstanding_amount) > 0 ? "text-red-600" : "text-gray-900"
-                                                }`}>
-                                                {customer.outstanding_amount ? `₹${customer.outstanding_amount}` : "₹0.00"}
-                                            </span>
+                                            <div className="flex flex-col">
+                                                <span className="text-xs text-gray-400">Outstanding</span>
+                                                <span className={`font-medium ${customer.outstanding_amount && parseFloat(customer.outstanding_amount) > 0 ? "text-red-600" : "text-gray-900"
+                                                    }`}>
+                                                    {customer.outstanding_amount ? `₹${customer.outstanding_amount}` : "₹0.00"}
+                                                </span>
+                                            </div>
+                                            <PermissionGuard module="loyalties" action="view">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-8 gap-2 text-gray-600 hover:text-yellow-600 border-gray-200"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        navigate(`/customers/${customer.id}/loyalty`);
+                                                    }}
+                                                >
+                                                    <Medal className="h-3.5 w-3.5" />
+                                                    Loyalty
+                                                </Button>
+                                            </PermissionGuard>
                                         </div>
                                     </div>
                                 </div>

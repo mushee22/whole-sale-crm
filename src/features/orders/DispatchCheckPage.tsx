@@ -108,11 +108,11 @@ export default function DispatchCheckPage() {
                                         <span>SKU: {item.product.sku || '-'}</span>
                                     </div>
                                     <div className="flex gap-2 mt-2">
-                                        {item.product.color_id && (
-                                            <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">Color: {item.product.color_id}</span>
+                                        {item.product.color && (
+                                            <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">Color: {item.product.color.name}</span>
                                         )}
-                                        {item.product.size_id && (
-                                            <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">Size: {item.product.size_id}</span>
+                                        {item.product.size && (
+                                            <span className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-600">Size: {item.product.size.name}</span>
                                         )}
                                     </div>
                                     {item.product.description && (

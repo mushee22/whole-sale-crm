@@ -1,16 +1,17 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getProductSales } from "../dashboard/api/dashboard";
+import { getProductSales, getDashboardSummary } from "../dashboard/api/dashboard";
 import { getOrders } from "../orders/api/orders";
 import { getProducts } from "../products/api/products";
 import { getUser } from "./api/users";
+import { getLocations } from "../master-data/api/locations";
 import { Card, CardHeader, CardTitle, CardContent } from "../../components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Button } from "../../components/ui/button";
 import { Pagination } from "../../components/ui/pagination";
 import { Input } from "../../components/ui/input";
-import { ArrowLeft, Package, Eye, TrendingDown } from "lucide-react";
+import { ArrowLeft, Package, Eye, TrendingDown, ShoppingCart, IndianRupee, Users } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
 
 export default function StaffDetailsPage() {
@@ -27,6 +28,7 @@ export default function StaffDetailsPage() {
     };
 
     const [selectedProductId, setSelectedProductId] = useState<string>("");
+    const [selectedLocationId, setSelectedLocationId] = useState<string>("");
     const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
@@ -73,14 +75,33 @@ export default function StaffDetailsPage() {
         queryFn: () => getProducts({ per_page: 100 }),
     });
 
+    const { data: locations } = useQuery({
+        queryKey: ['master-data', 'locations'],
+        queryFn: getLocations,
+    });
+
+    // Fetch dashboard summary for this user
+    const { data: summary, isLoading: isSummaryLoading } = useQuery({
+        queryKey: ['dashboard', 'summary', userId, startDate, endDate, selectedLocationId, selectedProductId],
+        queryFn: () => getDashboardSummary({
+            date_from: startDate,
+            date_to: endDate,
+            location_id: selectedLocationId,
+            product_id: selectedProductId,
+            user_id: userId
+        }),
+        enabled: !!userId
+    });
+
     const { data: salesData, isLoading: isLoadingStats } = useQuery({
-        queryKey: ['admin', 'dashboard', 'sales', selectedProductId, userId, startDate, endDate, salesPage],
+        queryKey: ['admin', 'dashboard', 'sales', selectedProductId, userId, startDate, endDate, salesPage, selectedLocationId],
         queryFn: () => getProductSales({
             product_id: selectedProductId,
             user_id: userId,
             date_from: startDate,
             date_to: endDate,
-            page: salesPage
+            page: salesPage,
+            location_id: selectedLocationId
         }),
         enabled: !!userId
     });
@@ -97,9 +118,6 @@ export default function StaffDetailsPage() {
         enabled: !!userId
     });
 
-    // Calculate totals from paginated data
-    const totalQuantity = salesData?.data.reduce((sum, item) => sum + item.net_quantity, 0) || 0;
-    const totalRevenue = salesData?.data.reduce((sum, item) => sum + item.net_revenue, 0) || 0;
 
     return (
         <div className="space-y-6 max-w-7xl mx-auto pb-10">
@@ -116,14 +134,31 @@ export default function StaffDetailsPage() {
                     <span className="block text-sm font-normal text-slate-500 mt-1">{user?.email}</span>
                 </h1>
 
-                {/* Date Filters */}
+                {/* Filters Row */}
                 <div className="flex flex-wrap gap-2 items-center">
+                    {/* Location Filter */}
+                    <div className="flex items-center gap-2">
+                        <select
+                            className="h-9 w-[150px] rounded-md border border-input bg-background px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                            value={selectedLocationId}
+                            onChange={(e) => {
+                                setSelectedLocationId(e.target.value);
+                                setSalesPage(1);
+                            }}
+                        >
+                            <option value="">All Locations</option>
+                            {locations?.map((loc: any) => (
+                                <option key={loc.id} value={loc.id}>{loc.name}</option>
+                            ))}
+                        </select>
+                    </div>
+
                     {/* Month/Year Picker */}
                     <div className="flex items-center gap-2">
                         <span className="text-sm text-gray-500 font-medium">Month:</span>
                         <Input
                             type="month"
-                            className="w-auto"
+                            className="w-auto h-9"
                             value={selectedMonth}
                             onChange={(e) => handleMonthChange(e.target.value)}
                         />
@@ -136,7 +171,7 @@ export default function StaffDetailsPage() {
                         <span className="text-sm text-gray-500 font-medium">From:</span>
                         <Input
                             type="date"
-                            className="w-auto"
+                            className="w-auto h-9"
                             value={startDate}
                             onChange={(e) => {
                                 setStartDate(e.target.value);
@@ -149,7 +184,7 @@ export default function StaffDetailsPage() {
                         <span className="text-sm text-gray-500 font-medium">To:</span>
                         <Input
                             type="date"
-                            className="w-auto"
+                            className="w-auto h-9"
                             value={endDate}
                             onChange={(e) => {
                                 setEndDate(e.target.value);
@@ -168,13 +203,84 @@ export default function StaffDetailsPage() {
                                 setSalesPage(1);
                                 setOrdersPage(1);
                             }}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 h-9"
                         >
                             Clear
                         </Button>
                     )}
                 </div>
             </div>
+
+            {/* Dashboard Summary Section */}
+            {isSummaryLoading ? (
+                <div className="text-center p-8">Loading summary...</div>
+            ) : summary ? (
+                <div className="space-y-6">
+                    {/* Key Metrics */}
+                    <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-xs sm:text-sm font-medium">Total Orders</CardTitle>
+                                <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-lg sm:text-2xl font-bold">{summary.total_orders}</div>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-xs sm:text-sm font-medium">Net Revenue</CardTitle>
+                                <IndianRupee className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-lg sm:text-2xl font-bold">₹{summary.net_revenue.toLocaleString()}</div>
+                                <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
+                                    Total: ₹{summary.total_revenue.toLocaleString()}
+                                </p>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-xs sm:text-sm font-medium">Quantity Sold</CardTitle>
+                                <Package className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-lg sm:text-2xl font-bold">{summary.total_quantity_sold}</div>
+                            </CardContent>
+                        </Card>
+                        <Card>
+                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                <CardTitle className="text-xs sm:text-sm font-medium">Customers</CardTitle>
+                                <Users className="h-4 w-4 text-muted-foreground" />
+                            </CardHeader>
+                            <CardContent>
+                                <div className="text-lg sm:text-2xl font-bold">{summary.distinct_customers}</div>
+                            </CardContent>
+                        </Card>
+                    </div>
+
+                    {/* Orders by Status */}
+                    <Card>
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-sm font-medium">Orders by Status</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                                {Object.entries(summary.orders_by_status).map(([status, count]) => (
+                                    <div key={status} className="flex flex-col items-center justify-center p-4 bg-slate-50 rounded-lg border border-slate-100">
+                                        <span className="text-sm font-medium text-muted-foreground capitalize mb-1">
+                                            {status.replace(/_/g, ' ')}
+                                        </span>
+                                        <span className="text-2xl font-bold text-slate-900">{count as number}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                </div>
+            ) : (
+                <div className="text-center p-8 text-gray-500">No summary data available</div>
+            )}
 
             {/* Product Sales Section */}
             <div className="space-y-4">
@@ -202,29 +308,7 @@ export default function StaffDetailsPage() {
                     </div>
                 </div>
 
-                {/* Summary Cards */}
-                <div className="grid gap-4 md:grid-cols-2">
-                    <Card className="bg-gradient-to-br from-blue-50 to-blue-100 border-blue-200">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-blue-800">Net Quantity (Current Page)</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-bold text-blue-900">
-                                {isLoadingStats ? "..." : totalQuantity.toLocaleString()}
-                            </div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-gradient-to-br from-green-50 to-green-100 border-green-200">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-green-800">Net Revenue (Current Page)</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-3xl font-bold text-green-900">
-                                {isLoadingStats ? "..." : `₹${totalRevenue.toLocaleString()}`}
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
+
 
                 {/* Product Sales Table */}
                 <Card className="border-gray-100 shadow-sm">

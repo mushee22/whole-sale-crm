@@ -4,6 +4,7 @@ export interface CreateSalesCustomerParams {
     name: string;
     phone: string;
     location_id: number;
+    reference_id?: number | null;
 }
 
 // ... existing code ...

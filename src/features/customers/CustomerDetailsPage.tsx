@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getCustomer, getCustomerTransactions } from "./api/customers";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { ArrowLeft, Calendar, Edit, History, Mail, MapPin, Phone, Plus } from "lucide-react";
+import { ArrowLeft, Calendar, Edit, History, Mail, MapPin, Phone, Plus, Medal } from "lucide-react";
 import { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -54,6 +54,16 @@ export default function CustomerDetailsPage() {
                     <ArrowLeft className="h-4 w-4" />
                     Back to Customers
                 </Button>
+                <PermissionGuard module="loyalties" action="view">
+                    <Button
+                        variant="outline"
+                        className="gap-2"
+                        onClick={() => navigate(`/customers/${customerId}/loyalty`)}
+                    >
+                        <Medal className="h-4 w-4 text-yellow-600" />
+                        Manage Loyalty
+                    </Button>
+                </PermissionGuard>
             </div>
 
             {/* Customer Overview Card */}
