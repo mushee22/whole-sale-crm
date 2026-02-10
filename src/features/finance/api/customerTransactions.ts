@@ -56,9 +56,12 @@ export interface CustomerTransactionsResponse {
     }[];
 }
 
-export const getCustomerTransactions = async (page = 1, is_moved_to_system?: boolean) => {
+export const getCustomerTransactions = async (page = 1, is_moved_to_system?: boolean, date_from?: string, date_to?: string, type?: 'credit' | 'debit') => {
     const params: any = { page };
     if (is_moved_to_system !== undefined) params.is_moved_to_system = is_moved_to_system;
+    if (date_from) params.date_from = date_from;
+    if (date_to) params.date_to = date_to;
+    if (type) params.type = type;
     const response = await api.get<CustomerTransactionsResponse>(`/customer-transactions`, { params });
     return response.data;
 };

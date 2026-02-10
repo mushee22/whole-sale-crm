@@ -115,6 +115,19 @@ export default function CustomerDetailsPage() {
                                 </div>
                             </div>
                         )}
+
+                        {customer.referred_by && (
+                            <div className="flex items-center gap-3 text-sm">
+                                <div className="h-8 w-8 rounded-full bg-blue-50 flex items-center justify-center text-blue-500">
+                                    <Mail className="h-4 w-4" />
+                                </div>
+                                <div>
+                                    <p className="text-slate-500 text-xs uppercase font-medium">Referred By</p>
+                                    <p className="text-slate-900 font-medium">{customer.referred_by.name}</p>
+                                    <p className="text-slate-500 text-xs">{customer.referred_by.email}</p>
+                                </div>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
 

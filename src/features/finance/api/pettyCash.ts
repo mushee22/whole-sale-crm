@@ -145,3 +145,16 @@ export const deletePettyCashAccount = async (id: number) => {
     const response = await api.delete(`/petty-cash-accounts/${id}`);
     return response.data;
 };
+
+export interface CreatePettyCashTransactionParams {
+    to_account_id: number;
+    amount: number;
+    type: 'credit' | 'debit';
+    reference: string;
+    date: string;
+}
+
+export const createPettyCashTransaction = async (data: CreatePettyCashTransactionParams) => {
+    const response = await api.post("/petty-cash/transactions", data);
+    return response.data;
+};

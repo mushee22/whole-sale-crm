@@ -34,6 +34,7 @@ export interface Customer {
     phone: string;
     email?: string;
     location_id?: number | null;
+    reference_id?: number | null;
     outstanding_amount?: string;
     created_at?: string;
     email_verified_at?: string | null;
@@ -48,6 +49,15 @@ export interface Customer {
         updated_at: string;
         deleted_at: string | null;
     };
+    // Reference user object from API response (API key is "referred_by")
+    referred_by?: {
+        id: number;
+        name: string;
+        email: string;
+        phone: string;
+        role_id: number;
+        status: string;
+    } | null;
     // Fields used in UI but possibly missing in partial response (kept as optional/required based on UI usage)
     unique_id?: string;
     whatsapp_no?: string | null;
@@ -86,6 +96,7 @@ export const createCustomerSchema = z.object({
     name: z.string().min(1, "Name is required"),
     phone: z.string().min(1, "Phone is required"),
     location_id: z.coerce.number().min(1, "Location is required"),
+    reference_id: z.coerce.number().optional().nullable(),
 });
 
 export type CreateCustomerData = z.infer<typeof createCustomerSchema>;

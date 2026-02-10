@@ -1,10 +1,10 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getOrder, deleteOrder } from "./api/orders";
+import { getOrder, deleteOrder, getOrderReturns } from "./api/orders";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
-import { ArrowLeft, Pencil, Trash2, User, Phone, Mail, Award } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, User, Phone, Mail, Award, PackageX, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "../../lib/utils";
 import { useAuth } from "../../context/AuthContext";
@@ -12,6 +12,9 @@ import { UpdateStatusModal } from "./components/UpdateStatusModal";
 import { Truck, FileText, ExternalLink } from "lucide-react";
 import { downloadInvoice } from "../accounts/api/invoices";
 import { PermissionGuard } from "../../hooks/usePermission";
+import { CreateOrderReturnModal } from "./components/CreateOrderReturnModal";
+import { useState } from "react";
+import { format } from "date-fns";
 
 export default function OrderDetailsPage() {
     const { id } = useParams();
@@ -19,10 +22,17 @@ export default function OrderDetailsPage() {
     const queryClient = useQueryClient();
     const { user } = useAuth();
     const orderId = Number(id);
+    const [isReturnModalOpen, setIsReturnModalOpen] = useState(false);
 
     const { data: order, isLoading } = useQuery({
         queryKey: ['order', orderId],
         queryFn: () => getOrder(orderId),
+        enabled: !!orderId
+    });
+
+    const { data: returns = [] } = useQuery({
+        queryKey: ['orderReturns', orderId],
+        queryFn: () => getOrderReturns(orderId),
         enabled: !!orderId
     });
 
@@ -241,6 +251,92 @@ export default function OrderDetailsPage() {
                             </CardContent>
                         </Card>
 
+                        {/* Order Returns */}
+                        <Card className="shadow-sm border-gray-100">
+                            <CardHeader className="flex flex-row items-center justify-between">
+                                <CardTitle className="text-base md:text-lg font-semibold flex items-center gap-2">
+                                    <PackageX className="h-5 w-5 text-orange-500" />
+                                    Order Returns
+                                    {returns.length > 0 && (
+                                        <span className="ml-2 px-2 py-0.5 text-xs bg-orange-100 text-orange-700 rounded-full">
+                                            {returns.length}
+                                        </span>
+                                    )}
+                                </CardTitle>
+                                <PermissionGuard module="orders" action="create_return">
+                                    <Button
+                                        size="sm"
+                                        onClick={() => setIsReturnModalOpen(true)}
+                                        className="gap-2"
+                                    >
+                                        <Plus className="h-4 w-4" />
+                                        Add Return
+                                    </Button>
+                                </PermissionGuard>
+                            </CardHeader>
+                            <CardContent>
+                                {returns.length === 0 ? (
+                                    <p className="text-sm text-gray-500 text-center py-8">No returns for this order</p>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {returns.map((returnRecord) => (
+                                            <div key={returnRecord.id} className="border rounded-lg p-4 bg-gray-50">
+                                                <div className="flex justify-between items-start mb-3">
+                                                    <div>
+                                                        <div className="text-sm font-semibold text-gray-900">
+                                                            Return #{returnRecord.id}
+                                                        </div>
+                                                        <div className="text-xs text-gray-500">
+                                                            {format(new Date(returnRecord.return_date), "PPP")}
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-xs text-gray-500">
+                                                        Created: {format(new Date(returnRecord.created_at), "PPp")}
+                                                    </div>
+                                                </div>
+
+                                                {returnRecord.note && (
+                                                    <div className="mb-3 p-2 bg-amber-50 border border-amber-100 rounded text-xs">
+                                                        <span className="font-semibold">Note:</span> {returnRecord.note}
+                                                    </div>
+                                                )}
+
+                                                <div className="overflow-x-auto">
+                                                    <Table>
+                                                        <TableHeader>
+                                                            <TableRow className="bg-white">
+                                                                <TableHead>Product</TableHead>
+                                                                <TableHead className="text-center">Quantity</TableHead>
+                                                            </TableRow>
+                                                        </TableHeader>
+                                                        <TableBody>
+                                                            {returnRecord.items.map((item) => (
+                                                                <TableRow key={item.id} className="bg-white">
+                                                                    <TableCell>
+                                                                        <div className="text-sm font-medium">
+                                                                            {item.product?.name || item.order_item?.product?.name || 'Unknown Product'}
+                                                                        </div>
+                                                                        {(item.product?.sku || item.order_item?.product?.sku) && (
+                                                                            <div className="text-xs text-gray-500">
+                                                                                SKU: {item.product?.sku || item.order_item?.product?.sku}
+                                                                            </div>
+                                                                        )}
+                                                                    </TableCell>
+                                                                    <TableCell className="text-center">
+                                                                        {item.quantity}
+                                                                    </TableCell>
+                                                                </TableRow>
+                                                            ))}
+                                                        </TableBody>
+                                                    </Table>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+
                         {/* Delivery & Logistics Info */}
                         {order.deliveries && order.deliveries.length > 0 && (
                             <Card className="shadow-sm border-gray-100">
@@ -447,6 +543,16 @@ export default function OrderDetailsPage() {
                     </div>
                 </div>
             </PermissionGuard>
+
+            {/* Create Return Modal */}
+            {order && (
+                <CreateOrderReturnModal
+                    orderId={orderId}
+                    orderItems={order.items || []}
+                    isOpen={isReturnModalOpen}
+                    onClose={() => setIsReturnModalOpen(false)}
+                />
+            )}
         </div>
     );
 }

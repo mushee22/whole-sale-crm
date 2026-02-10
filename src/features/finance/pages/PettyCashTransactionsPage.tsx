@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getAllPettyCashTransactions, getPettyCashAccounts, updatePettyCashTransaction } from "../api/pettyCash";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
@@ -40,16 +40,51 @@ interface PettyCashTransactionsPageProps {
 }
 
 export default function PettyCashTransactionsPage({ isAccountsMode = false }: PettyCashTransactionsPageProps) {
+    // Get current month in YYYY-MM format
+    const getCurrentMonth = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        return `${year}-${month}`;
+    };
+
     const [selectedTransaction, setSelectedTransaction] = useState<PettyCashTransaction | null>(null);
     const [detailsOpen, setDetailsOpen] = useState(false);
     const [page, setPage] = useState(1);
     const [viewFilter, setViewFilter] = useState<'all' | 'in_queue' | 'completed'>('all');
+    const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
     const [filters, setFilters] = useState({
         account_id: "",
         type: "",
         date_from: "",
         date_to: "",
     });
+
+    // Handle month selection - sets first and last day of month
+    const handleMonthChange = (monthValue: string) => {
+        setSelectedMonth(monthValue);
+
+        if (!monthValue) {
+            setFilters(prev => ({ ...prev, date_from: "", date_to: "" }));
+            return;
+        }
+
+        // monthValue is in format "YYYY-MM"
+        const [year, month] = monthValue.split('-');
+        const firstDay = `${year}-${month}-01`;
+
+        // Get last day of month
+        const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+        const lastDayFormatted = `${year}-${month}-${lastDay.toString().padStart(2, '0')}`;
+
+        setFilters(prev => ({ ...prev, date_from: firstDay, date_to: lastDayFormatted }));
+        setPage(1);
+    };
+
+    // Set current month as default on mount
+    useEffect(() => {
+        handleMonthChange(getCurrentMonth());
+    }, []);
 
     // Fetch accounts for filter
     const { data: accountsData } = useQuery({
@@ -93,6 +128,8 @@ export default function PettyCashTransactionsPage({ isAccountsMode = false }: Pe
             date_from: "",
             date_to: "",
         });
+        setSelectedMonth(getCurrentMonth());
+        handleMonthChange(getCurrentMonth());
         setViewFilter('all');
         setPage(1);
     };
@@ -110,55 +147,74 @@ export default function PettyCashTransactionsPage({ isAccountsMode = false }: Pe
 
                     {/* Filters Section */}
                     <div className="flex flex-col md:flex-row gap-4 pt-2">
-                        <div className="flex-1 min-w-[200px]">
-                            <Select
-                                value={filters.account_id}
-                                onValueChange={(val) => handleFilterChange("account_id", val)}
-                            >
-                                <SelectTrigger className="bg-white">
-                                    <SelectValue placeholder="Filter by Account" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {accountsData?.data.map((account) => (
-                                        <SelectItem key={account.id} value={account.id.toString()}>
-                                            {account.account_name} ({account.user.name})
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                        <div className="flex flex-col md:flex-row gap-4">
+                            <div className=" min-w-[200px]">
+                                <Select
+                                    value={filters.account_id}
+                                    onValueChange={(val) => handleFilterChange("account_id", val)}
+                                >
+                                    <SelectTrigger className="bg-white">
+                                        <SelectValue placeholder="Filter by Account" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {accountsData?.data.map((account) => (
+                                            <SelectItem key={account.id} value={account.id.toString()}>
+                                                {account.account_name} ({account.user.name})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="w-full md:w-[150px]">
+                                <Select
+                                    value={filters.type}
+                                    onValueChange={(val) => handleFilterChange("type", val)}
+                                >
+                                    <SelectTrigger className="bg-white">
+                                        <SelectValue placeholder="Type" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="credit">Credit</SelectItem>
+                                        <SelectItem value="debit">Debit</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                         </div>
-                        <div className="w-full md:w-[150px]">
-                            <Select
-                                value={filters.type}
-                                onValueChange={(val) => handleFilterChange("type", val)}
-                            >
-                                <SelectTrigger className="bg-white">
-                                    <SelectValue placeholder="Type" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="credit">Credit</SelectItem>
-                                    <SelectItem value="debit">Debit</SelectItem>
-                                </SelectContent>
-                            </Select>
+
+                        <div className="flex flex-col md:flex-row gap-4">
+                            <div className="w-full md:w-[165px]">
+                                <Input
+                                    type="month"
+                                    placeholder="Month"
+                                    value={selectedMonth}
+                                    onChange={(e) => handleMonthChange(e.target.value)}
+                                    className="bg-white"
+                                />
+                            </div>
+
+                            {/* OR Separator */}
+                            <span className="text-xs text-gray-400 font-medium self-center">OR</span>
+
+                            <div className="w-full md:w-[150px]">
+                                <Input
+                                    type="date"
+                                    placeholder="From Date"
+                                    value={filters.date_from}
+                                    onChange={(e) => handleFilterChange("date_from", e.target.value)}
+                                    className="bg-white"
+                                />
+                            </div>
+                            <div className="w-full md:w-[150px]">
+                                <Input
+                                    type="date"
+                                    placeholder="To Date"
+                                    value={filters.date_to}
+                                    onChange={(e) => handleFilterChange("date_to", e.target.value)}
+                                    className="bg-white"
+                                />
+                            </div>
                         </div>
-                        <div className="w-full md:w-[150px]">
-                            <Input
-                                type="date"
-                                placeholder="From Date"
-                                value={filters.date_from}
-                                onChange={(e) => handleFilterChange("date_from", e.target.value)}
-                                className="bg-white"
-                            />
-                        </div>
-                        <div className="w-full md:w-[150px]">
-                            <Input
-                                type="date"
-                                placeholder="To Date"
-                                value={filters.date_to}
-                                onChange={(e) => handleFilterChange("date_to", e.target.value)}
-                                className="bg-white"
-                            />
-                        </div>
+
                         {isAccountsMode && (
                             <div className="w-full md:w-[300px]">
                                 <Tabs

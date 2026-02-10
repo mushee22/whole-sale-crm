@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { Pagination } from "../../../components/ui/pagination";
@@ -18,9 +18,18 @@ import {
 import { PermissionGuard } from "../../../hooks/usePermission";
 
 export default function InvoicesListPage() {
+    // Get current month in YYYY-MM format
+    const getCurrentMonth = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        return `${year}-${month}`;
+    };
+
     const navigate = useNavigate();
     const [page, setPage] = useState(1);
     const [viewFilter, setViewFilter] = useState<'all' | 'in_queue' | 'completed'>('all');
+    const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
 
     // Default to current month
     const date = new Date();
@@ -31,6 +40,34 @@ export default function InvoicesListPage() {
     const [dateTo, setDateTo] = useState(lastDay);
 
     const queryClient = useQueryClient();
+
+    // Handle month selection - sets first and last day of month
+    const handleMonthChange = (monthValue: string) => {
+        setSelectedMonth(monthValue);
+
+        if (!monthValue) {
+            setDateFrom("");
+            setDateTo("");
+            return;
+        }
+
+        // monthValue is in format "YYYY-MM"
+        const [year, month] = monthValue.split('-');
+        const firstDayOfMonth = `${year}-${month}-01`;
+
+        // Get last day of month
+        const lastDayOfMonth = new Date(parseInt(year), parseInt(month), 0).getDate();
+        const lastDayFormatted = `${year}-${month}-${lastDayOfMonth.toString().padStart(2, '0')}`;
+
+        setDateFrom(firstDayOfMonth);
+        setDateTo(lastDayFormatted);
+        setPage(1);
+    };
+
+    // Set current month as default on mount
+    useEffect(() => {
+        handleMonthChange(getCurrentMonth());
+    }, []);
 
     const { data: invoicesData, isLoading } = useQuery({
         queryKey: ['invoices', page, dateFrom, dateTo, viewFilter],
@@ -69,6 +106,21 @@ export default function InvoicesListPage() {
                 <CardContent className="p-0">
                     {/* Filters */}
                     <div className="p-4 flex flex-wrap gap-4 border-b border-gray-100 bg-white items-end">
+                        <div className="space-y-1">
+                            <label className="text-xs font-medium text-gray-500 flex items-center gap-1">
+                                <Calendar className="h-3 w-3" /> Month
+                            </label>
+                            <Input
+                                type="month"
+                                value={selectedMonth}
+                                onChange={(e) => handleMonthChange(e.target.value)}
+                                className="h-9 w-[165px]"
+                            />
+                        </div>
+
+                        {/* OR Separator */}
+                        <span className="text-xs text-gray-400 font-medium self-end pb-2">OR</span>
+
                         <div className="space-y-1">
                             <label className="text-xs font-medium text-gray-500 flex items-center gap-1">
                                 <Calendar className="h-3 w-3" /> From Date
@@ -122,8 +174,8 @@ export default function InvoicesListPage() {
                                     variant="ghost"
                                     size="sm"
                                     onClick={() => {
-                                        setDateFrom(firstDay);
-                                        setDateTo(lastDay);
+                                        setSelectedMonth(getCurrentMonth());
+                                        handleMonthChange(getCurrentMonth());
                                         setViewFilter('all');
                                         setPage(1);
                                     }}

@@ -45,9 +45,9 @@ export function EditCustomerPricesModal({ customerId, isOpen, onClose }: EditCus
 
     // Populate initial items from customer data
     useEffect(() => {
-        if (customerData?.product_prices) {
+        if (customerData?.product_prices && productsData?.data) {
             const existingItems = customerData.product_prices.map(pp => {
-                const product = products.find(p => p.id === pp.product_id);
+                const product = productsData.data.find(p => p.id === pp.product_id);
                 return {
                     productId: pp.product_id.toString(),
                     productName: product ? product.name : `Product #${pp.product_id}`,
@@ -56,7 +56,7 @@ export function EditCustomerPricesModal({ customerId, isOpen, onClose }: EditCus
             });
             setPriceItems(existingItems);
         }
-    }, [customerData, products]);
+    }, [customerData, productsData]);
 
     // Auto-fill price when product selected
     useEffect(() => {

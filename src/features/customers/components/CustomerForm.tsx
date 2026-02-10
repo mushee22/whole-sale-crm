@@ -8,6 +8,8 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
 import { getLocations } from "../../master-data/api/locations";
+import { getUsers } from "../../users/api/users";
+import { useAuth } from "../../../context/AuthContext";
 
 interface CustomerFormProps {
     onSuccess: () => void;
@@ -17,10 +19,16 @@ interface CustomerFormProps {
 
 export default function CustomerForm({ onSuccess, onCancel, initialData }: CustomerFormProps) {
     const queryClient = useQueryClient();
+    const { user } = useAuth();
 
     const { data: locations } = useQuery({
         queryKey: ['locations'],
         queryFn: getLocations
+    });
+
+    const { data: usersResponse } = useQuery({
+        queryKey: ['users', { per_page: 100 }],
+        queryFn: () => getUsers({ per_page: 100 })
     });
 
     const { register, handleSubmit, formState: { errors }, setValue } = useForm<CreateCustomerData>({
@@ -29,10 +37,12 @@ export default function CustomerForm({ onSuccess, onCancel, initialData }: Custo
             name: initialData.name,
             phone: initialData.phone,
             location_id: initialData.location_id || 0,
+            reference_id: initialData.reference_id || user?.id || undefined,
         } : {
             name: "",
             phone: "",
-            location_id: 0
+            location_id: 0,
+            reference_id: user?.id || undefined,
         }
     });
 
@@ -97,6 +107,27 @@ export default function CustomerForm({ onSuccess, onCancel, initialData }: Custo
                         </SelectContent>
                     </Select>
                     {errors.location_id && <p className="text-sm text-red-500">{errors.location_id.message}</p>}
+                </div>
+
+                <div className="space-y-2">
+                    <Label htmlFor="reference_id">Reference User (Optional)</Label>
+                    <Select
+                        onValueChange={(value) => setValue("reference_id", value === "0" ? null : Number(value), { shouldValidate: true })}
+                        defaultValue={initialData?.reference_id?.toString() || user?.id?.toString()}
+                    >
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select reference user" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="0">None</SelectItem>
+                            {usersResponse?.data?.map((u) => (
+                                <SelectItem key={u.id} value={u.id.toString()}>
+                                    {u.name} ({u.email})
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    {errors.reference_id && <p className="text-sm text-red-500">{errors.reference_id.message}</p>}
                 </div>
             </div>
 

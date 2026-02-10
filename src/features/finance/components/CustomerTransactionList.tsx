@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { getCustomerTransactions, updateCustomerTransaction } from "../api/customerTransactions";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { Pagination } from "../../../components/ui/pagination";
-import { Plus, Edit, CheckCircle } from "lucide-react";
+import { Plus, Edit, CheckCircle, X } from "lucide-react";
 import { Button } from "../../../components/ui/button";
+import { Input } from "../../../components/ui/input";
 import { CreateTransactionModal } from "./CreateTransactionModal";
 import { EditTransactionModal } from "./EditTransactionModal";
 import { Badge } from "../../../components/ui/badge";
@@ -23,16 +24,59 @@ interface CustomerTransactionListProps {
 }
 
 export default function CustomerTransactionList({ isAccountsMode = false }: CustomerTransactionListProps) {
+    // Get current month in YYYY-MM format
+    const getCurrentMonth = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        return `${year}-${month}`;
+    };
+
     const [page, setPage] = useState(1);
     const [viewFilter, setViewFilter] = useState<'all' | 'in_queue' | 'completed'>('all');
+    const [typeFilter, setTypeFilter] = useState<'all' | 'credit' | 'debit'>('all');
+    const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
+    const [startDate, setStartDate] = useState("");
+    const [endDate, setEndDate] = useState("");
     const queryClient = useQueryClient();
     const navigate = useNavigate();
 
+    // Handle month selection - sets first and last day of month
+    const handleMonthChange = (monthValue: string) => {
+        setSelectedMonth(monthValue);
+
+        if (!monthValue) {
+            setStartDate("");
+            setEndDate("");
+            return;
+        }
+
+        // monthValue is in format "YYYY-MM"
+        const [year, month] = monthValue.split('-');
+        const firstDay = `${year}-${month}-01`;
+
+        // Get last day of month
+        const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+        const lastDayFormatted = `${year}-${month}-${lastDay.toString().padStart(2, '0')}`;
+
+        setStartDate(firstDay);
+        setEndDate(lastDayFormatted);
+        setPage(1);
+    };
+
+    // Set current month as default on mount
+    useEffect(() => {
+        handleMonthChange(getCurrentMonth());
+    }, []);
+
     const { data, isLoading } = useQuery({
-        queryKey: ['customer-transactions', page, viewFilter, isAccountsMode],
+        queryKey: ['customer-transactions', page, viewFilter, isAccountsMode, startDate, endDate, typeFilter],
         queryFn: () => getCustomerTransactions(
             page,
-            isAccountsMode ? (viewFilter === 'all' ? undefined : viewFilter === 'completed') : undefined
+            isAccountsMode ? (viewFilter === 'all' ? undefined : viewFilter === 'completed') : undefined,
+            startDate,
+            endDate,
+            typeFilter === 'all' ? undefined : typeFilter
         ),
     });
 
@@ -86,6 +130,88 @@ export default function CustomerTransactionList({ isAccountsMode = false }: Cust
                         )}
                     </div>
                 </CardHeader>
+
+                {/* Date Filter Section */}
+                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50/50">
+                    <div className="flex flex-wrap gap-3 items-center">
+                        {/* Type Filter */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600 font-medium">Type:</span>
+                            <select
+                                className="h-9 rounded-md border border-input bg-background px-3 py-1 text-sm ring-offset-background focus:outline-none focus:ring-2 focus:ring-ring"
+                                value={typeFilter}
+                                onChange={(e) => {
+                                    setTypeFilter(e.target.value as 'all' | 'credit' | 'debit');
+                                    setPage(1);
+                                }}
+                            >
+                                <option value="all">All Types</option>
+                                <option value="credit">Credit</option>
+                                <option value="debit">Debit</option>
+                            </select>
+                        </div>
+
+                        {/* Divider */}
+                        <div className="h-6 w-px bg-gray-300"></div>
+
+                        {/* Month/Year Picker */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600 font-medium">Month:</span>
+                            <Input
+                                type="month"
+                                className="w-auto h-9"
+                                value={selectedMonth}
+                                onChange={(e) => handleMonthChange(e.target.value)}
+                            />
+                        </div>
+
+                        {/* OR Separator */}
+                        <span className="text-xs text-gray-400 font-medium">OR</span>
+
+                        {/* Custom Date Range */}
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600 font-medium">From:</span>
+                            <Input
+                                type="date"
+                                className="w-auto h-9"
+                                value={startDate}
+                                onChange={(e) => {
+                                    setStartDate(e.target.value);
+                                    setPage(1);
+                                }}
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-gray-600 font-medium">To:</span>
+                            <Input
+                                type="date"
+                                className="w-auto h-9"
+                                value={endDate}
+                                onChange={(e) => {
+                                    setEndDate(e.target.value);
+                                    setPage(1);
+                                }}
+                            />
+                        </div>
+
+                        {/* Clear Filter */}
+                        {(startDate || endDate || typeFilter !== 'all') && (
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                    setSelectedMonth(getCurrentMonth());
+                                    handleMonthChange(getCurrentMonth());
+                                    setTypeFilter('all');
+                                }}
+                                className="h-9 text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                                <X className="h-4 w-4 mr-1" />
+                                Reset
+                            </Button>
+                        )}
+                    </div>
+                </div>
 
                 <CardContent className="p-0">
                     <PermissionGuard module="customer_transactions" action="view" showMessage>

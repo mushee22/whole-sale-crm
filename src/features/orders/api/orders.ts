@@ -123,7 +123,7 @@ export const getOrders = async (params?: {
     per_page?: number;
     search?: string;
     customer_id?: number;
-    user_id?: string | number; // Added user_id
+    created_by?: string | number;
     status?: string;
     order_date_from?: string;
     order_date_to?: string;
@@ -230,3 +230,50 @@ export const getMyDeliveryOrders = async (params?: { status?: string }) => {
     const response = await axios.get<OrdersResponse>("/deliveries/my-orders", { params });
     return response.data;
 };
+
+// --- Order Returns ---
+
+export interface OrderReturnItem {
+    order_item_id: number;
+    quantity: number;
+    product_name?: string; // For display purposes
+}
+
+export interface OrderReturn {
+    id: number;
+    order_id: number;
+    return_date: string;
+    note: string | null;
+    created_at: string;
+    updated_at: string;
+    items: {
+        id: number;
+        order_return_id: number;
+        order_item_id: number;
+        product_id: number;
+        quantity: number;
+        price: string;
+        created_at: string;
+        updated_at: string;
+        order_item?: OrderItem;
+        product?: OrderItemProduct;
+    }[];
+}
+
+export interface CreateOrderReturnParams {
+    return_date: string;
+    note?: string;
+    items: OrderReturnItem[];
+}
+
+export const createOrderReturn = async (orderId: number, data: CreateOrderReturnParams) => {
+    const response = await axios.post(`/orders/${orderId}/returns`, data);
+    return response.data;
+};
+
+export const getOrderReturns = async (orderId: number) => {
+    const response = await axios.get<OrderReturn[]>(`/orders/${orderId}/returns`);
+    return response.data;
+};
+
+

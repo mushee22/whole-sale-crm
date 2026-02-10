@@ -4,8 +4,9 @@ import { useQuery } from "@tanstack/react-query";
 import { getPettyCashAccount, getPettyCashTransactions } from "../api/pettyCash";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
-import { ArrowLeft, User, Wallet, Calendar } from "lucide-react";
+import { ArrowLeft, User, Wallet, Calendar, Plus } from "lucide-react";
 import { TransferPettyCashModal } from "../components/TransferPettyCashModal";
+import { AddPettyCashTransactionModal } from "../components/AddPettyCashTransactionModal";
 import { PermissionGuard } from "../../../hooks/usePermission";
 
 export const PettyCashDetailsPage = () => {
@@ -40,11 +41,22 @@ export const PettyCashDetailsPage = () => {
                         <CardContent className="p-6">
                             <p className="text-slate-400 text-sm font-medium">Current Balance</p>
                             <p className="text-lg md:text-2xl font-bold mt-1">₹{parseFloat(account.current_balance).toFixed(2)}</p>
-                            <div className="mt-4">
+                            <div className="mt-4 space-y-2">
                                 <PermissionGuard module="finance" action="update">
                                     <TransferPettyCashModal
                                         fromAccountId={account.id}
                                         currentBalance={account.current_balance}
+                                    />
+                                </PermissionGuard>
+                                <PermissionGuard module="petty_cash_transactions" action="add">
+                                    <AddPettyCashTransactionModal
+                                        accountId={account.id}
+                                        trigger={
+                                            <Button variant="outline" className="w-full gap-2 text-black">
+                                                <Plus className="h-4 w-4" />
+                                                Add Transaction
+                                            </Button>
+                                        }
                                     />
                                 </PermissionGuard>
                             </div>

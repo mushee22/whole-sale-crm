@@ -6,22 +6,24 @@ import { Pagination } from "../../components/ui/pagination";
 import { Button } from "../../components/ui/button";
 import { Card, CardHeader, CardContent, CardTitle } from "../../components/ui/card";
 import { Badge } from "../../components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/tabs";
 import { format } from "date-fns";
 import { getOrders } from "./api/orders";
 import { useNavigate } from "react-router-dom";
 
 export default function OutForDeliveryOrdersPage() {
+    const [status, setStatus] = useState<'out_for_delivery' | 'completed' | 'cancelled'>('out_for_delivery');
     const [page, setPage] = useState(1);
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const navigate = useNavigate();
 
     const { data, isLoading } = useQuery({
-        queryKey: ['orders', 'out_for_delivery', page, startDate, endDate],
+        queryKey: ['orders', status, page, startDate, endDate],
         queryFn: () => getOrders({
             page,
             per_page: 15,
-            status: 'out_for_delivery',
+            status: status,
             order_date_from: startDate,
             order_date_to: endDate
         }),
@@ -40,233 +42,244 @@ export default function OutForDeliveryOrdersPage() {
                         <p className="text-sm text-gray-500">Orders currently with the delivery team.</p>
                     </div>
                 </CardHeader>
-                <CardContent className="p-0">
-                    {/* Filters Toolbar */}
-                    <div className="p-4 flex flex-wrap gap-2 border-b border-gray-100 bg-white">
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500 font-medium">From:</span>
-                            <input
-                                type="date"
-                                className="h-9 w-auto rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                value={startDate}
-                                onChange={(e) => {
-                                    setStartDate(e.target.value);
-                                    setPage(1);
-                                }}
-                            />
-                        </div>
-                        <div className="flex items-center gap-2">
-                            <span className="text-sm text-gray-500 font-medium">To:</span>
-                            <input
-                                type="date"
-                                className="h-9 w-auto rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                value={endDate}
-                                onChange={(e) => {
-                                    setEndDate(e.target.value);
-                                    setPage(1);
-                                }}
-                            />
-                        </div>
-                        {(startDate || endDate) && (
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                    setStartDate("");
-                                    setEndDate("");
-                                    setPage(1);
-                                }}
-                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                            >
-                                Clear
-                            </Button>
-                        )}
+                <Tabs value={status} onValueChange={(val) => { setStatus(val as 'out_for_delivery' | 'completed' | 'cancelled'); setPage(1); }}>
+                    <div className="border-b border-gray-100 px-6 pt-4">
+                        <TabsList>
+                            <TabsTrigger value="out_for_delivery">Out For Delivery</TabsTrigger>
+                            <TabsTrigger value="completed">Completed</TabsTrigger>
+                            <TabsTrigger value="cancelled">Cancelled</TabsTrigger>
+                        </TabsList>
                     </div>
+                    <TabsContent value={status} className="m-0">
+                        <CardContent className="p-0">
+                            {/* Filters Toolbar */}
+                            <div className="p-4 flex flex-wrap gap-2 border-b border-gray-100 bg-white">
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-500 font-medium">From:</span>
+                                    <input
+                                        type="date"
+                                        className="h-9 w-auto rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                        value={startDate}
+                                        onChange={(e) => {
+                                            setStartDate(e.target.value);
+                                            setPage(1);
+                                        }}
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-500 font-medium">To:</span>
+                                    <input
+                                        type="date"
+                                        className="h-9 w-auto rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                        value={endDate}
+                                        onChange={(e) => {
+                                            setEndDate(e.target.value);
+                                            setPage(1);
+                                        }}
+                                    />
+                                </div>
+                                {(startDate || endDate) && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                            setStartDate("");
+                                            setEndDate("");
+                                            setPage(1);
+                                        }}
+                                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                    >
+                                        Clear
+                                    </Button>
+                                )}
+                            </div>
 
-                    <div className="hidden md:block overflow-x-auto">
-                        <Table>
-                            <TableHeader>
-                                <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
-                                    <TableHead>Order ID</TableHead>
-                                    <TableHead>Customer</TableHead>
-                                    <TableHead>Location</TableHead>
-                                    <TableHead>Order Date</TableHead>
-                                    <TableHead>Delivery Date</TableHead>
-                                    <TableHead>Delivery Boy</TableHead>
-                                    <TableHead>Items</TableHead>
-                                    <TableHead>Total Amount</TableHead>
-                                    {/* <TableHead>Status</TableHead> */}
-                                    <TableHead className="text-right">Actions</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {orders.length === 0 ? (
-                                    <TableRow>
-                                        <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
-                                            No orders currently out for delivery.
-                                        </TableCell>
-                                    </TableRow>
-                                ) : (
-                                    orders.map((order) => {
-                                        const calculatedTotal = order.items?.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0) || 0;
-                                        const deliveryBoy = order.deliveries?.[0]?.delivery_boy?.name || "-";
-                                        const deliveryDate = order.deliveries?.[0]?.delivery_date
-                                            ? format(new Date(order.deliveries[0].delivery_date), "PPP")
-                                            : (order.estimated_delivery_date ? format(new Date(order.estimated_delivery_date), "PPP") : "-");
+                            <div className="hidden md:block overflow-x-auto">
+                                <Table>
+                                    <TableHeader>
+                                        <TableRow className="bg-gray-50/50 hover:bg-gray-50/50">
+                                            <TableHead>Order ID</TableHead>
+                                            <TableHead>Customer</TableHead>
+                                            <TableHead>Location</TableHead>
+                                            <TableHead>Order Date</TableHead>
+                                            <TableHead>Delivery Date</TableHead>
+                                            <TableHead>Delivery Boy</TableHead>
+                                            <TableHead>Items</TableHead>
+                                            <TableHead>Total Amount</TableHead>
+                                            {/* <TableHead>Status</TableHead> */}
+                                            <TableHead className="text-right">Actions</TableHead>
+                                        </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                        {orders.length === 0 ? (
+                                            <TableRow>
+                                                <TableCell colSpan={10} className="text-center py-8 text-muted-foreground">
+                                                    No orders currently out for delivery.
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            orders.map((order) => {
+                                                const calculatedTotal = order.items?.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0) || 0;
+                                                const deliveryBoy = order.deliveries?.[0]?.delivery_boy?.name || "-";
+                                                const deliveryDate = order.deliveries?.[0]?.delivery_date
+                                                    ? format(new Date(order.deliveries[0].delivery_date), "PPP")
+                                                    : (order.estimated_delivery_date ? format(new Date(order.estimated_delivery_date), "PPP") : "-");
 
-                                        return (
-                                            <TableRow key={order.id}>
-                                                <TableCell className="font-medium cursor-pointer hover:underline" onClick={() => navigate(`/orders/${order.id}`)}>#{order.id}</TableCell>
-                                                <TableCell>
-                                                    <div className="flex flex-col">
-                                                        <span className="font-medium">{order.customer?.name}</span>
-                                                        <span className="text-xs text-muted-foreground">{order.customer?.phone}</span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>
-                                                    {order.customer?.location ? (
-                                                        <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200">
-                                                            {order.customer.location.name}
-                                                        </Badge>
-                                                    ) : "-"}
-                                                </TableCell>
-                                                <TableCell>{order.order_date ? format(new Date(order.order_date), "PPP") : "-"}</TableCell>
-                                                <TableCell>{deliveryDate}</TableCell>
-                                                <TableCell>
-                                                    <div className="flex items-center gap-1">
-                                                        <span className="text-sm font-medium text-slate-700">{deliveryBoy}</span>
-                                                    </div>
-                                                </TableCell>
-                                                <TableCell>{order.items?.length || 0} items</TableCell>
-                                                <TableCell>₹{calculatedTotal.toFixed(2)}</TableCell>
-                                                {/* <TableCell>
+                                                return (
+                                                    <TableRow key={order.id}>
+                                                        <TableCell className="font-medium cursor-pointer hover:underline" onClick={() => navigate(`/orders/${order.id}`)}>#{order.id}</TableCell>
+                                                        <TableCell>
+                                                            <div className="flex flex-col">
+                                                                <span className="font-medium">{order.customer?.name}</span>
+                                                                <span className="text-xs text-muted-foreground">{order.customer?.phone}</span>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>
+                                                            {order.customer?.location ? (
+                                                                <Badge variant="outline" className="bg-slate-50 text-slate-600 border-slate-200">
+                                                                    {order.customer.location.name}
+                                                                </Badge>
+                                                            ) : "-"}
+                                                        </TableCell>
+                                                        <TableCell>{order.order_date ? format(new Date(order.order_date), "PPP") : "-"}</TableCell>
+                                                        <TableCell>{deliveryDate}</TableCell>
+                                                        <TableCell>
+                                                            <div className="flex items-center gap-1">
+                                                                <span className="text-sm font-medium text-slate-700">{deliveryBoy}</span>
+                                                            </div>
+                                                        </TableCell>
+                                                        <TableCell>{order.items?.length || 0} items</TableCell>
+                                                        <TableCell>₹{calculatedTotal.toFixed(2)}</TableCell>
+                                                        {/* <TableCell>
                                                     <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
                                                         {order.status}
                                                     </Badge>
                                                 </TableCell> */}
-                                                <TableCell className="text-right">
-                                                    <div className="flex justify-end gap-2">
-                                                        <Button
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            className="text-slate-600"
-                                                            onClick={() => navigate(`/orders/edit/${order.id}`)}
-                                                            title="Edit Order"
-                                                        >
-                                                            <Pencil className="h-4 w-4" />
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="ghost"
-                                                            onClick={() => navigate(`/orders/${order.id}`)}
-                                                        >
-                                                            View
-                                                        </Button>
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            className="gap-2 text-green-600 border-green-200 hover:bg-green-50"
-                                                            onClick={() => navigate(`/sales/out-for-delivery/${order.id}/check`)}
-                                                        >
-                                                            <CheckSquare className="h-4 w-4" />
-                                                            Delivery
-                                                        </Button>
-                                                    </div>
-                                                </TableCell>
-                                            </TableRow>
-                                        );
-                                    })
-                                )}
-                            </TableBody>
-                        </Table>
-                    </div>
+                                                        <TableCell className="text-right">
+                                                            <div className="flex justify-end gap-2">
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="ghost"
+                                                                    className="text-slate-600"
+                                                                    onClick={() => navigate(`/orders/edit/${order.id}`)}
+                                                                    title="Edit Order"
+                                                                >
+                                                                    <Pencil className="h-4 w-4" />
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="ghost"
+                                                                    onClick={() => navigate(`/orders/${order.id}`)}
+                                                                >
+                                                                    View
+                                                                </Button>
+                                                                <Button
+                                                                    size="sm"
+                                                                    variant="outline"
+                                                                    className="gap-2 text-green-600 border-green-200 hover:bg-green-50"
+                                                                    onClick={() => navigate(`/sales/out-for-delivery/${order.id}/check`)}
+                                                                >
+                                                                    <CheckSquare className="h-4 w-4" />
+                                                                    Delivery
+                                                                </Button>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
+                                                );
+                                            })
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            </div>
 
-                    {/* Mobile Card View */}
-                    <div className="md:hidden divide-y divide-gray-100">
-                        {orders.map((order) => {
-                            const calculatedTotal = order.items?.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0) || 0;
-                            const deliveryBoy = order.deliveries?.[0]?.delivery_boy?.name || "-";
-                            const deliveryDate = order.deliveries?.[0]?.delivery_date
-                                ? format(new Date(order.deliveries[0].delivery_date), "PPP")
-                                : (order.estimated_delivery_date ? format(new Date(order.estimated_delivery_date), "PPP") : "-");
+                            {/* Mobile Card View */}
+                            <div className="md:hidden divide-y divide-gray-100">
+                                {orders.map((order) => {
+                                    const calculatedTotal = order.items?.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0) || 0;
+                                    const deliveryBoy = order.deliveries?.[0]?.delivery_boy?.name || "-";
+                                    const deliveryDate = order.deliveries?.[0]?.delivery_date
+                                        ? format(new Date(order.deliveries[0].delivery_date), "PPP")
+                                        : (order.estimated_delivery_date ? format(new Date(order.estimated_delivery_date), "PPP") : "-");
 
-                            return (
-                                <div key={order.id} className="p-4 space-y-3 bg-white">
-                                    <div className="flex justify-between items-start">
-                                        <div>
-                                            <div className="font-semibold text-gray-900" onClick={() => navigate(`/orders/${order.id}`)}>Order #{order.id}</div>
-                                            <div className="text-xs text-gray-500">{new Date(order.order_date).toLocaleDateString()}</div>
+                                    return (
+                                        <div key={order.id} className="p-4 space-y-3 bg-white">
+                                            <div className="flex justify-between items-start">
+                                                <div>
+                                                    <div className="font-semibold text-gray-900" onClick={() => navigate(`/orders/${order.id}`)}>Order #{order.id}</div>
+                                                    <div className="text-xs text-gray-500">{new Date(order.order_date).toLocaleDateString()}</div>
+                                                </div>
+                                                <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+                                                    {order.status}
+                                                </Badge>
+                                            </div>
+                                            <div className="grid grid-cols-2 gap-2 text-sm">
+                                                <div>
+                                                    <span className="text-gray-500 text-xs block">Customer</span>
+                                                    <span className="font-medium text-gray-900">{order.customer?.name}</span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-gray-500 text-xs block">Total</span>
+                                                    <span className="font-medium text-gray-900">₹{calculatedTotal.toFixed(2)}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-500 text-xs block">Location</span>
+                                                    <span className="font-medium text-gray-900">{order.customer?.location?.name || "-"}</span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-gray-500 text-xs block">Delivery Date</span>
+                                                    <span className="font-medium text-gray-900">{deliveryDate}</span>
+                                                </div>
+                                                <div>
+                                                    <span className="text-gray-500 text-xs block">Delivery Boy</span>
+                                                    <span className="font-medium text-gray-900">{deliveryBoy}</span>
+                                                </div>
+                                                <div className="text-right">
+                                                    <span className="text-gray-500 text-xs block">Items</span>
+                                                    <span className="font-medium text-gray-900">{order.items?.length || 0} items</span>
+                                                </div>
+                                            </div>
+                                            <div className="pt-2 flex gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="flex-1 gap-2"
+                                                    onClick={() => navigate(`/orders/edit/${order.id}`)}
+                                                >
+                                                    <Pencil className="h-4 w-4" /> Edit
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    className="flex-1"
+                                                    onClick={() => navigate(`/orders/${order.id}`)}
+                                                >
+                                                    View
+                                                </Button>
+                                                <Button
+                                                    size="sm"
+                                                    variant="default"
+                                                    className="flex-1 gap-2 bg-green-600 hover:bg-green-700"
+                                                    onClick={() => navigate(`/sales/out-for-delivery/${order.id}/check`)}
+                                                >
+                                                    <CheckSquare className="h-4 w-4" />
+                                                    Delivery
+                                                </Button>
+                                            </div>
                                         </div>
-                                        <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
-                                            {order.status}
-                                        </Badge>
-                                    </div>
-                                    <div className="grid grid-cols-2 gap-2 text-sm">
-                                        <div>
-                                            <span className="text-gray-500 text-xs block">Customer</span>
-                                            <span className="font-medium text-gray-900">{order.customer?.name}</span>
-                                        </div>
-                                        <div className="text-right">
-                                            <span className="text-gray-500 text-xs block">Total</span>
-                                            <span className="font-medium text-gray-900">₹{calculatedTotal.toFixed(2)}</span>
-                                        </div>
-                                        <div>
-                                            <span className="text-gray-500 text-xs block">Location</span>
-                                            <span className="font-medium text-gray-900">{order.customer?.location?.name || "-"}</span>
-                                        </div>
-                                        <div className="text-right">
-                                            <span className="text-gray-500 text-xs block">Delivery Date</span>
-                                            <span className="font-medium text-gray-900">{deliveryDate}</span>
-                                        </div>
-                                        <div>
-                                            <span className="text-gray-500 text-xs block">Delivery Boy</span>
-                                            <span className="font-medium text-gray-900">{deliveryBoy}</span>
-                                        </div>
-                                        <div className="text-right">
-                                            <span className="text-gray-500 text-xs block">Items</span>
-                                            <span className="font-medium text-gray-900">{order.items?.length || 0} items</span>
-                                        </div>
-                                    </div>
-                                    <div className="pt-2 flex gap-2">
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="flex-1 gap-2"
-                                            onClick={() => navigate(`/orders/edit/${order.id}`)}
-                                        >
-                                            <Pencil className="h-4 w-4" /> Edit
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="outline"
-                                            className="flex-1"
-                                            onClick={() => navigate(`/orders/${order.id}`)}
-                                        >
-                                            View
-                                        </Button>
-                                        <Button
-                                            size="sm"
-                                            variant="default"
-                                            className="flex-1 gap-2 bg-green-600 hover:bg-green-700"
-                                            onClick={() => navigate(`/sales/out-for-delivery/${order.id}/check`)}
-                                        >
-                                            <CheckSquare className="h-4 w-4" />
-                                            Delivery
-                                        </Button>
-                                    </div>
-                                </div>
-                            )
-                        })}
-                    </div>
+                                    )
+                                })}
+                            </div>
 
-                    <div className="px-4 py-4 border-t border-gray-100">
-                        <Pagination
-                            currentPage={data?.current_page || 1}
-                            totalPages={data?.last_page || 1}
-                            onPageChange={setPage}
-                        />
-                    </div>
-                </CardContent>
+                            <div className="px-4 py-4 border-t border-gray-100">
+                                <Pagination
+                                    currentPage={data?.current_page || 1}
+                                    totalPages={data?.last_page || 1}
+                                    onPageChange={setPage}
+                                />
+                            </div>
+                        </CardContent>
+                    </TabsContent>
+                </Tabs>
             </Card>
         </div>
     );
