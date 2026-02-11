@@ -22,6 +22,8 @@ import {
 const productTargetSchema = z.object({
     product_id: z.string().min(1, "Product is required"),
     target_quantity: z.number().min(1, "Quantity must be at least 1"),
+    reward_product_id: z.string().min(1, "Reward product is required"),
+    reward_quantity: z.number().min(1, "Reward quantity is required"),
 });
 
 const amountTierSchema = z.object({
@@ -33,9 +35,7 @@ const amountTierSchema = z.object({
 const productSystemSchema = z.object({
     type: z.literal("product"),
     duration_days: z.number().min(1, "Duration is required"),
-    product_targets: z.array(productTargetSchema).min(1, "At least one target is required"),
-    reward_product_id: z.string().min(1, "Reward product is required"),
-    reward_quantity: z.number().min(1, "Reward quantity is required"),
+    loyalty_products: z.array(productTargetSchema).min(1, "At least one target is required"),
     // Allow other fields to exist but be ignored/optional
     tiers: z.any().optional(),
 });
@@ -45,9 +45,8 @@ const amountSystemSchema = z.object({
     duration_days: z.number().min(1, "Duration is required"),
     tiers: z.array(amountTierSchema).min(1, "At least one tier is required"),
     // Allow other fields to exist but be ignored/optional
-    product_targets: z.any().optional(),
-    reward_product_id: z.any().optional(),
-    reward_quantity: z.any().optional(),
+    // Allow other fields to exist but be ignored/optional
+    loyalty_products: z.any().optional(),
 });
 
 const schema = z.discriminatedUnion("type", [productSystemSchema, amountSystemSchema]);
@@ -58,9 +57,7 @@ type SchemaData = z.infer<typeof schema>;
 type FormValues = {
     type: "product" | "amount";
     duration_days: number;
-    product_targets: { product_id: string; target_quantity: number }[];
-    reward_product_id: string;
-    reward_quantity: number;
+    loyalty_products: { product_id: string; target_quantity: number; reward_product_id: string; reward_quantity: number }[];
     tiers: { threshold_amount: number; reward_product_id: string; reward_quantity: number }[];
 };
 
@@ -84,17 +81,17 @@ export function LoyaltySystemForm({ customerId, initialData, onSuccess, onCancel
 
     const products = productsData?.data || [];
 
-    const { register, control, handleSubmit, setValue, watch, formState: { errors } } = useForm<FormValues>({
+    const { register, control, handleSubmit, setValue, formState: { errors } } = useForm<FormValues>({
         resolver: zodResolver(schema) as any,
         defaultValues: {
             type: initialData?.type || "product",
             duration_days: initialData?.duration_days || 30,
-            product_targets: initialData?.product_targets?.map(t => ({
+            loyalty_products: initialData?.product_targets?.map(t => ({
                 product_id: t.product_id.toString(),
-                target_quantity: t.target_quantity
-            })) || [{ product_id: "", target_quantity: 1 }],
-            reward_product_id: initialData?.reward_product_id?.toString() || "",
-            reward_quantity: initialData?.reward_quantity || 1,
+                target_quantity: t.target_quantity,
+                reward_product_id: t.reward_product_id.toString(),
+                reward_quantity: t.reward_quantity
+            })) || [{ product_id: "", target_quantity: 1, reward_product_id: "", reward_quantity: 1 }],
             tiers: initialData?.amount_tiers?.map(t => ({
                 threshold_amount: t.threshold_amount,
                 reward_product_id: t.reward_product_id.toString(),
@@ -105,7 +102,7 @@ export function LoyaltySystemForm({ customerId, initialData, onSuccess, onCancel
 
     const { fields: targetFields, append: appendTarget, remove: removeTarget } = useFieldArray({
         control,
-        name: "product_targets"
+        name: "loyalty_products"
     });
 
     const { fields: tierFields, append: appendTier, remove: removeTier } = useFieldArray({
@@ -134,12 +131,12 @@ export function LoyaltySystemForm({ customerId, initialData, onSuccess, onCancel
             if (data.type === "product") {
                 const payload = {
                     duration_days: data.duration_days,
-                    product_targets: data.product_targets!.map(t => ({
+                    loyalty_products: data.loyalty_products!.map(t => ({
                         product_id: parseInt(t.product_id),
-                        target_quantity: t.target_quantity
+                        target_quantity: t.target_quantity,
+                        reward_product_id: parseInt(t.reward_product_id),
+                        reward_quantity: t.reward_quantity
                     })),
-                    reward_product_id: parseInt(data.reward_product_id!),
-                    reward_quantity: data.reward_quantity!
                 };
 
                 if (initialData) {
@@ -204,85 +201,85 @@ export function LoyaltySystemForm({ customerId, initialData, onSuccess, onCancel
 
                 {systemType === "product" && (
                     <div className="space-y-4 border rounded-md p-4 bg-slate-50">
-                        <h4 className="font-medium text-sm">Product Targets</h4>
+                        <h4 className="font-medium text-sm">Target Products & Rewards</h4>
                         {targetFields.map((field, index) => (
-                            <div key={field.id} className="flex gap-2 items-end">
-                                <div className="flex-1 space-y-1">
-                                    <Label className="text-xs">Product</Label>
-                                    <Select
-                                        onValueChange={(val) => setValue(`product_targets.${index}.product_id`, val, { shouldValidate: true })}
-                                        defaultValue={field.product_id}
+                            <div key={field.id} className="space-y-3 p-3 bg-white rounded border mb-2">
+                                <div className="flex gap-2 items-center">
+                                    <div className="flex-1">
+                                        <Label className="text-xs">Product</Label>
+                                        <Select
+                                            onValueChange={(val) => setValue(`loyalty_products.${index}.product_id`, val, { shouldValidate: true })}
+                                            defaultValue={field.product_id}
+                                        >
+                                            <SelectTrigger className={errors.loyalty_products?.[index]?.product_id ? "border-red-500" : ""}>
+                                                <SelectValue placeholder="Select Product" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {products.map(p => (
+                                                    <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div className="w-24">
+                                        <Label className="text-xs">Qty</Label>
+                                        <Input
+                                            type="number"
+                                            {...register(`loyalty_products.${index}.target_quantity`, { valueAsNumber: true })}
+                                            className={errors.loyalty_products?.[index]?.target_quantity ? "border-red-500" : ""}
+                                        />
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        onClick={() => removeTarget(index)}
+                                        disabled={targetFields.length === 1}
+                                        className="text-red-500 mt-5"
                                     >
-                                        <SelectTrigger className={errors.product_targets?.[index]?.product_id ? "border-red-500" : ""}>
-                                            <SelectValue placeholder="Select Product" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {products.map(p => (
-                                                <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
                                 </div>
-                                <div className="w-24 space-y-1">
-                                    <Label className="text-xs">Qty</Label>
-                                    <Input
-                                        type="number"
-                                        {...register(`product_targets.${index}.target_quantity`, { valueAsNumber: true })}
-                                        className={errors.product_targets?.[index]?.target_quantity ? "border-red-500" : ""}
-                                    />
+
+                                <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-100">
+                                    <div>
+                                        <Label className="text-xs">Reward Product</Label>
+                                        <Select
+                                            onValueChange={(val) => setValue(`loyalty_products.${index}.reward_product_id`, val, { shouldValidate: true })}
+                                            defaultValue={field.reward_product_id}
+                                        >
+                                            <SelectTrigger className={errors.loyalty_products?.[index]?.reward_product_id ? "border-red-500" : ""}>
+                                                <SelectValue placeholder="Select Reward" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {products.map(p => (
+                                                    <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+                                    <div>
+                                        <Label className="text-xs">Reward Qty</Label>
+                                        <Input
+                                            type="number"
+                                            {...register(`loyalty_products.${index}.reward_quantity`, { valueAsNumber: true })}
+                                            className={errors.loyalty_products?.[index]?.reward_quantity ? "border-red-500" : ""}
+                                        />
+                                    </div>
                                 </div>
-                                <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => removeTarget(index)}
-                                    disabled={targetFields.length === 1}
-                                    className="text-red-500"
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
                             </div>
                         ))}
-                        {errors.product_targets && <p className="text-sm text-red-500">{errors.product_targets.message}</p>}
+                        {errors.loyalty_products && <p className="text-sm text-red-500">{errors.loyalty_products.message}</p>}
 
                         <Button
                             type="button"
                             variant="outline"
                             size="sm"
-                            onClick={() => appendTarget({ product_id: "", target_quantity: 1 })}
+                            onClick={() => appendTarget({ product_id: "", target_quantity: 1, reward_product_id: "", reward_quantity: 1 })}
                             className="w-full"
                         >
                             <Plus className="h-4 w-4 mr-2" /> Add Target Product
                         </Button>
-
-                        <div className="pt-4 border-t border-slate-200 grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label>Reward Product</Label>
-                                <Select
-                                    onValueChange={(val) => setValue("reward_product_id", val, { shouldValidate: true })}
-                                    defaultValue={watch("reward_product_id")}
-                                >
-                                    <SelectTrigger className={errors.reward_product_id ? "border-red-500" : ""}>
-                                        <SelectValue placeholder="Select Reward" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {products.map(p => (
-                                            <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                {errors.reward_product_id && <p className="text-sm text-red-500">{errors.reward_product_id.message}</p>}
-                            </div>
-                            <div className="space-y-2">
-                                <Label>Reward Qty</Label>
-                                <Input
-                                    type="number"
-                                    {...register("reward_quantity", { valueAsNumber: true })}
-                                    className={errors.reward_quantity ? "border-red-500" : ""}
-                                />
-                                {errors.reward_quantity && <p className="text-sm text-red-500">{errors.reward_quantity.message}</p>}
-                            </div>
-                        </div>
                     </div>
                 )}
 

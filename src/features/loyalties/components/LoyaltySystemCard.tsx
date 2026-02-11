@@ -136,8 +136,8 @@ export function LoyaltySystemCard({ system, customerName, onEdit, onDelete }: Lo
                                 })}
 
                                 {system.type === 'product' && system.product_targets?.map((target, idx) => {
-                                    const progress = progressData?.product_progress?.find((p: any) => p.product_id === target.product_id);
-                                    const currentQty = progress?.current_quantity || 0;
+                                    const progress = progressData?.product_progress?.find(p => p.product_target_id === target.id || p.product_id === target.product_id);
+                                    const currentQty = progress?.achieved || 0;
                                     const isAchieved = currentQty >= target.target_quantity;
 
                                     return (
@@ -149,6 +149,12 @@ export function LoyaltySystemCard({ system, customerName, onEdit, onDelete }: Lo
                                             <div className={`text-sm ${isAchieved ? 'text-white' : 'text-gray-500'} truncate`}>
                                                 {target.product?.name || `Product`}
                                             </div>
+                                            {target.reward_quantity > 0 && (
+                                                <div className={`text-xs mt-1 flex items-center gap-1 ${isAchieved ? 'text-green-200' : 'text-gray-600'}`}>
+                                                    <Gift className="h-3 w-3" />
+                                                    Reward: {target.reward_quantity} × {target.reward_product?.name || 'Item'}
+                                                </div>
+                                            )}
                                             {isAchieved && <div className="absolute inset-0 bg-green-500/10"></div>}
                                         </div>
                                     );
@@ -243,18 +249,25 @@ export function LoyaltySystemCard({ system, customerName, onEdit, onDelete }: Lo
                                 <p className="font-medium text-slate-700 mb-2">Targets:</p>
                                 <ul className="space-y-2">
                                     {system.product_targets.map((t, idx) => {
-                                        const progress = progressData?.product_progress?.find((p: any) => p.product_id === t.product_id);
-                                        const isCompleted = progress && (progress.current_quantity >= t.target_quantity);
+                                        const progress = progressData?.product_progress?.find(p => p.product_target_id === t.id || p.product_id === t.product_id);
+                                        const isCompleted = progress && (progress.achieved >= t.target_quantity);
 
                                         return (
                                             <li key={idx} className={`flex justify-between items-center p-2 rounded border ${isCompleted ? 'bg-green-50 border-green-200' : 'bg-white border-slate-100'}`}>
-                                                <span className={isCompleted ? 'text-green-800 font-medium' : 'text-slate-600'}>
-                                                    Buy {t.target_quantity} x {t.product?.name || `Product #${t.product_id}`}
-                                                </span>
+                                                <div className="flex flex-col">
+                                                    <span className={isCompleted ? 'text-green-800 font-medium' : 'text-slate-600'}>
+                                                        Buy {t.target_quantity} x {t.product?.name || `Product #${t.product_id}`}
+                                                    </span>
+                                                    {t.reward_quantity > 0 && (
+                                                        <span className="text-xs text-slate-500">
+                                                            Reward: {t.reward_quantity} × {t.reward_product?.name || `Item`}
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 {system.is_active && progress && (
                                                     <div className="flex items-center gap-2">
                                                         <span className={`text-xs font-medium px-2 py-1 rounded ${isCompleted ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'}`}>
-                                                            {progress.current_quantity || 0} / {t.target_quantity}
+                                                            {progress.achieved || 0} / {t.target_quantity}
                                                         </span>
                                                         {isCompleted && <Zap className="h-4 w-4 text-green-500 fill-green-500" />}
                                                     </div>
@@ -263,13 +276,6 @@ export function LoyaltySystemCard({ system, customerName, onEdit, onDelete }: Lo
                                         );
                                     })}
                                 </ul>
-                                <div className="mt-3 pt-2 border-t border-slate-200">
-                                    <p className="font-medium text-slate-700">Reward:</p>
-                                    <p className="text-slate-600 flex items-center gap-1">
-                                        <Gift className="h-3.5 w-3.5 text-purple-500" />
-                                        {system.reward_quantity} x {system.reward_product?.name || `Product #${system.reward_product_id}`}
-                                    </p>
-                                </div>
                             </div>
                         )}
 

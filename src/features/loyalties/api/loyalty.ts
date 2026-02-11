@@ -1,9 +1,16 @@
 import { api } from "../../../lib/api";
 
-export interface ProductTarget {
+export interface LoyaltyProduct {
+    id?: number;
     product_id: number;
     target_quantity: number;
+    reward_product_id: number;
+    reward_quantity: number;
     product?: {
+        id: number;
+        name: string;
+    };
+    reward_product?: {
         id: number;
         name: string;
     };
@@ -32,13 +39,10 @@ export interface LoyaltySystem {
     created_at: string;
 
     // Product based fields
-    product_targets?: ProductTarget[];
-    reward_product_id?: number | null;
-    reward_quantity?: number | null;
-    reward_product?: { // For display
-        id: number;
-        name: string;
-    };
+    product_targets?: LoyaltyProduct[];
+    reward_product_id?: never; // Deprecated
+    reward_quantity?: never; // Deprecated
+    reward_product?: never; // Deprecated
 
     // Amount based fields
     amount_tiers?: AmountTier[];
@@ -47,16 +51,22 @@ export interface LoyaltySystem {
 export interface CreateProductLoyaltyParams {
     customer_id: number;
     duration_days: number;
-    product_targets: { product_id: number; target_quantity: number }[];
-    reward_product_id: number;
-    reward_quantity: number;
+    loyalty_products: {
+        product_id: number;
+        target_quantity: number;
+        reward_product_id: number;
+        reward_quantity: number;
+    }[];
 }
 
 export interface UpdateProductLoyaltyParams {
     duration_days: number;
-    product_targets: { product_id: number; target_quantity: number }[];
-    reward_product_id: number;
-    reward_quantity: number;
+    loyalty_products: {
+        product_id: number;
+        target_quantity: number;
+        reward_product_id: number;
+        reward_quantity: number;
+    }[];
 }
 
 export interface CreateAmountLoyaltyParams {
@@ -80,17 +90,36 @@ export interface LoyaltyProgressTier {
     unlocked: boolean;
 }
 
+export interface ProductProgressItem {
+    product_target_id: number;
+    product_id: number;
+    product_name: string;
+    achieved: number;
+    target: number;
+    product: {
+        id: number;
+        name: string;
+        // add other product fields if necessary, or use a shared Product interface if available
+    };
+    reward_product_id: number;
+    reward_quantity: number;
+    reward_product: {
+        id: number;
+        name: string;
+    };
+}
+
 export interface LoyaltyProgress {
     type: 'product' | 'amount';
     is_active: boolean;
     activated_at: string;
     expires_at?: string;
     reward_claims: any[];
-    total_spend: number;
-    tiers: LoyaltyProgressTier[];
-    // Product specific fields (inferred or needed later)
-    percentage?: number;
-    product_progress?: { product_id: number; current_quantity: number; target_quantity: number }[];
+    total_spend?: number; // Optional as it might not be in product response
+    tiers?: LoyaltyProgressTier[]; // Optional as it might not be in product response
+    // Product specific fields
+    product_progress?: ProductProgressItem[];
+    all_targets_met?: boolean;
 }
 
 export const getCustomerLoyaltySystems = async (customerId: number) => {
