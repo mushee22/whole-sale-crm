@@ -66,7 +66,7 @@ export default function PettyCashList() {
                                                             )}
                                                         </div>
                                                         <div className="text-xs text-slate-500">{account.account_id}</div>
-                                                        <div className="text-xs text-slate-500 mt-1">User: {account.user.name}</div>
+                                                        <div className="text-xs text-slate-500 mt-1">User: {account?.user?.name}</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -153,8 +153,8 @@ export default function PettyCashList() {
                                                                 <UserIcon className="h-4 w-4" />
                                                             </div>
                                                             <div>
-                                                                <div className="font-medium text-slate-900">{account.user.name}</div>
-                                                                <div className="text-xs text-slate-400">{account.user.email}</div>
+                                                                <div className="font-medium text-slate-900">{account.user?.name}</div>
+                                                                <div className="text-xs text-slate-400">{account.user?.email}</div>
                                                             </div>
                                                         </div>
                                                     </TableCell>

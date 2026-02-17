@@ -21,7 +21,7 @@ const sidebarItems: SidebarItem[] = [
         label: "Dashboard",
         icon: LayoutDashboard,
         to: "/",
-        permission: "dashboard.view",
+        permission: "dashboard",
     },
     {
         label: "Management",
@@ -52,7 +52,7 @@ const sidebarItems: SidebarItem[] = [
         label: "Sales",
         icon: ShoppingCart,
         items: [
-            { label: "Create Quote", to: "/sales/create-quote", permission: "sales_pre_orders" },
+            { label: "Create Quote", to: "/sales/create-quote", permission: "create_quote" },
             { label: "New Order", to: "/orders/create", permission: "sales_new_order" },
             { label: "Confirmed Orders", to: "/sales/confirmed-orders", permission: "sales_confirmed" },
             { label: "Dispatched Orders", to: "/sales/dispatched-orders", permission: "sales_dispatched" },

@@ -1,12 +1,23 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getLocations } from "../master-data/api/locations";
 import { getProducts } from "../products/api/products";
 import { getDashboardSummary } from "./api/dashboard";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { ShoppingCart, IndianRupee, Package, Users } from "lucide-react";
+import { usePermission } from "../../hooks/usePermission";
 
 export default function DashboardPage() {
+    const navigate = useNavigate();
+    const { hasPermission } = usePermission();
+
+    useEffect(() => {
+        if (!hasPermission("dashboard", "view")) {
+            navigate("/my-orders");
+        }
+    }, [hasPermission, navigate]);
+
     const [dateFrom, setDateFrom] = useState<string>("");
     const [selectedLocationId, setSelectedLocationId] = useState<string>("");
     const [selectedProductId, setSelectedProductId] = useState<string>("");
@@ -61,6 +72,8 @@ export default function DashboardPage() {
             product_id: selectedProductId,
         }),
     });
+
+    if (!hasPermission("dashboard", "view")) return null;
 
     return (
         <div className="space-y-6">

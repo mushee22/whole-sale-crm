@@ -167,7 +167,7 @@ export default function DispatchedOrdersPage() {
                                                                 >
                                                                     <Eye className="h-4 w-4" />
                                                                 </Button>
-                                                                <PermissionGuard module="sales" action="dispatch_check">
+                                                                <PermissionGuard module="sales_dispatched" action="check">
                                                                     <Button
                                                                         size="sm"
                                                                         variant="outline"
@@ -247,7 +247,7 @@ export default function DispatchedOrdersPage() {
                                                 >
                                                     View Details
                                                 </Button>
-                                                <PermissionGuard module="sales" action="dispatch_check">
+                                                <PermissionGuard module="sales_dispatched" action="check">
                                                     <Button
                                                         size="sm"
                                                         variant="default"

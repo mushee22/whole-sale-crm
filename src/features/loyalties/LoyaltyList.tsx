@@ -6,7 +6,7 @@ import { Button } from "../../components/ui/button";
 import { Modal } from "../../components/ui/modal";
 import { createLoyalty, getLoyalties, updateLoyalty, deleteLoyalty, type CreateLoyaltyData, type Loyalty } from "./api/loyalties";
 import { LoyaltyForm } from "./components/LoyaltyForm";
-import { Plus, Pencil, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, Pencil, Trash2, AlertTriangle, Power } from "lucide-react";
 import { Card, CardHeader, CardContent, CardTitle } from "../../components/ui/card";
 import { Input } from "../../components/ui/input";
 import { toast } from "sonner";
@@ -75,6 +75,18 @@ export default function LoyaltyList() {
         } else {
             createMutation.mutate(formData);
         }
+    };
+
+    const handleToggleStatus = (loyalty: Loyalty) => {
+        updateMutation.mutate({
+            id: loyalty.id,
+            data: {
+                product_id: loyalty.product_id,
+                points: loyalty.points,
+                is_active: !loyalty.is_active,
+                is_show_to_brochure: loyalty.is_show_to_brochure
+            }
+        });
     };
 
     const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -170,6 +182,15 @@ export default function LoyaltyList() {
                                                     >
                                                         <Pencil className="h-4 w-4 mr-2" /> Edit
                                                     </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className={`h-8 border-transparent hover:bg-gray-100 ${loyalty.is_active ? 'text-emerald-600' : 'text-gray-400'}`}
+                                                        onClick={() => handleToggleStatus(loyalty)}
+                                                        title={loyalty.is_active ? "Deactivate" : "Activate"}
+                                                    >
+                                                        <Power className="h-4 w-4 mr-2" /> {loyalty.is_active ? 'Active' : 'Inactive'}
+                                                    </Button>
                                                 </PermissionGuard>
                                                 <PermissionGuard module="loyalties" action="delete">
                                                     <Button
@@ -232,8 +253,18 @@ export default function LoyaltyList() {
                                                                         size="icon"
                                                                         className="h-8 w-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
                                                                         onClick={() => openEdit(loyalty)}
+                                                                        title="Edit Rule"
                                                                     >
                                                                         <Pencil className="h-4 w-4" />
+                                                                    </Button>
+                                                                    <Button
+                                                                        variant="ghost"
+                                                                        size="icon"
+                                                                        className={`h-8 w-8 hover:bg-gray-100 ${loyalty.is_active ? 'text-emerald-600 hover:text-emerald-700' : 'text-gray-400 hover:text-gray-600'}`}
+                                                                        onClick={() => handleToggleStatus(loyalty)}
+                                                                        title={loyalty.is_active ? "Deactivate" : "Activate"}
+                                                                    >
+                                                                        <Power className="h-4 w-4" />
                                                                     </Button>
                                                                 </PermissionGuard>
                                                                 <PermissionGuard module="loyalties" action="delete">

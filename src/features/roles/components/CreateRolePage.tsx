@@ -21,12 +21,17 @@ const modules = [
     { key: "roles", label: "Roles", actions: ["view", "add", "update", "delete"] },
 
     // Orders & Sales
-    { key: "orders", label: "Orders", actions: ["view_list", "view_detail", "add", "update", "delete", "update_status"] },
-    { key: "pre_orders", label: "Pre-Orders", actions: ["view", "convert"] },
-    { key: "sales", label: "Sales Operations", actions: ["new_order", "dispatch_check", "delivery_check"] },
+    { key: "orders", label: "Orders", actions: ["view_list", "view_detail", "add", "update", "delete", "update_status", "cancel", "assign_delivery"] },
+    { key: "sales_new_order", label: "New Order", actions: ["create"] },
+    { key: "create_quote", label: "Create Quote", actions: ["create"] },
+    { key: "sales_confirmed", label: "Confirmed Orders", actions: ["view"] },
+    { key: "sales_dispatched", label: "Dispatched Orders", actions: ["view", "check"] },
+    { key: "sales_out_for_delivery", label: "Delivery Check", actions: ["view", "check"] },
+    { key: "sales_completed", label: "Completed Orders", actions: ["view"] },
+    { key: "sales_cancelled", label: "Cancelled Orders", actions: ["view"] },
 
     // Finance & Accounts
-    { key: "finance", label: "Finance", actions: ["view", "add", "update", "delete", "mark_moved_to_system"] },
+    // { key: "finance", label: "Finance", actions: ["view", "add", "update", "delete", "mark_moved_to_system"] },
     { key: "accounts", label: "Accounts", actions: ["mark_moved_to_system"] },
     { key: "customer_transactions", label: "Customer Transactions", actions: ["view", "add", "update", "delete"] },
     { key: "petty_cash_transactions", label: "Petty Cash Transactions", actions: ["view"] },
@@ -40,13 +45,13 @@ const modules = [
 
     // Loyalty & Rewards
     { key: "loyalties", label: "Loyalty Rules", actions: ["view", "add", "update", "delete"] },
-    { key: "rewards", label: "Rewards", actions: ["add", "update", "delete"] },
-    { key: "claims", label: "Claims", actions: ["add"] },
+    // { key: "rewards", label: "Rewards", actions: ["add", "update", "delete"] },
+    // { key: "claims", label: "Claims", actions: ["add"] },
 
     // Reports & Other
     { key: "reports", label: "Reports", actions: ["export"] },
     { key: "dashboard", label: "Dashboard", actions: ["view"] },
-    { key: "settings", label: "Settings", actions: ["view", "update"] },
+    // { key: "settings", label: "Settings", actions: ["view", "update"] },
 ];
 
 const createRoleSchema = z.object({

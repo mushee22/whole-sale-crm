@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../../components/ui/ta
 import { format } from "date-fns";
 import { getOrders } from "./api/orders";
 import { useNavigate } from "react-router-dom";
+import { PermissionGuard } from "../../hooks/usePermission";
 
 export default function OutForDeliveryOrdersPage() {
     const [status, setStatus] = useState<'out_for_delivery' | 'completed' | 'cancelled'>('out_for_delivery');
@@ -173,15 +174,17 @@ export default function OutForDeliveryOrdersPage() {
                                                                 >
                                                                     View
                                                                 </Button>
-                                                                <Button
-                                                                    size="sm"
-                                                                    variant="outline"
-                                                                    className="gap-2 text-green-600 border-green-200 hover:bg-green-50"
-                                                                    onClick={() => navigate(`/sales/out-for-delivery/${order.id}/check`)}
-                                                                >
-                                                                    <CheckSquare className="h-4 w-4" />
-                                                                    Delivery
-                                                                </Button>
+                                                                <PermissionGuard module="sales_out_for_delivery" action="check">
+                                                                    <Button
+                                                                        size="sm"
+                                                                        variant="outline"
+                                                                        className="gap-2 text-green-600 border-green-200 hover:bg-green-50"
+                                                                        onClick={() => navigate(`/sales/out-for-delivery/${order.id}/check`)}
+                                                                    >
+                                                                        <CheckSquare className="h-4 w-4" />
+                                                                        Delivery
+                                                                    </Button>
+                                                                </PermissionGuard>
                                                             </div>
                                                         </TableCell>
                                                     </TableRow>
@@ -255,15 +258,17 @@ export default function OutForDeliveryOrdersPage() {
                                                 >
                                                     View
                                                 </Button>
-                                                <Button
-                                                    size="sm"
-                                                    variant="default"
-                                                    className="flex-1 gap-2 bg-green-600 hover:bg-green-700"
-                                                    onClick={() => navigate(`/sales/out-for-delivery/${order.id}/check`)}
-                                                >
-                                                    <CheckSquare className="h-4 w-4" />
-                                                    Delivery
-                                                </Button>
+                                                <PermissionGuard module="sales_out_for_delivery" action="check">
+                                                    <Button
+                                                        size="sm"
+                                                        variant="default"
+                                                        className="flex-1 gap-2 bg-green-600 hover:bg-green-700"
+                                                        onClick={() => navigate(`/sales/out-for-delivery/${order.id}/check`)}
+                                                    >
+                                                        <CheckSquare className="h-4 w-4" />
+                                                        Delivery
+                                                    </Button>
+                                                </PermissionGuard>
                                             </div>
                                         </div>
                                     )

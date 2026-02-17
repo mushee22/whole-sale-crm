@@ -62,9 +62,11 @@ export default function CustomerLoyaltyPage() {
                         <h1 className="text-2xl font-bold text-slate-900">Loyalty Systems</h1>
                         <p className="text-gray-500">Manage reward programs for {customer.name}</p>
                     </div>
-                    <Button onClick={() => setIsCreateModalOpen(true)} className="bg-slate-900 text-white hover:bg-slate-800">
-                        <Plus className="h-4 w-4 mr-2" /> Add System
-                    </Button>
+                    <PermissionGuard module="loyalties" action="add">
+                        <Button onClick={() => setIsCreateModalOpen(true)} className="bg-slate-900 text-white hover:bg-slate-800">
+                            <Plus className="h-4 w-4 mr-2" /> Add System
+                        </Button>
+                    </PermissionGuard>
                 </div>
 
                 {isLoading ? (
@@ -93,9 +95,11 @@ export default function CustomerLoyaltyPage() {
                         <Medal className="h-12 w-12 text-gray-300 mx-auto mb-3" />
                         <h3 className="text-lg font-medium text-gray-900">No Loyalty Systems</h3>
                         <p className="text-gray-500 mb-6 max-w-sm mx-auto">Create a reward program to incentivize {customer.name} to purchase more.</p>
-                        <Button onClick={() => setIsCreateModalOpen(true)} className="bg-slate-900 text-white">
-                            <Plus className="h-4 w-4 mr-2" /> Create First System
-                        </Button>
+                        <PermissionGuard module="loyalties" action="add">
+                            <Button onClick={() => setIsCreateModalOpen(true)} className="bg-slate-900 text-white">
+                                <Plus className="h-4 w-4 mr-2" /> Create First System
+                            </Button>
+                        </PermissionGuard>
                     </div>
                 )}
 

@@ -1,10 +1,10 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getOrder, deleteOrder, getOrderReturns } from "./api/orders";
+import { getOrder, deleteOrder, getOrderReturns, updateOrderStatus } from "./api/orders";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
-import { ArrowLeft, Pencil, Trash2, User, Phone, Mail, Award, PackageX, Plus } from "lucide-react";
+import { ArrowLeft, Pencil, Trash2, User, Phone, Mail, Award, PackageX, Plus, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "../../lib/utils";
 import { useAuth } from "../../context/AuthContext";
@@ -90,6 +90,46 @@ export default function OrderDetailsPage() {
                                     Delete
                                 </Button>
                             </PermissionGuard>
+                            {order.status !== 'cancelled' && order.status !== 'delivered' && (
+                                <PermissionGuard module="orders" action="cancel">
+                                    <Button
+                                        variant="outline"
+                                        className="flex-1 sm:flex-none gap-2 text-red-600 border-red-200 hover:bg-red-50"
+                                        onClick={async () => {
+                                            if (window.confirm("Are you sure you want to cancel this order?")) {
+                                                try {
+                                                    await updateOrderStatus(orderId, 'cancelled');
+                                                    toast.success("Order cancelled successfully");
+                                                    queryClient.invalidateQueries({ queryKey: ['order', orderId] });
+                                                    queryClient.invalidateQueries({ queryKey: ['orders'] });
+                                                } catch (error) {
+                                                    console.error("Failed to cancel order", error);
+                                                    toast.error("Failed to cancel order");
+                                                }
+                                            }
+                                        }}
+                                    >
+                                        <XCircle className="h-4 w-4" />
+                                        Cancel Order
+                                    </Button>
+                                </PermissionGuard>
+                            )}
+                            {order.status !== 'cancelled' && order.status !== 'delivered' && (
+                                <PermissionGuard module="orders" action="cancel">
+                                    <Button
+                                        variant="outline"
+                                        className="flex-1 sm:flex-none gap-2 text-red-600 border-red-200 hover:bg-red-50"
+                                        onClick={() => {
+                                            if (window.confirm("Are you sure you want to cancel this order?")) {
+
+                                            }
+                                        }}
+                                    >
+                                        <XCircle className="h-4 w-4" />
+                                        Cancel Order
+                                    </Button>
+                                </PermissionGuard>
+                            )}
                         </div>
                     )}
                 </div>
@@ -141,7 +181,7 @@ export default function OrderDetailsPage() {
                                             <div key={item.id} className="p-4 space-y-2">
                                                 <div className="flex justify-between items-start">
                                                     <div>
-                                                        <div className="font-medium text-slate-900">{item.product.name}</div>
+                                                        <div className="font-medium text-slate-900">{item.product?.name}</div>
                                                         <div className="text-xs text-gray-500">SKU: {item.product.sku}</div>
                                                         <div className="flex gap-2 mt-1">
                                                             {item.product.color_id && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">Color: {item.product.color_id}</span>}
@@ -204,7 +244,7 @@ export default function OrderDetailsPage() {
                                                 return (
                                                     <TableRow key={item.id}>
                                                         <TableCell>
-                                                            <div className="font-medium text-slate-900">{item.product.name}</div>
+                                                            <div className="font-medium text-slate-900">{item.product?.name}</div>
                                                             <div className="text-xs text-gray-500">SKU: {item.product.sku}</div>
                                                             <div className="flex gap-2 mt-1">
                                                                 {item.product.color_id && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">Color: {item.product.color_id}</span>}
@@ -356,13 +396,13 @@ export default function OrderDetailsPage() {
                                                 </div>
                                                 <div className="flex items-center gap-3">
                                                     <div className="h-8 w-8 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 uppercase font-bold text-xs">
-                                                        {delivery.delivery_boy.name.substring(0, 2)}
+                                                        {delivery.delivery_boy?.name?.substring(0, 2)}
                                                     </div>
                                                     <div>
-                                                        <p className="text-sm font-medium text-slate-900">{delivery.delivery_boy.name}</p>
+                                                        <p className="text-sm font-medium text-slate-900">{delivery.delivery_boy?.name}</p>
                                                         <div className="flex gap-3 text-xs text-slate-500">
-                                                            <span>{delivery.delivery_boy.phone}</span>
-                                                            <span>{delivery.delivery_boy.email}</span>
+                                                            <span>{delivery.delivery_boy?.phone}</span>
+                                                            <span>{delivery.delivery_boy?.email}</span>
                                                         </div>
                                                     </div>
                                                 </div>
@@ -482,7 +522,7 @@ export default function OrderDetailsPage() {
                                         <User className="h-5 w-5" />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-medium text-slate-900 group-hover:text-blue-700 transition-colors">{order.customer.name}</p>
+                                        <p className="text-sm font-medium text-slate-900 group-hover:text-blue-700 transition-colors">{order.customer?.name}</p>
                                         <p className="text-xs text-slate-500">Customer ID: #{order.customer.id}</p>
                                     </div>
                                 </div>

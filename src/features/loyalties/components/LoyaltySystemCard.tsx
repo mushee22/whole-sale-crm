@@ -13,6 +13,7 @@ import {
 } from "../api/loyalty";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
+import { PermissionGuard } from "../../../hooks/usePermission";
 
 interface LoyaltySystemCardProps {
     system: LoyaltySystem;
@@ -328,30 +329,34 @@ export function LoyaltySystemCard({ system, customerName, onEdit, onDelete }: Lo
                             <Download className="h-3.5 w-3.5 mr-1" />
                             Download
                         </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => toggleStatusMutation.mutate({ id: system.id, isActive: system.is_active })}
-                            disabled={toggleStatusMutation.isPending}
-                        >
-                            <Power className="h-3.5 w-3.5 mr-1" />
-                            {system.is_active ? 'Deactivate' : 'Activate'}
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => onEdit(system)}
-                        >
-                            Edit
-                        </Button>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                            onClick={() => onDelete(system.id)}
-                        >
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
+                        <PermissionGuard module="loyalties" action="update">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => toggleStatusMutation.mutate({ id: system.id, isActive: system.is_active })}
+                                disabled={toggleStatusMutation.isPending}
+                            >
+                                <Power className="h-3.5 w-3.5 mr-1" />
+                                {system.is_active ? 'Deactivate' : 'Activate'}
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onEdit(system)}
+                            >
+                                Edit
+                            </Button>
+                        </PermissionGuard>
+                        <PermissionGuard module="loyalties" action="delete">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                                onClick={() => onDelete(system.id)}
+                            >
+                                <Trash2 className="h-4 w-4" />
+                            </Button>
+                        </PermissionGuard>
                     </div>
                 </CardContent>
             </Card>

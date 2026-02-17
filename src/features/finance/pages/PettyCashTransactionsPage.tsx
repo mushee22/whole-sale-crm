@@ -159,7 +159,7 @@ export default function PettyCashTransactionsPage({ isAccountsMode = false }: Pe
                                     <SelectContent>
                                         {accountsData?.data.map((account) => (
                                             <SelectItem key={account.id} value={account.id.toString()}>
-                                                {account.account_name} ({account.user.name})
+                                                {account.account_name} ({account.user?.name})
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
