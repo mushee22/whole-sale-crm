@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Pagination } from "../../components/ui/pagination";
@@ -16,6 +16,44 @@ export default function CompletedOrdersPage() {
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const navigate = useNavigate();
+
+    // Get current month in YYYY-MM format
+    const getCurrentMonth = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        return `${year}-${month}`;
+    };
+
+    const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
+
+    // Handle month selection - sets first and last day of month
+    const handleMonthChange = (monthValue: string) => {
+        setSelectedMonth(monthValue);
+
+        if (!monthValue) {
+            setStartDate("");
+            setEndDate("");
+            return;
+        }
+
+        // monthValue is in format "YYYY-MM"
+        const [year, month] = monthValue.split('-');
+        const firstDay = `${year}-${month}-01`;
+
+        // Get last day of month
+        const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+        const lastDayFormatted = `${year}-${month}-${lastDay.toString().padStart(2, '0')}`;
+
+        setStartDate(firstDay);
+        setEndDate(lastDayFormatted);
+        setPage(1);
+    };
+
+    // Set current month as default on mount
+    useEffect(() => {
+        handleMonthChange(getCurrentMonth());
+    }, []);
 
     const { data, isLoading } = useQuery({
         queryKey: ['orders', 'delivered', page, startDate, endDate],
@@ -47,45 +85,63 @@ export default function CompletedOrdersPage() {
                     </CardHeader>
                     <CardContent className="p-0">
                         {/* Filters Toolbar */}
-                        <div className="p-4 flex flex-wrap gap-2 border-b border-gray-100 bg-white">
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-500 font-medium">From:</span>
-                                <input
-                                    type="date"
-                                    className="h-9 w-auto rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                    value={startDate}
-                                    onChange={(e) => {
-                                        setStartDate(e.target.value);
-                                        setPage(1);
-                                    }}
-                                />
+                        <div className="p-4 flex flex-col md:flex-row gap-4 border-b border-gray-100 bg-white">
+                            <div className="flex flex-col md:flex-row gap-4 w-full">
+                                <div className="w-full md:w-[165px]">
+                                    <input
+                                        type="month"
+                                        placeholder="Month"
+                                        value={selectedMonth}
+                                        onChange={(e) => handleMonthChange(e.target.value)}
+                                        className="h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                    />
+                                </div>
+
+                                {/* OR Separator */}
+                                <span className="text-xs text-gray-400 font-medium self-center hidden md:block">OR</span>
+
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-500 font-medium">From:</span>
+                                    <input
+                                        type="date"
+                                        className="h-9 w-auto rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                        value={startDate}
+                                        onChange={(e) => {
+                                            setStartDate(e.target.value);
+                                            setSelectedMonth("");
+                                            setPage(1);
+                                        }}
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-500 font-medium">To:</span>
+                                    <input
+                                        type="date"
+                                        className="h-9 w-auto rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                        value={endDate}
+                                        onChange={(e) => {
+                                            setEndDate(e.target.value);
+                                            setSelectedMonth("");
+                                            setPage(1);
+                                        }}
+                                    />
+                                </div>
+                                {(selectedMonth || startDate || endDate) && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                            setStartDate("");
+                                            setEndDate("");
+                                            setSelectedMonth("");
+                                            setPage(1);
+                                        }}
+                                        className="text-red-500 hover:text-red-700 hover:bg-red-50 whitespace-nowrap"
+                                    >
+                                        Clear
+                                    </Button>
+                                )}
                             </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-500 font-medium">To:</span>
-                                <input
-                                    type="date"
-                                    className="h-9 w-auto rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                    value={endDate}
-                                    onChange={(e) => {
-                                        setEndDate(e.target.value);
-                                        setPage(1);
-                                    }}
-                                />
-                            </div>
-                            {(startDate || endDate) && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                        setStartDate("");
-                                        setEndDate("");
-                                        setPage(1);
-                                    }}
-                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                >
-                                    Clear
-                                </Button>
-                            )}
                         </div>
 
                         <div className="hidden md:block overflow-x-auto">

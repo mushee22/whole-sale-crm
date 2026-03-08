@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { CheckSquare, Pencil, Eye } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
@@ -16,6 +16,45 @@ export default function DispatchedOrdersPage() {
     const [page, setPage] = useState(1);
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
+
+    // Get current month in YYYY-MM format
+    const getCurrentMonth = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        return `${year}-${month}`;
+    };
+
+    const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
+
+    // Handle month selection - sets first and last day of month
+    const handleMonthChange = (monthValue: string) => {
+        setSelectedMonth(monthValue);
+
+        if (!monthValue) {
+            setStartDate("");
+            setEndDate("");
+            return;
+        }
+
+        // monthValue is in format "YYYY-MM"
+        const [year, month] = monthValue.split('-');
+        const firstDay = `${year}-${month}-01`;
+
+        // Get last day of month
+        const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+        const lastDayFormatted = `${year}-${month}-${lastDay.toString().padStart(2, '0')}`;
+
+        setStartDate(firstDay);
+        setEndDate(lastDayFormatted);
+        setPage(1);
+    };
+
+    // Set current month as default on mount
+    useEffect(() => {
+        handleMonthChange(getCurrentMonth());
+    }, []);
+
     const navigate = useNavigate();
 
     const { data, isLoading } = useQuery({
@@ -52,45 +91,63 @@ export default function DispatchedOrdersPage() {
                     <TabsContent value={status} className="m-0">
                         <CardContent className="p-0">
                             {/* Filters Toolbar */}
-                            <div className="p-4 flex flex-wrap gap-2 border-b border-gray-100 bg-white">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm text-gray-500 font-medium">From:</span>
-                                    <input
-                                        type="date"
-                                        className="h-9 w-auto rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                        value={startDate}
-                                        onChange={(e) => {
-                                            setStartDate(e.target.value);
-                                            setPage(1);
-                                        }}
-                                    />
+                            <div className="p-4 flex flex-col md:flex-row gap-4 border-b border-gray-100 bg-white">
+                                <div className="flex flex-col md:flex-row gap-4 w-full">
+                                    <div className="w-full md:w-[165px]">
+                                        <input
+                                            type="month"
+                                            placeholder="Month"
+                                            value={selectedMonth}
+                                            onChange={(e) => handleMonthChange(e.target.value)}
+                                            className="h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                        />
+                                    </div>
+
+                                    {/* OR Separator */}
+                                    <span className="text-xs text-gray-400 font-medium self-center hidden md:block">OR</span>
+
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm text-gray-500 font-medium">From:</span>
+                                        <input
+                                            type="date"
+                                            className="h-9 w-auto rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                            value={startDate}
+                                            onChange={(e) => {
+                                                setStartDate(e.target.value);
+                                                setSelectedMonth("");
+                                                setPage(1);
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-sm text-gray-500 font-medium">To:</span>
+                                        <input
+                                            type="date"
+                                            className="h-9 w-auto rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                            value={endDate}
+                                            onChange={(e) => {
+                                                setEndDate(e.target.value);
+                                                setSelectedMonth("");
+                                                setPage(1);
+                                            }}
+                                        />
+                                    </div>
+                                    {(selectedMonth || startDate || endDate) && (
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => {
+                                                setStartDate("");
+                                                setEndDate("");
+                                                setSelectedMonth("");
+                                                setPage(1);
+                                            }}
+                                            className="text-red-500 hover:text-red-700 hover:bg-red-50 whitespace-nowrap"
+                                        >
+                                            Clear
+                                        </Button>
+                                    )}
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-sm text-gray-500 font-medium">To:</span>
-                                    <input
-                                        type="date"
-                                        className="h-9 w-auto rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                                        value={endDate}
-                                        onChange={(e) => {
-                                            setEndDate(e.target.value);
-                                            setPage(1);
-                                        }}
-                                    />
-                                </div>
-                                {(startDate || endDate) && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={() => {
-                                            setStartDate("");
-                                            setEndDate("");
-                                            setPage(1);
-                                        }}
-                                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                    >
-                                        Clear
-                                    </Button>
-                                )}
                             </div>
 
                             <div className="hidden md:block overflow-x-auto">
@@ -121,7 +178,7 @@ export default function DispatchedOrdersPage() {
                                                 const deliveryBoy = order.deliveries?.[0]?.delivery_boy?.name || "-";
                                                 return (
                                                     <TableRow key={order.id}>
-                                                        <TableCell className="font-medium cursor-pointer hover:underline" onClick={() => navigate(`/orders/${order.id}`)}>#{order.id}</TableCell>
+                                                        <TableCell className="font-medium cursor-pointer hover:underline" onClick={() => navigate(`/ orders / ${order.id} `)}>#{order.id}</TableCell>
                                                         <TableCell>
                                                             <div className="flex flex-col">
                                                                 <span className="font-medium">{order.customer?.name}</span>
@@ -152,7 +209,7 @@ export default function DispatchedOrdersPage() {
                                                                         size="sm"
                                                                         variant="ghost"
                                                                         className="text-slate-600"
-                                                                        onClick={() => navigate(`/orders/edit/${order.id}`)}
+                                                                        onClick={() => navigate(`/ orders / edit / ${order.id} `)}
                                                                         title="Edit Order"
                                                                     >
                                                                         <Pencil className="h-4 w-4" />
@@ -162,7 +219,7 @@ export default function DispatchedOrdersPage() {
                                                                     size="sm"
                                                                     variant="ghost"
                                                                     className="text-slate-600"
-                                                                    onClick={() => navigate(`/orders/${order.id}`)}
+                                                                    onClick={() => navigate(`/ orders / ${order.id} `)}
                                                                     title="View Details"
                                                                 >
                                                                     <Eye className="h-4 w-4" />
@@ -172,97 +229,99 @@ export default function DispatchedOrdersPage() {
                                                                         size="sm"
                                                                         variant="outline"
                                                                         className="gap-2 text-indigo-600 border-indigo-200 hover:bg-indigo-50"
-                                                                        onClick={() => navigate(`/sales/dispatched-orders/${order.id}/check`)}
+                                                                        onClick={() => navigate(`/ sales / dispatched - orders / ${order.id}/check`)}
                                                                     >
                                                                         <CheckSquare className="h-4 w-4" />
                                                                         Check
-                                                                    </Button>
-                                                                </PermissionGuard>
-                                                            </div>
-                                                        </TableCell>
-                                                    </TableRow>
+                                                                    </Button >
+                                                                </PermissionGuard >
+                                                            </div >
+                                                        </TableCell >
+                                                    </TableRow >
                                                 );
                                             })
                                         )}
-                                    </TableBody>
-                                </Table>
-                            </div>
+                                    </TableBody >
+                                </Table >
+                            </div >
 
                             {/* Mobile Card View */}
-                            <div className="md:hidden divide-y divide-gray-100">
-                                {orders.map((order) => {
-                                    const calculatedTotal = order.items?.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0) || 0;
-                                    const deliveryBoy = order.deliveries?.[0]?.delivery_boy?.name || "-";
-                                    return (
-                                        <div key={order.id} className="p-4 space-y-3 bg-white">
-                                            <div className="flex justify-between items-start">
-                                                <div>
-                                                    <div className="font-semibold text-gray-900" onClick={() => navigate(`/orders/${order.id}`)}>Order #{order.id}</div>
-                                                    <div className="text-xs text-gray-500">{new Date(order.order_date).toLocaleDateString()}</div>
+                            < div className="md:hidden divide-y divide-gray-100" >
+                                {
+                                    orders.map((order) => {
+                                        const calculatedTotal = order.items?.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0) || 0;
+                                        const deliveryBoy = order.deliveries?.[0]?.delivery_boy?.name || "-";
+                                        return (
+                                            <div key={order.id} className="p-4 space-y-3 bg-white">
+                                                <div className="flex justify-between items-start">
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900" onClick={() => navigate(`/orders/${order.id}`)}>Order #{order.id}</div>
+                                                        <div className="text-xs text-gray-500">{new Date(order.order_date).toLocaleDateString()}</div>
+                                                    </div>
+                                                    {/* Status removed in mobile view */}
                                                 </div>
-                                                {/* Status removed in mobile view */}
-                                            </div>
-                                            <div className="grid grid-cols-2 gap-2 text-sm">
-                                                <div>
-                                                    <span className="text-gray-500 text-xs block">Customer</span>
-                                                    <span className="font-medium text-gray-900">{order.customer?.name}</span>
+                                                <div className="grid grid-cols-2 gap-2 text-sm">
+                                                    <div>
+                                                        <span className="text-gray-500 text-xs block">Customer</span>
+                                                        <span className="font-medium text-gray-900">{order.customer?.name}</span>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="text-gray-500 text-xs block">Total</span>
+                                                        <span className="font-medium text-gray-900">₹{calculatedTotal.toFixed(2)}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-gray-500 text-xs block">Location</span>
+                                                        <span className="font-medium text-gray-900">{order.customer?.location?.name || "-"}</span>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="text-gray-500 text-xs block">Delivery Boy</span>
+                                                        <span className="font-medium text-gray-900">{deliveryBoy}</span>
+                                                    </div>
+                                                    <div>
+                                                        <span className="text-gray-500 text-xs block">Items</span>
+                                                        <span className="font-medium text-gray-900">{order.items?.length || 0} items</span>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <span className="text-gray-500 text-xs block">Est. Delivery</span>
+                                                        <span className="font-medium text-gray-900">{order.estimated_delivery_date ? format(new Date(order.estimated_delivery_date), "PPP") : "-"}</span>
+                                                    </div>
                                                 </div>
-                                                <div className="text-right">
-                                                    <span className="text-gray-500 text-xs block">Total</span>
-                                                    <span className="font-medium text-gray-900">₹{calculatedTotal.toFixed(2)}</span>
-                                                </div>
-                                                <div>
-                                                    <span className="text-gray-500 text-xs block">Location</span>
-                                                    <span className="font-medium text-gray-900">{order.customer?.location?.name || "-"}</span>
-                                                </div>
-                                                <div className="text-right">
-                                                    <span className="text-gray-500 text-xs block">Delivery Boy</span>
-                                                    <span className="font-medium text-gray-900">{deliveryBoy}</span>
-                                                </div>
-                                                <div>
-                                                    <span className="text-gray-500 text-xs block">Items</span>
-                                                    <span className="font-medium text-gray-900">{order.items?.length || 0} items</span>
-                                                </div>
-                                                <div className="text-right">
-                                                    <span className="text-gray-500 text-xs block">Est. Delivery</span>
-                                                    <span className="font-medium text-gray-900">{order.estimated_delivery_date ? format(new Date(order.estimated_delivery_date), "PPP") : "-"}</span>
-                                                </div>
-                                            </div>
-                                            <div className="pt-2 flex gap-2">
-                                                <PermissionGuard module="orders" action="update">
+                                                <div className="pt-2 flex gap-2">
+                                                    <PermissionGuard module="orders" action="update">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="outline"
+                                                            className="flex-1 gap-2"
+                                                            onClick={() => navigate(`/orders/edit/${order.id}`)}
+                                                        >
+                                                            <Pencil className="h-4 w-4" /> Edit
+                                                        </Button>
+                                                    </PermissionGuard>
                                                     <Button
                                                         size="sm"
                                                         variant="outline"
-                                                        className="flex-1 gap-2"
-                                                        onClick={() => navigate(`/orders/edit/${order.id}`)}
+                                                        className="flex-1"
+                                                        onClick={() => navigate(`/orders/${order.id}`)}
                                                     >
-                                                        <Pencil className="h-4 w-4" /> Edit
+                                                        View Details
                                                     </Button>
-                                                </PermissionGuard>
-                                                <Button
-                                                    size="sm"
-                                                    variant="outline"
-                                                    className="flex-1"
-                                                    onClick={() => navigate(`/orders/${order.id}`)}
-                                                >
-                                                    View Details
-                                                </Button>
-                                                <PermissionGuard module="sales_dispatched" action="check">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="default"
-                                                        className="flex-1 gap-2 bg-indigo-600 hover:bg-indigo-700"
-                                                        onClick={() => navigate(`/sales/dispatched-orders/${order.id}/check`)}
-                                                    >
-                                                        <CheckSquare className="h-4 w-4" />
-                                                        Check
-                                                    </Button>
-                                                </PermissionGuard>
+                                                    <PermissionGuard module="sales_dispatched" action="check">
+                                                        <Button
+                                                            size="sm"
+                                                            variant="default"
+                                                            className="flex-1 gap-2 bg-indigo-600 hover:bg-indigo-700"
+                                                            onClick={() => navigate(`/sales/dispatched-orders/${order.id}/check`)}
+                                                        >
+                                                            <CheckSquare className="h-4 w-4" />
+                                                            Check
+                                                        </Button>
+                                                    </PermissionGuard>
+                                                </div>
                                             </div>
-                                        </div>
-                                    )
-                                })}
-                            </div>
+                                        )
+                                    })
+                                }
+                            </div >
 
                             <div className="px-4 py-4 border-t border-gray-100">
                                 <Pagination
@@ -271,10 +330,10 @@ export default function DispatchedOrdersPage() {
                                     onPageChange={setPage}
                                 />
                             </div>
-                        </CardContent>
-                    </TabsContent>
-                </Tabs>
-            </Card>
-        </div>
+                        </CardContent >
+                    </TabsContent >
+                </Tabs >
+            </Card >
+        </div >
     );
 }

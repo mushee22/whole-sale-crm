@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "../../context/AuthContext";
@@ -20,6 +20,44 @@ export default function OrderList() {
     const [startDate, setStartDate] = useState("");
     const [endDate, setEndDate] = useState("");
     const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+
+    // Get current month in YYYY-MM format
+    const getCurrentMonth = () => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, '0');
+        return `${year}-${month}`;
+    };
+
+    const [selectedMonth, setSelectedMonth] = useState(getCurrentMonth());
+
+    // Handle month selection - sets first and last day of month
+    const handleMonthChange = (monthValue: string) => {
+        setSelectedMonth(monthValue);
+
+        if (!monthValue) {
+            setStartDate("");
+            setEndDate("");
+            return;
+        }
+
+        // monthValue is in format "YYYY-MM"
+        const [year, month] = monthValue.split('-');
+        const firstDay = `${year}-${month}-01`;
+
+        // Get last day of month
+        const lastDay = new Date(parseInt(year), parseInt(month), 0).getDate();
+        const lastDayFormatted = `${year}-${month}-${lastDay.toString().padStart(2, '0')}`;
+
+        setStartDate(firstDay);
+        setEndDate(lastDayFormatted);
+        setPage(1);
+    };
+
+    // Set current month as default on mount
+    useEffect(() => {
+        handleMonthChange(getCurrentMonth());
+    }, []);
 
     const navigate = useNavigate();
 
@@ -74,46 +112,64 @@ export default function OrderList() {
                 <CardContent className="p-0">
                     <PermissionGuard module="orders" action="view_list" showMessage>
                         {/* Filters Toolbar */}
-                        <div className="p-4 flex flex-wrap gap-2 border-b border-gray-100 bg-white">
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-500 font-medium">From:</span>
-                                <Input
-                                    type="date"
-                                    className="w-auto"
-                                    value={startDate}
-                                    onChange={(e) => {
-                                        setStartDate(e.target.value);
-                                        setPage(1); // Reset to first page on filter change
-                                    }}
-                                />
+                        <div className="p-4 flex flex-col md:flex-row gap-4 border-b border-gray-100 bg-white">
+                            <div className="flex flex-col md:flex-row gap-4 w-full">
+                                <div className="w-full md:w-[165px]">
+                                    <Input
+                                        type="month"
+                                        placeholder="Month"
+                                        value={selectedMonth}
+                                        onChange={(e) => handleMonthChange(e.target.value)}
+                                        className="bg-white"
+                                    />
+                                </div>
+
+                                {/* OR Separator */}
+                                <span className="text-xs text-gray-400 font-medium self-center hidden md:block">OR</span>
+
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-500 font-medium">From:</span>
+                                    <Input
+                                        type="date"
+                                        className="w-auto"
+                                        value={startDate}
+                                        onChange={(e) => {
+                                            setStartDate(e.target.value);
+                                            setSelectedMonth(""); // Reset month if custom date is chosen
+                                            setPage(1); // Reset to first page on filter change
+                                        }}
+                                    />
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-sm text-gray-500 font-medium">To:</span>
+                                    <Input
+                                        type="date"
+                                        className="w-auto"
+                                        value={endDate}
+                                        onChange={(e) => {
+                                            setEndDate(e.target.value);
+                                            setSelectedMonth(""); // Reset month if custom date is chosen
+                                            setPage(1); // Reset to first page on filter change
+                                        }}
+                                    />
+                                </div>
+                                {(selectedMonth || startDate || endDate) && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                            setStartDate("");
+                                            setEndDate("");
+                                            setSelectedMonth("");
+                                            setPage(1);
+                                        }}
+                                        className="text-red-500 hover:text-red-700 hover:bg-red-50 whitespace-nowrap"
+                                    >
+                                        <X className="mr-2 h-4 w-4" />
+                                        Clear Filters
+                                    </Button>
+                                )}
                             </div>
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-gray-500 font-medium">To:</span>
-                                <Input
-                                    type="date"
-                                    className="w-auto"
-                                    value={endDate}
-                                    onChange={(e) => {
-                                        setEndDate(e.target.value);
-                                        setPage(1); // Reset to first page on filter change
-                                    }}
-                                />
-                            </div>
-                            {(startDate || endDate) && (
-                                <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => {
-                                        setStartDate("");
-                                        setEndDate("");
-                                        setPage(1);
-                                    }}
-                                    className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                                >
-                                    <X className="mr-2 h-4 w-4" />
-                                    Clear Filters
-                                </Button>
-                            )}
                         </div>
 
                         {/* Mobile Card View */}
