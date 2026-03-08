@@ -170,7 +170,7 @@ export function LoyaltySystemForm({ customerId, initialData, onSuccess, onCancel
             onSuccess();
         } catch (error) {
             console.error(error);
-            toast.error("Failed to save loyalty system");
+            toast.error("Failed to save loyalty system , Please check loyality system is deactivated , else first deativate it");
         } finally {
             setIsLoading(false);
         }

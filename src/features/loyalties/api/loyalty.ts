@@ -17,6 +17,7 @@ export interface LoyaltyProduct {
 }
 
 export interface AmountTier {
+    id?: number;
     threshold_amount: number;
     reward_product_id: number;
     reward_quantity: number;
@@ -163,5 +164,12 @@ export const deactivateLoyaltySystem = async (id: number) => {
 
 export const getLoyaltySystemProgress = async (id: number) => {
     const response = await api.get<LoyaltyProgress>(`/loyalty-systems/${id}/progress`);
+    return response.data;
+};
+
+export const claimLoyaltyReward = async (claimId: number) => {
+    const response = await api.post(`/loyalty-reward-claims/${claimId}/claim`, {
+        deduct_stock: false
+    });
     return response.data;
 };

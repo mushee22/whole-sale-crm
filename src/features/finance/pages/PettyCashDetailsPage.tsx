@@ -184,7 +184,7 @@ function PettyCashTransactionsList({ accountId }: { accountId: number }) {
                             {data?.data.map((tx) => (
                                 <tr key={tx.id} className="hover:bg-gray-50/50">
                                     <td className="py-3 px-4 text-gray-500">{new Date(tx.date).toLocaleDateString()}</td>
-                                    <td className="py-3 px-4 text-slate-900">{tx.description}</td>
+                                    <td className="py-3 px-4 text-slate-900">{tx.reference}</td>
                                     <td className="py-3 px-4">
                                         <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium capitalize ${tx.type === 'credit' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
                                             }`}>

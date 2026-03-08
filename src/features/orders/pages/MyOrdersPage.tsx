@@ -134,15 +134,13 @@ export default function MyOrdersPage() {
                                     View Details
                                 </Button>
                                 {order.status === 'out_for_delivery' && (
-                                    <PermissionGuard module="sales" action="delivery_check">
-                                        <Button
-                                            className="flex-1 bg-blue-600 hover:bg-blue-700"
-                                            onClick={() => navigate(`/sales/out-for-delivery/${order.id}/check`)}
-                                        >
-                                            <CheckCircle className="w-4 h-4 mr-2" />
-                                            Delivery Check
-                                        </Button>
-                                    </PermissionGuard>
+                                    <Button
+                                        className="flex-1 bg-blue-600 hover:bg-blue-700"
+                                        onClick={() => navigate(`/sales/out-for-delivery/${order.id}/check`)}
+                                    >
+                                        <CheckCircle className="w-4 h-4 mr-2" />
+                                        Delivery Check
+                                    </Button>
                                 )}
                             </div>
                         </CardContent>

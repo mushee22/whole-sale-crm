@@ -9,6 +9,7 @@ import {
     activateLoyaltySystem,
     deactivateLoyaltySystem,
     getLoyaltySystemProgress,
+    claimLoyaltyReward,
     type LoyaltySystem
 } from "../api/loyalty";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -17,7 +18,7 @@ import { PermissionGuard } from "../../../hooks/usePermission";
 
 interface LoyaltySystemCardProps {
     system: LoyaltySystem;
-    customerName: string;
+    customerName: string; // Keeping prop as it might be required by parent, but stripping usage if lint complains about unused prop, or we can just ignore it or use it. Actually wait, let's keep it to say whose card it is?
     onEdit: (system: LoyaltySystem) => void;
     onDelete: (id: number) => void;
 }
@@ -43,6 +44,15 @@ export function LoyaltySystemCard({ system, customerName, onEdit, onDelete }: Lo
         onError: () => toast.error("Failed to update status")
     });
 
+    const claimMutation = useMutation({
+        mutationFn: (claimId: number) => claimLoyaltyReward(claimId),
+        onSuccess: () => {
+            toast.success("Reward claimed successfully");
+            queryClient.invalidateQueries({ queryKey: ['loyalty-progress', system.id] });
+        },
+        onError: () => toast.error("Failed to claim reward")
+    });
+
     const handleDownloadImage = async () => {
         if (!cardRef.current) return;
 
@@ -61,114 +71,136 @@ export function LoyaltySystemCard({ system, customerName, onEdit, onDelete }: Lo
 
     // Calculated stats for the card
     const totalSpend = progressData?.total_spend || 0;
-    const progressPercentage = system.type === 'amount' && system.amount_tiers && system.amount_tiers.length > 0
-        ? Math.min((totalSpend / system.amount_tiers[system.amount_tiers.length - 1].threshold_amount) * 100, 100)
-        : 0;
 
     return (
         <>
             {/* Hidden Premium Card for Export */}
             <div style={{ position: 'absolute', top: -9999, left: -9999 }}>
-                <div ref={cardRef} className="w-[800px] h-[500px] bg-gradient-to-br from-slate-900 via-slate-800 to-black text-white p-8 rounded-xl shadow-2xl relative overflow-hidden font-sans flex flex-col justify-between">
-                    {/* Background Accents */}
-                    <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl -mr-16 -mt-16"></div>
-                    <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -ml-16 -mb-16"></div>
-
-                    <div>
-                        {/* Header */}
-                        <div className="flex justify-between items-start relative z-10 mb-8">
-                            <div>
-                                <div className="text-white/60 text-sm font-medium uppercase tracking-widest mb-1">Loyalty Member</div>
-                                <h2 className="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
-                                    {customerName}
-                                </h2>
-                            </div>
-                            <div className="text-right">
-                                <div className="text-white/60 text-xs font-medium uppercase tracking-widest mb-1">Company</div>
-                                <div className="text-2xl font-bold flex items-center gap-2">
-                                    <Medal className="h-8 w-8 text-yellow-500 fill-yellow-500" />
-                                    Wholesale Club
-                                </div>
+                <div ref={cardRef} className="w-[950px] min-h-[500px] bg-white text-slate-900 p-8 rounded-xl shadow-lg relative font-sans flex flex-col justify-start border border-slate-200">
+                    <div className="mb-6">
+                        <div className="flex justify-between items-end mb-2">
+                            <h2 className="text-xl font-bold flex items-center gap-2">
+                                <span className={system.is_active ? "text-slate-900" : "text-slate-500"}>Active:</span>
+                                <span className="text-slate-900">{system.is_active ? 'Yes' : 'No'}</span>
+                            </h2>
+                            <div className="text-sm text-slate-500 font-medium">
+                                Member: <span className="text-slate-900">{customerName}</span>
                             </div>
                         </div>
+                        <p className="text-sm text-slate-600 mb-4">
+                            Each row: {system.type === 'amount' ? 'spend milestone' : 'target product to buy'}, {system.type === 'amount' ? 'milestone amount' : 'target quantity'} to reach, {system.type === 'amount' ? 'spend achieved' : 'quantity achieved'}, remaining to target, and reward when target is met.
+                        </p>
 
-                        {/* Main Stats */}
-                        <div className="relative z-10 mb-8">
-                            <div className="flex justify-between items-end mb-2">
-                                <div>
-                                    <div className="text-sm text-gray-400 mb-1">Current Progress</div>
-                                    {system.type === 'amount' ? (
-                                        <div className="text-6xl font-bold text-white tracking-tight">
-                                            ₹{totalSpend.toLocaleString()}
-                                        </div>
+                        {/* Milestones / Targets Table */}
+                        <div className="mb-8">
+                            <table className="w-full text-left text-sm border-collapse">
+                                <thead className="bg-slate-50 text-slate-900 font-bold border-b border-slate-200">
+                                    <tr>
+                                        <th className="px-4 py-3 border-b border-transparent">{system.type === 'amount' ? 'Milestone' : 'Target product'}</th>
+                                        <th className="px-4 py-3 border-b border-transparent text-right">{system.type === 'amount' ? 'Target amount' : 'Target qty'}</th>
+                                        <th className="px-4 py-3 border-b border-transparent text-right">{system.type === 'amount' ? 'Achieved amount' : 'Achieved qty'}</th>
+                                        <th className="px-4 py-3 border-b border-transparent text-right">Remaining to Target</th>
+                                        <th className="px-4 py-3 border-b border-transparent pl-8">Reward Name</th>
+                                        <th className="px-4 py-3 border-b border-transparent text-right">Earned</th>
+                                        <th className="px-4 py-3 border-b border-transparent text-right">Claimed</th>
+                                        <th className="px-4 py-3 border-b border-transparent text-right">Remaining to Claim</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {system.type === 'amount' && system.amount_tiers?.map((tier, idx) => {
+                                        const achieved = totalSpend;
+                                        const remaining = Math.max(0, tier.threshold_amount - totalSpend);
+
+                                        // Calculate claims based on amount tier
+                                        const tierClaims = progressData?.reward_claims?.filter(c => c.loyalty_system_amount_tier_id === tier.id) || [];
+                                        const earnedNum = tierClaims.reduce((acc, c) => acc + c.reward_quantity, 0);
+                                        const claimedNum = tierClaims.filter(c => c.is_claimed).reduce((acc, c) => acc + c.reward_quantity, 0);
+                                        const remainingClaimNum = tierClaims.filter(c => !c.is_claimed).reduce((acc, c) => acc + c.reward_quantity, 0);
+
+                                        return (
+                                            <tr key={idx}>
+                                                <td className="px-4 py-4 text-slate-900 font-medium whitespace-nowrap">Spend ₹{tier.threshold_amount.toLocaleString()}</td>
+                                                <td className="px-4 py-4 text-slate-900 text-right font-medium">₹{tier.threshold_amount.toLocaleString()}</td>
+                                                <td className="px-4 py-4 text-slate-900 text-right font-medium">₹{achieved.toLocaleString()}</td>
+                                                <td className="px-4 py-4 text-slate-900 text-right font-medium">₹{remaining.toLocaleString()}</td>
+                                                <td className="px-4 py-4 text-slate-900 font-medium pl-8">{tier.reward_product?.name || `Product`}</td>
+                                                <td className="px-4 py-4 text-slate-900 text-right font-medium">{earnedNum || '-'}</td>
+                                                <td className="px-4 py-4 text-slate-900 text-right font-medium">{claimedNum || '-'}</td>
+                                                <td className="px-4 py-4 text-slate-900 text-right font-medium">{remainingClaimNum || '-'}</td>
+                                            </tr>
+                                        );
+                                    })}
+
+                                    {system.type === 'product' && system.product_targets?.map((target, idx) => {
+                                        // Find all progress items for this product
+                                        const progressItems = progressData?.product_progress?.filter(p => p.product_id === target.product_id) || [];
+                                        const achieved = progressItems.reduce((acc, p) => acc + p.achieved, 0);
+                                        const remaining = Math.max(0, target.target_quantity - achieved);
+
+                                        // Calculate claims based on product target
+                                        const targetClaims = progressData?.reward_claims?.filter(c => c.loyalty_system_product_target_id === target.id) || [];
+                                        const earnedNum = targetClaims.reduce((acc, c) => acc + c.reward_quantity, 0);
+                                        const claimedNum = targetClaims.filter(c => c.is_claimed).reduce((acc, c) => acc + c.reward_quantity, 0);
+                                        const remainingClaimNum = targetClaims.filter(c => !c.is_claimed).reduce((acc, c) => acc + c.reward_quantity, 0);
+
+                                        // Find corresponding reward product name
+                                        // The api returns target.reward_product ? .name or progress?.reward_product?.name
+                                        const rewardName = target.reward_product?.name || progressItems[0]?.reward_product?.name || 'Item';
+
+                                        return (
+                                            <tr key={idx}>
+                                                <td className="px-4 py-4 text-slate-900 font-medium whitespace-nowrap">{target.product?.name || 'Product'}</td>
+                                                <td className="px-4 py-4 text-slate-900 text-right font-medium">{target.target_quantity}</td>
+                                                <td className="px-4 py-4 text-slate-900 text-right font-medium">{achieved}</td>
+                                                <td className="px-4 py-4 text-slate-900 text-right font-medium">{remaining}</td>
+                                                <td className="px-4 py-4 text-slate-900 font-medium pl-8">{target.reward_quantity > 0 ? rewardName : '-'}</td>
+                                                <td className="px-4 py-4 text-slate-900 text-right font-medium">{earnedNum || '-'}</td>
+                                                <td className="px-4 py-4 text-slate-900 text-right font-medium">{claimedNum || '-'}</td>
+                                                <td className="px-4 py-4 text-slate-900 text-right font-medium">{remainingClaimNum || '-'}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                            {/* bottom border matching the image style roughly */}
+                            <div className="border-b border-slate-200"></div>
+                        </div>
+
+                        {/* Rewards Table */}
+                        <div>
+                            <h3 className="text-xl font-bold text-slate-900 mb-4">Rewards</h3>
+                            <table className="w-full text-left text-sm border-collapse">
+                                <thead className="bg-slate-50 text-slate-900 font-bold border-b border-slate-200">
+                                    <tr>
+                                        <th className="px-4 py-3 border-b border-transparent">Reward</th>
+                                        <th className="px-4 py-3 border-b border-transparent text-right">Qty</th>
+                                        <th className="px-4 py-3 border-b border-transparent pl-8">Status</th>
+                                        <th className="px-4 py-3 border-b border-transparent">Claimed at</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-slate-100">
+                                    {progressData?.reward_claims && progressData.reward_claims.length > 0 ? (
+                                        progressData.reward_claims.map((claim, idx) => (
+                                            <tr key={idx}>
+                                                <td className="px-4 py-4 text-slate-900 font-medium">{claim.reward_product_name || `Product #${claim.reward_product_id}`}</td>
+                                                <td className="px-4 py-4 text-slate-900 text-right font-medium">{claim.reward_quantity}</td>
+                                                <td className="px-4 py-4 text-slate-900 font-medium pl-8">
+                                                    {claim.is_claimed ? 'Claimed' : 'Unlocked (not claimed)'}
+                                                </td>
+                                                <td className="px-4 py-4 text-slate-900 font-medium">
+                                                    {claim.is_claimed && claim.claimed_at ? new Date(claim.claimed_at).toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }) : '—'}
+                                                </td>
+                                            </tr>
+                                        ))
                                     ) : (
-                                        <div className="text-5xl font-bold text-white">Product Goal</div>
+                                        <tr>
+                                            <td colSpan={4} className="px-4 py-4 text-slate-500 text-center italic">No rewards unlocked yet.</td>
+                                        </tr>
                                     )}
-                                </div>
-                            </div>
-
-                            {/* Progress Bar */}
-                            <div className="h-4 bg-white/10 rounded-full overflow-hidden">
-                                <div
-                                    className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full transition-all duration-1000"
-                                    style={{ width: `${progressPercentage}%` }}
-                                ></div>
-                            </div>
-                        </div>
-
-                        {/* Milestones Grid */}
-                        <div className="relative z-10">
-                            <div className="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-3">Milestones & Rewards</div>
-                            <div className="grid grid-cols-3 gap-3">
-                                {system.type === 'amount' && system.amount_tiers?.map((tier, idx) => {
-                                    const isAchieved = (totalSpend >= tier.threshold_amount);
-                                    return (
-                                        <div key={idx} className={`p-4 rounded-lg border ${isAchieved ? 'bg-white/10 border-green-500/50' : 'bg-white/5 border-white/10'} backdrop-blur-sm relative overflow-hidden group`}>
-                                            <div className="flex justify-between items-start mb-2">
-                                                <span className={`text-lg font-bold ${isAchieved ? 'text-green-400' : 'text-gray-400'}`}>₹{tier.threshold_amount}</span>
-                                                {isAchieved && <Zap className="h-5 w-5 text-green-400 fill-green-400" />}
-                                            </div>
-                                            <div className={`text-sm ${isAchieved ? 'text-white' : 'text-gray-500'}`}>
-                                                {tier.reward_quantity} x {tier.reward_product?.name || `Product`}
-                                            </div>
-                                            {isAchieved && <div className="absolute inset-0 bg-green-500/10"></div>}
-                                        </div>
-                                    );
-                                })}
-
-                                {system.type === 'product' && system.product_targets?.map((target, idx) => {
-                                    const progress = progressData?.product_progress?.find(p => p.product_target_id === target.id || p.product_id === target.product_id);
-                                    const currentQty = progress?.achieved || 0;
-                                    const isAchieved = currentQty >= target.target_quantity;
-
-                                    return (
-                                        <div key={idx} className={`p-4 rounded-lg border ${isAchieved ? 'bg-white/10 border-green-500/50' : 'bg-white/5 border-white/10'} backdrop-blur-sm relative overflow-hidden`}>
-                                            <div className="flex justify-between items-start mb-2">
-                                                <span className={`text-lg font-bold ${isAchieved ? 'text-green-400' : 'text-gray-400'}`}>{currentQty} / {target.target_quantity}</span>
-                                                {isAchieved && <Zap className="h-5 w-5 text-green-400 fill-green-400" />}
-                                            </div>
-                                            <div className={`text-sm ${isAchieved ? 'text-white' : 'text-gray-500'} truncate`}>
-                                                {target.product?.name || `Product`}
-                                            </div>
-                                            {target.reward_quantity > 0 && (
-                                                <div className={`text-xs mt-1 flex items-center gap-1 ${isAchieved ? 'text-green-200' : 'text-gray-600'}`}>
-                                                    <Gift className="h-3 w-3" />
-                                                    Reward: {target.reward_quantity} × {target.reward_product?.name || 'Item'}
-                                                </div>
-                                            )}
-                                            {isAchieved && <div className="absolute inset-0 bg-green-500/10"></div>}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Footer */}
-                    <div className="flex justify-between items-center pt-4 border-t border-white/10 relative z-10 mt-auto">
-                        <div className="flex items-center gap-2 opacity-60">
-                            <Calendar className="h-4 w-4" />
-                            <span className="text-sm">Valid Until: {system.expires_at ? new Date(system.expires_at).toLocaleDateString() : 'Forever'}</span>
+                                </tbody>
+                            </table>
+                            {/* bottom border matching the image style roughly */}
+                            <div className="border-b border-slate-200"></div>
                         </div>
                     </div>
                 </div>
@@ -227,16 +259,28 @@ export function LoyaltySystemCard({ system, customerName, onEdit, onDelete }: Lo
                                         <span className="text-xs font-semibold uppercase tracking-wider text-green-600 mb-2 block">Unlocked Rewards</span>
                                         <div className="space-y-2">
                                             {progressData.reward_claims.map((claim) => (
-                                                <div key={claim.id} className="bg-green-50 border border-green-200 rounded p-2 flex items-center justify-between">
+                                                <div key={claim.id} className="bg-green-50 border border-green-200 rounded p-2 flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
                                                     <div className="flex items-center gap-2">
-                                                        <Gift className="h-4 w-4 text-green-600" />
+                                                        <Gift className="h-4 w-4 text-green-600 shrink-0" />
                                                         <span className="font-medium text-green-800">
-                                                            {claim.reward_quantity} x {claim.reward_product_name}
+                                                            {claim.reward_quantity} x {claim.reward_product_name || `Product #${claim.reward_product_id}`}
                                                         </span>
                                                     </div>
-                                                    <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 text-[10px] px-1.5 h-5">
-                                                        Unlocked
-                                                    </Badge>
+
+                                                    {!claim.is_claimed ? (
+                                                        <Button
+                                                            size="sm"
+                                                            className="h-7 text-xs bg-green-600 hover:bg-green-700 text-white shrink-0"
+                                                            onClick={() => claimMutation.mutate(claim.id)}
+                                                            disabled={claimMutation.isPending}
+                                                        >
+                                                            {claimMutation.isPending ? 'Claiming...' : 'Claim Reward'}
+                                                        </Button>
+                                                    ) : (
+                                                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100 border-green-200 text-[10px] px-1.5 h-5 shrink-0">
+                                                            Claimed
+                                                        </Badge>
+                                                    )}
                                                 </div>
                                             ))}
                                         </div>

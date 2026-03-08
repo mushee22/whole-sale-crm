@@ -87,7 +87,7 @@ export function TransferPettyCashModal({ fromAccountId, currentBalance }: Transf
                             <option value="">Select Account</option>
                             {availableAccounts.map((acc) => (
                                 <option key={acc.id} value={acc.id}>
-                                    {acc.account_name} ({acc.user.name})
+                                    {acc?.account_name} ({acc?.user?.name})
                                 </option>
                             ))}
                         </select>
@@ -106,7 +106,7 @@ export function TransferPettyCashModal({ fromAccountId, currentBalance }: Transf
                                 min: { value: 1, message: "Amount must be greater than 0" }
                             })}
                         />
-                        {errors.amount && <p className="text-red-500 text-xs">{errors.amount.message}</p>}
+                        {errors.amount && <p className="text-red-500 text-xs">{errors.amount?.message}</p>}
                     </div>
 
                     <div className="space-y-2">
@@ -116,7 +116,7 @@ export function TransferPettyCashModal({ fromAccountId, currentBalance }: Transf
                             type="date"
                             {...register("date", { required: "Date is required" })}
                         />
-                        {errors.date && <p className="text-red-500 text-xs">{errors.date.message}</p>}
+                        {errors.date && <p className="text-red-500 text-xs">{errors.date?.message}</p>}
                     </div>
 
                     <div className="space-y-2">

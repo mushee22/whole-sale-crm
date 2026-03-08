@@ -114,22 +114,6 @@ export default function OrderDetailsPage() {
                                     </Button>
                                 </PermissionGuard>
                             )}
-                            {order.status !== 'cancelled' && order.status !== 'delivered' && (
-                                <PermissionGuard module="orders" action="cancel">
-                                    <Button
-                                        variant="outline"
-                                        className="flex-1 sm:flex-none gap-2 text-red-600 border-red-200 hover:bg-red-50"
-                                        onClick={() => {
-                                            if (window.confirm("Are you sure you want to cancel this order?")) {
-
-                                            }
-                                        }}
-                                    >
-                                        <XCircle className="h-4 w-4" />
-                                        Cancel Order
-                                    </Button>
-                                </PermissionGuard>
-                            )}
                         </div>
                     )}
                 </div>

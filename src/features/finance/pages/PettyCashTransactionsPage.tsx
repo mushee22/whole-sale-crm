@@ -305,7 +305,7 @@ export default function PettyCashTransactionsPage({ isAccountsMode = false }: Pe
                                                             Moved
                                                         </Badge>
                                                     ) : (
-                                                        <PermissionGuard module="finance" action="mark_moved_to_system">
+                                                        <PermissionGuard module="accounts" action="mark_moved_to_system">
                                                             <Button
                                                                 variant="outline"
                                                                 size="sm"
@@ -399,7 +399,7 @@ export default function PettyCashTransactionsPage({ isAccountsMode = false }: Pe
                                                                     Moved
                                                                 </Badge>
                                                             ) : (
-                                                                <PermissionGuard module="finance" action="mark_moved_to_system">
+                                                                <PermissionGuard module="accounts" action="mark_moved_to_system">
                                                                     <Button
                                                                         variant="outline"
                                                                         size="sm"
