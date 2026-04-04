@@ -150,12 +150,16 @@ export default function CustomerDetailsPage() {
                                 {currentBalance.toFixed(2)}
                             </p>
                         </div>
-                        <div className="pt-4 border-t border-slate-800">
+                        {/* <div className="pt-4 border-t border-slate-800 space-y-2">
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-slate-400">Opening Balance:</span>
+                                <span className="font-medium text-slate-300">{Number(customer.opening_balance || 0).toFixed(2)}</span>
+                            </div>
                             <div className="flex justify-between items-center text-sm">
                                 <span className="text-slate-400">Outstanding:</span>
                                 <span className="font-medium">{customer.outstanding_amount || '0.00'}</span>
                             </div>
-                        </div>
+                        </div> */}
                     </CardContent>
                 </Card>
             </div>
@@ -210,9 +214,9 @@ export default function CustomerDetailsPage() {
                                                 </span>
                                             </div>
 
-                                            {(tx.description || tx.order || tx.invoice) && (
+                                            {(tx.note || tx.order || tx.invoice) && (
                                                 <div className="text-sm text-gray-600 bg-gray-50 p-2 rounded">
-                                                    {tx.description && <div>{tx.description}</div>}
+                                                    {tx.note && <div>{tx.note}</div>}
                                                     {tx.order && (
                                                         <div
                                                             className="text-indigo-600 cursor-pointer hover:underline text-xs mt-1"
@@ -296,7 +300,7 @@ export default function CustomerDetailsPage() {
                                                     </TableCell>
                                                     <TableCell className="capitalize text-sm text-gray-700">{tx.payment_mode}</TableCell>
                                                     <TableCell className="text-sm text-gray-600">
-                                                        {tx.description || '-'}
+                                                        {tx.note || '-'}
                                                         {tx.order && <span className="ml-1 text-xs text-indigo-500 cursor-pointer hover:underline" onClick={() => {
                                                             setSelectedOrderId(tx.order!.id);
                                                             setIsOrderModalOpen(true);

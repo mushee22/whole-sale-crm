@@ -132,7 +132,7 @@ export interface CustomerTransaction {
     amount: string;
     type: string; // 'credit', 'debit'
     payment_mode: string; // 'cash', 'upi', etc.
-    description: string | null;
+    note: string | null;
     created_at: string;
     updated_at: string;
     order?: {
