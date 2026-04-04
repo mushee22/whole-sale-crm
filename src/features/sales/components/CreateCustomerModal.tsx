@@ -24,6 +24,7 @@ export function CreateCustomerModal({ isOpen, onClose, onCustomerCreated }: Crea
     const [phone, setPhone] = useState("");
     const [locationId, setLocationId] = useState<string>("");
     const [referenceId, setReferenceId] = useState<string>("");
+    const [openingBalance, setOpeningBalance] = useState<string>("");
 
     const { user } = useAuth();
 
@@ -64,6 +65,7 @@ export function CreateCustomerModal({ isOpen, onClose, onCustomerCreated }: Crea
             phone,
             location_id: parseInt(locationId),
             reference_id: referenceId && referenceId !== "0" ? parseInt(referenceId) : null,
+            opening_balance: openingBalance !== "" ? parseFloat(openingBalance) : null,
         });
     };
 
@@ -72,6 +74,7 @@ export function CreateCustomerModal({ isOpen, onClose, onCustomerCreated }: Crea
         setPhone("");
         setLocationId("");
         setReferenceId("");
+        setOpeningBalance("");
         onClose();
     };
 
@@ -128,6 +131,17 @@ export function CreateCustomerModal({ isOpen, onClose, onCustomerCreated }: Crea
                             ))}
                         </SelectContent>
                     </Select>
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="cust-opening-balance">Opening Balance (Optional)</Label>
+                    <Input
+                        id="cust-opening-balance"
+                        type="number"
+                        step="0.01"
+                        value={openingBalance}
+                        onChange={(e) => setOpeningBalance(e.target.value)}
+                        placeholder="0.00"
+                    />
                 </div>
                 <div className="flex justify-end gap-3 pt-4">
                     <Button type="button" variant="outline" onClick={handleClose}>

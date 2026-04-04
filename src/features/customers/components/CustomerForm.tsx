@@ -43,6 +43,7 @@ export default function CustomerForm({ onSuccess, onCancel, initialData }: Custo
             phone: "",
             location_id: 0,
             reference_id: user?.id || undefined,
+            opening_balance: undefined,
         }
     });
 
@@ -129,6 +130,20 @@ export default function CustomerForm({ onSuccess, onCancel, initialData }: Custo
                     </Select>
                     {errors.reference_id && <p className="text-sm text-red-500">{errors.reference_id.message}</p>}
                 </div>
+
+                {!initialData && (
+                    <div className="space-y-2">
+                        <Label htmlFor="opening_balance">Opening Balance (Optional)</Label>
+                        <Input
+                            id="opening_balance"
+                            type="number"
+                            step="0.01"
+                            placeholder="0.00"
+                            {...register("opening_balance")}
+                        />
+                        {errors.opening_balance && <p className="text-sm text-red-500">{errors.opening_balance.message}</p>}
+                    </div>
+                )}
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t">

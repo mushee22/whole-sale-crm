@@ -98,6 +98,7 @@ export const createCustomerSchema = z.object({
     phone: z.string().min(1, "Phone is required"),
     location_id: z.coerce.number().min(1, "Location is required"),
     reference_id: z.coerce.number().optional().nullable(),
+    opening_balance: z.coerce.number().optional().nullable(),
 });
 
 export type CreateCustomerData = z.infer<typeof createCustomerSchema>;
