@@ -101,11 +101,11 @@ export function DispatchCheckModal({ order, trigger, open, onOpenChange, onSucce
                                         {item.product.description && (
                                             <p className="text-xs text-slate-400 line-clamp-1">{item.product.description}</p>
                                         )}
-                                        {item.product.color_id && (
-                                            <span className="text-[10px] bg-slate-100 px-1 rounded text-slate-600 mr-2">Color ID: {item.product.color_id}</span>
+                                        {item.product.color?.name && (
+                                            <span className="text-[10px] bg-slate-100 px-1 rounded text-slate-600 mr-2">Color ID: {item.product.color?.name}</span>
                                         )}
-                                        {item.product.size_id && (
-                                            <span className="text-[10px] bg-slate-100 px-1 rounded text-slate-600">Size ID: {item.product.size_id}</span>
+                                        {item.product.size?.name && (
+                                            <span className="text-[10px] bg-slate-100 px-1 rounded text-slate-600">Size ID: {item.product.size?.name}</span>
                                         )}
                                     </div>
                                 </div>
