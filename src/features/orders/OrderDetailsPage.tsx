@@ -168,8 +168,8 @@ export default function OrderDetailsPage() {
                                                         <div className="font-medium text-slate-900">{item.product?.name}</div>
                                                         <div className="text-xs text-gray-500">SKU: {item.product.sku}</div>
                                                         <div className="flex gap-2 mt-1">
-                                                            {item.product.color_id && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">Color: {item.product.color_id}</span>}
-                                                            {item.product.size_id && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">Size: {item.product.size_id}</span>}
+                                                            {item.product.color?.name && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">Color: {item.product.color?.name}</span>}
+                                                            {item.product.size?.name && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">Size: {item.product.size?.name}</span>}
                                                         </div>
                                                         {item.comment && (
                                                             <div className="text-xs text-slate-600 mt-1 italic bg-amber-50 px-2 py-1 rounded border border-amber-100 inline-block">
@@ -229,10 +229,10 @@ export default function OrderDetailsPage() {
                                                     <TableRow key={item.id}>
                                                         <TableCell>
                                                             <div className="font-medium text-slate-900">{item.product?.name}</div>
-                                                            <div className="text-xs text-gray-500">SKU: {item.product.sku}</div>
+                                                            {/* <div className="text-xs text-gray-500">SKU: {item.product.sku}</div> */}
                                                             <div className="flex gap-2 mt-1">
-                                                                {item.product.color_id && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">Color: {item.product.color_id}</span>}
-                                                                {item.product.size_id && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">Size: {item.product.size_id}</span>}
+                                                                {item.product.color?.name && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">Color: {item.product.color?.name}</span>}
+                                                                {item.product.size?.name && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">Size: {item.product.size?.name}</span>}
                                                             </div>
                                                             {item.comment && (
                                                                 <div className="text-xs text-slate-600 mt-1 italic bg-amber-50 px-2 py-1 rounded border border-amber-100 inline-block">
