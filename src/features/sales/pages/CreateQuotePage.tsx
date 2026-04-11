@@ -93,7 +93,9 @@ export function CreateQuotePage() {
                 const product = products.find(p => p.id === pp.product_id);
                 return {
                     productId: pp.product_id.toString(),
-                    productName: product ? product.name : `Product #${pp.product_id}`,
+                    productName: product 
+                        ? `${product.name}${product.color?.name ? ` (${product.color.name})` : ""}${product.size?.name ? ` [${product.size.name}]` : ""}`
+                        : `Product #${pp.product_id}`,
                     price: parseFloat(pp.price)
                 };
             }).filter(item => item.productName !== `Product #${item.productId}` || products.length === 0); // Keep only if product found or products not loaded yet
@@ -145,7 +147,7 @@ export function CreateQuotePage() {
 
         const newItem = {
             productId: selectedProductId,
-            productName: product.name,
+            productName: `${product.name}${product.color?.name ? ` (${product.color.name})` : ""}${product.size?.name ? ` [${product.size.name}]` : ""}`,
             price: parseFloat(price)
         };
 

@@ -178,7 +178,7 @@ export default function DispatchedOrdersPage() {
                                                 const deliveryBoy = order.deliveries?.[0]?.delivery_boy?.name || "-";
                                                 return (
                                                     <TableRow key={order.id}>
-                                                        <TableCell className="font-medium cursor-pointer hover:underline" onClick={() => navigate(`/ orders / ${order.id} `)}>#{order.id}</TableCell>
+                                                        <TableCell className="font-medium cursor-pointer hover:underline" onClick={() => navigate(`/orders/${order.id}`)}>#{order.id}</TableCell>
                                                         <TableCell>
                                                             <div className="flex flex-col">
                                                                 <span className="font-medium">{order.customer?.name}</span>
@@ -209,7 +209,7 @@ export default function DispatchedOrdersPage() {
                                                                         size="sm"
                                                                         variant="ghost"
                                                                         className="text-slate-600"
-                                                                        onClick={() => navigate(`/ orders / edit / ${order.id} `)}
+                                                                        onClick={() => navigate(`/orders/edit/${order.id}`)}
                                                                         title="Edit Order"
                                                                     >
                                                                         <Pencil className="h-4 w-4" />
@@ -219,7 +219,7 @@ export default function DispatchedOrdersPage() {
                                                                     size="sm"
                                                                     variant="ghost"
                                                                     className="text-slate-600"
-                                                                    onClick={() => navigate(`/ orders / ${order.id} `)}
+                                                                    onClick={() => navigate(`/orders/${order.id}`)}
                                                                     title="View Details"
                                                                 >
                                                                     <Eye className="h-4 w-4" />
@@ -229,24 +229,24 @@ export default function DispatchedOrdersPage() {
                                                                         size="sm"
                                                                         variant="outline"
                                                                         className="gap-2 text-indigo-600 border-indigo-200 hover:bg-indigo-50"
-                                                                        onClick={() => navigate(`/ sales / dispatched - orders / ${order.id}/check`)}
+                                                                        onClick={() => navigate(`/sales/dispatched-orders/${order.id}/check`)}
                                                                     >
                                                                         <CheckSquare className="h-4 w-4" />
                                                                         Check
-                                                                    </Button >
-                                                                </PermissionGuard >
-                                                            </div >
-                                                        </TableCell >
-                                                    </TableRow >
+                                                                    </Button>
+                                                                </PermissionGuard>
+                                                            </div>
+                                                        </TableCell>
+                                                    </TableRow>
                                                 );
                                             })
                                         )}
-                                    </TableBody >
-                                </Table >
-                            </div >
+                                    </TableBody>
+                                </Table>
+                            </div>
 
                             {/* Mobile Card View */}
-                            < div className="md:hidden divide-y divide-gray-100" >
+                            <div className="md:hidden divide-y divide-gray-100">
                                 {
                                     orders.map((order) => {
                                         const calculatedTotal = order.items?.reduce((sum, item) => sum + (parseFloat(item.price) * item.quantity), 0) || 0;

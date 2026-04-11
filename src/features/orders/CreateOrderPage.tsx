@@ -132,7 +132,7 @@ function OrderItemRow({ index, register, remove, setValue, watch, errors, custom
                                 type="text"
                                 placeholder="Search products..."
                                 className="pl-9 bg-white"
-                                value={selectedProduct ? selectedProduct.name : search}
+                                value={selectedProduct ? `${selectedProduct.name}${selectedProduct.color?.name ? ` (${selectedProduct.color.name})` : ""}${selectedProduct.size?.name ? ` [${selectedProduct.size.name}]` : ""}` : search}
                                 onChange={(e) => {
                                     setSearch(e.target.value);
                                     setOpen(true);
@@ -154,8 +154,14 @@ function OrderItemRow({ index, register, remove, setValue, watch, errors, custom
                                         >
                                             <div className="flex justify-between items-center">
                                                 <div className="flex flex-col">
-                                                    <span className="font-medium text-gray-900">{product.name}</span>
-                                                    <span className="text-xs text-gray-400">SKU: {product.sku} • Stock: {product.stock}</span>
+                                                    <span className="font-medium text-gray-900">
+                                                        {product.name}
+                                                        {product.color?.name && ` (${product.color.name})`}
+                                                        {product.size?.name && ` [${product.size.name}]`}
+                                                    </span>
+                                                    <span className="text-xs text-gray-400">
+                                                        SKU: {product.sku} • Stock: {product.stock}
+                                                    </span>
                                                 </div>
                                                 {product.price ? (
                                                     <div className="flex flex-col items-end">
@@ -335,7 +341,9 @@ export default function CreateOrderPage() {
             if (customerDetails.product_prices && customerDetails.product_prices.length > 0 && (!stateQuotedItems || stateQuotedItems.length === 0)) {
                 const specialPriceItems = customerDetails.product_prices.map(pp => ({
                     productId: pp.product_id,
-                    productName: pp.product?.name || `Product #${pp.product_id}`,
+                    productName: pp.product 
+                        ? `${pp.product.name}${pp.product.color?.name ? ` (${pp.product.color.name})` : ""}${pp.product.size?.name ? ` [${pp.product.size.name}]` : ""}`
+                        : `Product #${pp.product_id}`,
                     price: Number(pp.price)
                 }));
                 setQuotedItems(specialPriceItems);

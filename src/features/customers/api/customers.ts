@@ -10,6 +10,8 @@ export interface Product {
     image_url: string | null;
     color_id: number | null;
     size_id: number | null;
+    color?: { name: string; id: number };
+    size?: { name: string; id: number };
     stock: number;
     price: string;
     is_active: boolean;
