@@ -96,7 +96,7 @@ export function DispatchCheckModal({ order, trigger, open, onOpenChange, onSucce
                                             {item.product.name}
                                         </label>
                                         <p className="text-xs text-muted-foreground">
-                                            Qty: {item.quantity} • {item.product.sku || 'No SKU'}
+                                            Qty: {item.quantity}
                                         </p>
                                         {item.product.description && (
                                             <p className="text-xs text-slate-400 line-clamp-1">{item.product.description}</p>

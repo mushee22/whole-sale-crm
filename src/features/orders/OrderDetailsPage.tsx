@@ -166,7 +166,6 @@ export default function OrderDetailsPage() {
                                                 <div className="flex justify-between items-start">
                                                     <div>
                                                         <div className="font-medium text-slate-900">{item.product?.name}</div>
-                                                        <div className="text-xs text-gray-500">SKU: {item.product.sku}</div>
                                                         <div className="flex gap-2 mt-1">
                                                             {item.product.color?.name && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">Color: {item.product.color?.name}</span>}
                                                             {item.product.size?.name && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded">Size: {item.product.size?.name}</span>}
@@ -229,7 +228,6 @@ export default function OrderDetailsPage() {
                                                     <TableRow key={item.id}>
                                                         <TableCell>
                                                             <div className="font-medium text-slate-900">{item.product?.name}</div>
-                                                            {/* <div className="text-xs text-gray-500">SKU: {item.product.sku}</div> */}
                                                             <div className="flex gap-2 mt-1">
                                                                 {item.product.color?.name && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">Color: {item.product.color?.name}</span>}
                                                                 {item.product.size?.name && <span className="text-xs bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">Size: {item.product.size?.name}</span>}

@@ -82,7 +82,6 @@ export default function OrderDetailsModal({ orderId, isOpen, onClose }: OrderDet
                                             <TableCell className="py-2">
                                                 <div className="font-medium text-sm text-slate-900">{item.product.name}</div>
                                                 <div className="text-[10px] text-gray-500">
-                                                    {/* {item.product.sku ? `SKU: ${item.product.sku}` : ''} */}
                                                     {item.product.color?.name ? ` • Color: ${item.product.color?.name}` : ''}
                                                     {item.product.size?.name ? ` • Size: ${item.product.size?.name}` : ''}
                                                 </div>

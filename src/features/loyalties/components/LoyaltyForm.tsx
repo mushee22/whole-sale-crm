@@ -104,7 +104,7 @@ export function LoyaltyForm({ onSubmit, isLoading, initialData }: LoyaltyFormPro
                                             className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer flex justify-between items-center"
                                             onClick={() => handleSelectProduct(product)}
                                         >
-                                            <span>{product.name} <span className="text-gray-400">({product.sku})</span></span>
+                                            <span>{product.name}</span>
                                             {selectedProduct?.id === product.id && <Check className="h-4 w-4 text-slate-900" />}
                                         </li>
                                     ))}
@@ -119,7 +119,7 @@ export function LoyaltyForm({ onSubmit, isLoading, initialData }: LoyaltyFormPro
 
                 {selectedProduct && (
                     <div className="text-xs text-gray-500">
-                        Selected: {selectedProduct.name} (SKU: {selectedProduct.sku})
+                        Selected: {selectedProduct.name}
                     </div>
                 )}
             </div>

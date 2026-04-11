@@ -160,7 +160,7 @@ export default function ProductList() {
                                                     <div className="flex justify-between items-start">
                                                         <div>
                                                             <p className="font-semibold text-gray-900 line-clamp-1">{product.name}</p>
-                                                            <p className="text-xs text-gray-500">#{product.id} • {product.sku}</p>
+                                                            <p className="text-xs text-gray-500">#{product.id}</p>
                                                         </div>
                                                         <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${product.is_active
                                                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/50'

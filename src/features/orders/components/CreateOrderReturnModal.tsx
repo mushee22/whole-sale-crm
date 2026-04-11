@@ -165,7 +165,7 @@ export function CreateOrderReturnModal({ orderId, orderItems, isOpen, onClose }:
                                             <div className="flex-1">
                                                 <div className="font-medium text-sm">{item.product.name}</div>
                                                 <div className="text-xs text-gray-500">
-                                                    SKU: {item.product.sku} • Ordered Qty: {item.quantity}
+                                                    Ordered Qty: {item.quantity}
                                                 </div>
                                                 {isSelected && (
                                                     <div className="mt-2 flex items-center gap-2">

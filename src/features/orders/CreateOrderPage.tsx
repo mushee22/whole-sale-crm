@@ -160,7 +160,7 @@ function OrderItemRow({ index, register, remove, setValue, watch, errors, custom
                                                         {product.size?.name && ` [${product.size.name}]`}
                                                     </span>
                                                     <span className="text-xs text-gray-400">
-                                                        SKU: {product.sku} • Stock: {product.stock}
+                                                        Stock: {product.stock}
                                                     </span>
                                                 </div>
                                                 {product.price ? (
@@ -341,7 +341,7 @@ export default function CreateOrderPage() {
             if (customerDetails.product_prices && customerDetails.product_prices.length > 0 && (!stateQuotedItems || stateQuotedItems.length === 0)) {
                 const specialPriceItems = customerDetails.product_prices.map(pp => ({
                     productId: pp.product_id,
-                    productName: pp.product 
+                    productName: pp.product
                         ? `${pp.product.name}${pp.product.color?.name ? ` (${pp.product.color.name})` : ""}${pp.product.size?.name ? ` [${pp.product.size.name}]` : ""}`
                         : `Product #${pp.product_id}`,
                     price: Number(pp.price)

@@ -227,7 +227,6 @@ export default function LoyaltyList() {
                                                 <TableCell className="font-medium text-gray-900">
                                                     <div className="flex flex-col">
                                                         <span>{loyalty.product ? loyalty.product.name : `Product #${loyalty.product_id}`}</span>
-                                                        {loyalty.product && <span className="text-xs text-gray-400 font-normal">{loyalty.product.sku}</span>}
                                                     </div>
                                                 </TableCell>
                                                 <TableCell>

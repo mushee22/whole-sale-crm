@@ -105,7 +105,6 @@ export default function DispatchCheckPage() {
                                     </label>
                                     <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
                                         <span>Qty: <strong className="text-gray-900">{item.quantity}</strong></span>
-                                        <span>SKU: {item.product.sku || '-'}</span>
                                     </div>
                                     <div className="flex gap-2 mt-2">
                                         {item.product.color && (

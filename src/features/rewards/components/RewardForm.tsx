@@ -126,7 +126,6 @@ export default function RewardForm({ onSubmit, initialData, isLoading, onCancel 
                                         <div className="flex justify-between items-center">
                                             <div className="flex flex-col">
                                                 <span className="font-medium text-gray-900">{product.name}</span>
-                                                <span className="text-xs text-gray-400">SKU: {product.sku}</span>
                                             </div>
                                         </div>
                                     </li>
