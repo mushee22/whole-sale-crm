@@ -53,6 +53,7 @@ export interface ProductListResponse {
 export interface GetProductsParams {
     page?: number;
     search?: string;
+    is_main?: boolean;
     is_active?: boolean;
     per_page?: number;
 }

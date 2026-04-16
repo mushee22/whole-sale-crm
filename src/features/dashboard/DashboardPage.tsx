@@ -53,8 +53,8 @@ export default function DashboardPage() {
 
     // Fetch filters data
     const { data: locations } = useQuery({
-        queryKey: ['master-data', 'locations'],
-        queryFn: getLocations,
+        queryKey: ['locations'],
+        queryFn: () => getLocations(),
     });
 
     const { data: products } = useQuery({

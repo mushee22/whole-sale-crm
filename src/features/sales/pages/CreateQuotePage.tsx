@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { Check, Plus, Trash2, Save } from "lucide-react";
+import { Check, Plus, Trash2, Save, Search } from "lucide-react";
+
 import { cn } from "../../../lib/utils";
 import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
@@ -22,10 +23,14 @@ export function CreateQuotePage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [selectedCustomerId, setSelectedCustomerId] = useState<string>("");
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+    const [productSearch, setProductSearch] = useState("");
+    const [isProductSearchOpen, setIsProductSearchOpen] = useState(false);
+
 
     // Item State
-    const [selectedProductId, setSelectedProductId] = useState<string>("");
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [price, setPrice] = useState<string>("");
+
 
     // Multiple Items State
     const [quoteItems, setQuoteItems] = useState<Array<{
@@ -40,9 +45,12 @@ export function CreateQuotePage() {
     });
 
     const { data: productsData } = useQuery({
-        queryKey: ["products"],
-        queryFn: () => getProducts({ per_page: 100 })
+        queryKey: ["products", "all"],
+        queryFn: () => getProducts({ per_page: 300 })
     });
+
+
+
 
     const queryClient = useQueryClient();
 
@@ -62,6 +70,15 @@ export function CreateQuotePage() {
 
     const customers: Customer[] = customersData?.data || [];
     const products: Product[] = productsData?.data || [];
+    
+    // Local product filtering
+    const filteredProducts = products.filter(p => 
+        p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+        p.sku?.toLowerCase().includes(productSearch.toLowerCase()) ||
+        p.color?.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
+        p.size?.name?.toLowerCase().includes(productSearch.toLowerCase())
+    ).slice(0, 10);
+
 
     // Filter customers based on search term
     const filteredCustomers = customers.filter(c =>
@@ -90,15 +107,17 @@ export function CreateQuotePage() {
             // User request implies "create quote" which might mean starting fresh or editing existing.
             // Let's load existing prices into the table so they can be edited.
             const existingItems = customerDetails.product_prices.map(pp => {
+                // Try to find in both main list and current search results if any
                 const product = products.find(p => p.id === pp.product_id);
                 return {
                     productId: pp.product_id.toString(),
                     productName: product 
                         ? `${product.name}${product.color?.name ? ` (${product.color.name})` : ""}${product.size?.name ? ` [${product.size.name}]` : ""}`
-                        : `Product #${pp.product_id}`,
+                        : pp.product ? `${pp.product.name}${pp.product.color?.name ? ` (${pp.product.color.name})` : ""}${pp.product.size?.name ? ` [${pp.product.size.name}]` : ""}` : `Product #${pp.product_id}`,
                     price: parseFloat(pp.price)
                 };
-            }).filter(item => item.productName !== `Product #${item.productId}` || products.length === 0); // Keep only if product found or products not loaded yet
+            });
+
 
             // Only set if we haven't manually added items yet to avoid overwriting work? 
             // Or maybe we should append? 
@@ -109,25 +128,22 @@ export function CreateQuotePage() {
         }
     }, [customerDetails, products]);
 
-    // Auto-fill price input when Product is selected
     useEffect(() => {
-        if (!selectedProductId) return;
+        if (!selectedProduct) return;
 
-        const product = products?.find(p => p.id.toString() === selectedProductId);
-        if (!product) return;
-
-        let effectivePrice = Number(product.price);
+        let effectivePrice = Number(selectedProduct.price);
 
         // Check for special customer price in currently loaded details
         if (customerDetails && customerDetails.product_prices) {
-            const specialPrice = customerDetails.product_prices.find(pp => pp.product_id === parseInt(selectedProductId));
+            const specialPrice = customerDetails.product_prices.find(pp => pp.product_id === selectedProduct.id);
             if (specialPrice) {
                 effectivePrice = Number(specialPrice.price);
             }
         }
 
         setPrice(effectivePrice.toString());
-    }, [selectedProductId, customerDetails, products]);
+    }, [selectedProduct, customerDetails]);
+
 
     const handleCustomerCreated = (newCustomer: any) => {
         if (newCustomer?.id) {
@@ -137,23 +153,20 @@ export function CreateQuotePage() {
     };
 
     const handleAddItem = () => {
-        if (!selectedProductId || !price) {
+        if (!selectedProduct || !price) {
             toast.error("Please fill in product details");
             return;
         }
 
-        const product = products?.find(p => p.id.toString() === selectedProductId);
-        if (!product) return;
-
         const newItem = {
-            productId: selectedProductId,
-            productName: `${product.name}${product.color?.name ? ` (${product.color.name})` : ""}${product.size?.name ? ` [${product.size.name}]` : ""}`,
+            productId: selectedProduct.id.toString(),
+            productName: `${selectedProduct.name}${selectedProduct.color?.name ? ` (${selectedProduct.color.name})` : ""}${selectedProduct.size?.name ? ` [${selectedProduct.size.name}]` : ""}`,
             price: parseFloat(price)
         };
 
         // Check if item exists and update it, or add new
         setQuoteItems(prev => {
-            const existingIndex = prev.findIndex(item => item.productId === selectedProductId);
+            const existingIndex = prev.findIndex(item => item.productId === selectedProduct.id.toString());
             if (existingIndex >= 0) {
                 const newItems = [...prev];
                 newItems[existingIndex] = newItem;
@@ -163,9 +176,11 @@ export function CreateQuotePage() {
         });
 
         // Reset inputs
-        setSelectedProductId("");
+        setSelectedProduct(null);
         setPrice("");
+        setProductSearch("");
     };
+
 
     const handleRemoveItem = (index: number) => {
         const newItems = [...quoteItems];
@@ -301,21 +316,65 @@ export function CreateQuotePage() {
                                 {/* Add Item Form */}
                                 <div className="p-4 bg-slate-50/50 rounded-lg border border-slate-100 space-y-4">
                                     <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                                        <div className="md:col-span-6 space-y-2">
+                                        <div className="md:col-span-6 space-y-2 relative">
                                             <Label>Product</Label>
-                                            <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-                                                <SelectTrigger className="bg-white">
-                                                    <SelectValue placeholder="Select Product" />
-                                                </SelectTrigger>
-                                                <SelectContent>
-                                                    {products?.map((p) => (
-                                                        <SelectItem key={p.id} value={p.id.toString()}>
-                                                            {p.name} {p.color?.name ? `(${p.color.name})` : ''} {p.size?.name ? `[${p.size.name}]` : ''}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                            <div className="relative">
+                                                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400 z-10" />
+                                                <Input
+                                                    placeholder="Search products..."
+                                                    className="pl-9 bg-white"
+                                                    value={selectedProduct ? 
+                                                        `${selectedProduct.name}${selectedProduct.color?.name ? ` (${selectedProduct.color.name})` : ""}${selectedProduct.size?.name ? ` [${selectedProduct.size.name}]` : ""}`
+                                                        : productSearch}
+                                                    onChange={(e) => {
+                                                        setProductSearch(e.target.value);
+                                                        setIsProductSearchOpen(true);
+                                                        setSelectedProduct(null);
+                                                    }}
+                                                    onFocus={() => setIsProductSearchOpen(true)}
+
+                                                />
+                                            </div>
+
+                                            {isProductSearchOpen && productSearch !== "" && (
+                                                <div className="absolute z-[100] w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                                                    {filteredProducts.length === 0 ? (
+                                                        <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                                                            No products found for "{productSearch}"
+                                                        </div>
+                                                    ) : (
+                                                        filteredProducts.map((product) => (
+                                                            <div
+                                                                key={product.id}
+                                                                className="px-4 py-3 hover:bg-gray-50 cursor-pointer flex items-center justify-between border-b border-gray-50 last:border-0"
+                                                                onClick={() => {
+                                                                    setSelectedProduct(product);
+                                                                    setProductSearch("");
+                                                                    setIsProductSearchOpen(false);
+                                                                }}
+                                                            >
+                                                                <div className="flex flex-col">
+                                                                    <span className="font-medium text-slate-900">
+                                                                        {product.name}
+                                                                        {product.color?.name && ` (${product.color.name})`}
+                                                                        {product.size?.name && ` [${product.size.name}]`}
+                                                                    </span>
+                                                                    <span className="text-xs text-slate-500">Stock: {product.stock} | Price: ₹{product.price}</span>
+                                                                </div>
+                                                                {selectedProduct?.id === product.id && <Check className="h-4 w-4 text-blue-600" />}
+                                                            </div>
+                                                        ))
+                                                    )}
+                                                </div>
+                                            )}
+
+
+
+                                            {isProductSearchOpen && (
+                                                <div className="fixed inset-0 z-40" onClick={() => setIsProductSearchOpen(false)} />
+                                            )}
                                         </div>
+
 
                                         <div className="md:col-span-5 space-y-2">
                                             <Label>Custom Price</Label>

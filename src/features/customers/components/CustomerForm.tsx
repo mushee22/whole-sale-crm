@@ -3,12 +3,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
-import { createCustomer, createCustomerSchema, type CreateCustomerData, type Customer } from "../api/customers";
+import { createCustomer, createCustomerSchema, updateCustomer, type CreateCustomerData, type Customer } from "../api/customers";
+
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
 import { getLocations } from "../../master-data/api/locations";
 import { getUsers } from "../../users/api/users";
+import { SearchableSelect } from "../../../components/ui/searchable-select";
+import { useWatch } from "react-hook-form";
+
 import { useAuth } from "../../../context/AuthContext";
 
 interface CustomerFormProps {
@@ -23,15 +27,17 @@ export default function CustomerForm({ onSuccess, onCancel, initialData }: Custo
 
     const { data: locations } = useQuery({
         queryKey: ['locations'],
-        queryFn: getLocations
+        queryFn: () => getLocations({ per_page: 1000 })
     });
+
+
 
     const { data: usersResponse } = useQuery({
         queryKey: ['users', { per_page: 100 }],
         queryFn: () => getUsers({ per_page: 100 })
     });
 
-    const { register, handleSubmit, formState: { errors }, setValue } = useForm<CreateCustomerData>({
+    const { register, handleSubmit, formState: { errors }, setValue, control } = useForm<CreateCustomerData>({
         resolver: zodResolver(createCustomerSchema) as any,
         defaultValues: initialData ? {
             name: initialData.name,
@@ -47,18 +53,25 @@ export default function CustomerForm({ onSuccess, onCancel, initialData }: Custo
         }
     });
 
+    const locationId = useWatch<CreateCustomerData>({
+        control,
+        name: "location_id",
+        defaultValue: initialData?.location_id || 0,
+    });
+
+
+
     // Watch location_id to manage Select value state if needed, though Select usually handles itself via onValueChange
     // const currentLocationId = watch("location_id");
 
     const mutation = useMutation({
         mutationFn: (data: CreateCustomerData) => {
             if (initialData) {
-                return initialData
-                    ? import("../api/customers").then(mod => mod.updateCustomer(initialData.id, data))
-                    : createCustomer(data);
+                return updateCustomer(initialData.id, data);
             }
             return createCustomer(data);
         },
+
         onSuccess: () => {
             toast.success(initialData ? "Customer updated successfully" : "Customer created successfully");
             queryClient.invalidateQueries({ queryKey: ['customers'] });
@@ -92,23 +105,16 @@ export default function CustomerForm({ onSuccess, onCancel, initialData }: Custo
 
                 <div className="space-y-2">
                     <Label htmlFor="location_id">Location *</Label>
-                    <Select
-                        onValueChange={(value) => setValue("location_id", Number(value), { shouldValidate: true })}
-                        defaultValue={initialData?.location_id?.toString()}
-                    >
-                        <SelectTrigger>
-                            <SelectValue placeholder="Select location" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {locations?.map((location) => (
-                                <SelectItem key={location.id} value={location.id.toString()}>
-                                    {location.name}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
+                    <SearchableSelect
+                        options={locations?.map(loc => ({ value: loc.id.toString(), label: loc.name })) || []}
+                        value={locationId?.toString()}
+                        onChange={(value) => setValue("location_id", Number(value), { shouldValidate: true })}
+                        placeholder="Select location"
+                        emptyText="No location found."
+                    />
                     {errors.location_id && <p className="text-sm text-red-500">{errors.location_id.message}</p>}
                 </div>
+
 
                 <div className="space-y-2">
                     <Label htmlFor="reference_id">Reference User (Optional)</Label>

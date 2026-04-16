@@ -6,9 +6,11 @@ import { Modal } from "../../../components/ui/modal";
 import { Plus, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import { Card, CardHeader, CardContent, CardTitle } from "../../../components/ui/card";
 import { MasterDataForm } from "./MasterDataForm";
-import { type MasterDataItem } from "../types";
 import { toast } from "sonner";
 import { PermissionGuard } from "../../../hooks/usePermission";
+import { Pagination } from "../../../components/ui/pagination";
+import { type MasterDataItem, type PaginatedResponse } from "../types";
+
 
 export interface Column {
     header: string;
@@ -21,7 +23,7 @@ interface MasterDataListProps {
     title: string;
     module?: string;
     queryKey: string;
-    fetchFn: () => Promise<MasterDataItem[]>;
+    fetchFn: (params: { page: number }) => Promise<MasterDataItem[] | PaginatedResponse<MasterDataItem>>;
     createFn: (data: any) => Promise<MasterDataItem>;
     updateFn: (id: number | string, data: any) => Promise<MasterDataItem>;
     deleteFn: (id: number | string) => Promise<void>;
@@ -29,16 +31,26 @@ interface MasterDataListProps {
     columns?: Column[];
 }
 
+
 export function MasterDataList({ title, module, queryKey, fetchFn, createFn, updateFn, deleteFn, FormComponent = MasterDataForm, columns }: MasterDataListProps) {
     const queryClient = useQueryClient();
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [editingItem, setEditingItem] = useState<MasterDataItem | null>(null);
     const [deleteId, setDeleteId] = useState<number | string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
 
-    const { data, isLoading } = useQuery({
-        queryKey: [queryKey],
-        queryFn: fetchFn
+    const { data: rawData, isLoading } = useQuery({
+        queryKey: [queryKey, currentPage],
+        queryFn: () => fetchFn({ page: currentPage })
     });
+
+    const isPaginated = (data: any): data is PaginatedResponse<MasterDataItem> => {
+        return data && 'data' in data && 'current_page' in data;
+    };
+
+    const items = isPaginated(rawData) ? rawData.data : (Array.isArray(rawData) ? rawData : []);
+    const totalPages = isPaginated(rawData) ? rawData.last_page : 1;
+
 
     const createMutation = useMutation({
         mutationFn: createFn,
@@ -128,7 +140,8 @@ export function MasterDataList({ title, module, queryKey, fetchFn, createFn, upd
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
-                                    {data?.map((item) => (
+                                    {items.map((item) => (
+
                                         <TableRow key={item.id} className="hover:bg-slate-50">
                                             {columns ? (
                                                 columns.map((col, index) => (
@@ -190,7 +203,8 @@ export function MasterDataList({ title, module, queryKey, fetchFn, createFn, upd
                                             </TableCell>
                                         </TableRow>
                                     ))}
-                                    {data?.length === 0 && (
+                                    {items.length === 0 && (
+
                                         <TableRow>
                                             <TableCell colSpan={columns ? columns.length + 1 : 3} className="h-24 text-center text-gray-400">
                                                 No {title.toLowerCase()}s found.
@@ -202,7 +216,17 @@ export function MasterDataList({ title, module, queryKey, fetchFn, createFn, upd
                         </div>
                     )}
                 </CardContent>
+                {totalPages > 1 && (
+                    <div className="px-4 border-t border-gray-100">
+                        <Pagination
+                            currentPage={currentPage}
+                            totalPages={totalPages}
+                            onPageChange={setCurrentPage}
+                        />
+                    </div>
+                )}
             </Card>
+
 
             <Modal
                 isOpen={isFormOpen}

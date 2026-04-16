@@ -33,10 +33,11 @@ function OrderItemRow({ index, register, remove, setValue, watch, errors, custom
     const wrapperRef = useRef<HTMLDivElement>(null);
 
     const { data: productsData } = useQuery({
-        queryKey: ['products', 'autocomplete', search],
-        queryFn: () => getProducts({ search, per_page: 5 }),
+        queryKey: ['products', 'all'],
+        queryFn: () => getProducts({ per_page: 300 }),
         enabled: open,
     });
+
 
     useEffect(() => {
         function handleClickOutside(event: MouseEvent) {
@@ -103,7 +104,13 @@ function OrderItemRow({ index, register, remove, setValue, watch, errors, custom
     };
 
     const lineTotal = (unitPrice || 0) * (quantity || 0);
-    const filteredProducts = productsData?.data || [];
+    const filteredProducts = (productsData?.data || []).filter(p => 
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        p.sku?.toLowerCase().includes(search.toLowerCase()) ||
+        p.color?.name?.toLowerCase().includes(search.toLowerCase()) ||
+        p.size?.name?.toLowerCase().includes(search.toLowerCase())
+    ).slice(0, 10); // Limit to 10 for display performance
+
 
     return (
         <div className="p-3 md:p-4 border border-gray-100 rounded-lg bg-gray-50/50 relative group space-y-3 md:space-y-4">
@@ -143,44 +150,51 @@ function OrderItemRow({ index, register, remove, setValue, watch, errors, custom
                                 onFocus={() => setOpen(true)}
                             />
                         </div>
-                        {open && filteredProducts.length > 0 && (
-                            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
-                                <ul className="py-1">
-                                    {filteredProducts.map((product) => (
-                                        <li
-                                            key={product.id}
-                                            className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
-                                            onClick={() => handleSelectProduct(product)}
-                                        >
-                                            <div className="flex justify-between items-center">
-                                                <div className="flex flex-col">
-                                                    <span className="font-medium text-gray-900">
-                                                        {product.name}
-                                                        {product.color?.name && ` (${product.color.name})`}
-                                                        {product.size?.name && ` [${product.size.name}]`}
-                                                    </span>
-                                                    <span className="text-xs text-gray-400">
-                                                        Stock: {product.stock}
-                                                    </span>
-                                                </div>
-                                                {product.price ? (
-                                                    <div className="flex flex-col items-end">
-                                                        {product.discount_price && product.discount_price < product.price ? (
-                                                            <>
-                                                                <span className="text-xs text-gray-400 line-through">₹{product?.price ?? 0}</span>
-                                                                <span className="text-sm font-semibold text-green-600">₹{product?.discount_price ?? 0}</span>
-                                                            </>
-                                                        ) : (
-                                                            <span className="text-sm font-medium">₹{product?.price ?? 0}</span>
-                                                        )}
+                        {open && search !== "" && (
+                            <div className="absolute z-[100] w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                                {!productsData?.data || productsData.data.length === 0 ? (
+                                    <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                                        No products found
+                                    </div>
+                                ) : (
+                                    <ul className="py-1">
+                                        {filteredProducts.map((product: any) => (
+                                            <li
+                                                key={product.id}
+                                                className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer"
+                                                onClick={() => handleSelectProduct(product)}
+                                            >
+                                                <div className="flex justify-between items-center">
+                                                    <div className="flex flex-col">
+                                                        <span className="font-medium text-gray-900">
+                                                            {product.name}
+                                                            {product.color?.name && ` (${product.color.name})`}
+                                                            {product.size?.name && ` [${product.size.name}]`}
+                                                        </span>
+                                                        <span className="text-xs text-gray-400">
+                                                            Stock: {product.stock}
+                                                        </span>
                                                     </div>
-                                                ) : null}
-                                            </div>
-                                        </li>
-                                    ))}
-                                </ul>
+                                                    {product.price ? (
+                                                        <div className="flex flex-col items-end">
+                                                            {product.discount_price && product.discount_price < product.price ? (
+                                                                <>
+                                                                    <span className="text-xs text-gray-400 line-through">₹{product?.price ?? 0}</span>
+                                                                    <span className="text-sm font-semibold text-green-600">₹{product?.discount_price ?? 0}</span>
+                                                                </>
+                                                            ) : (
+                                                                <span className="text-sm font-medium">₹{product?.price ?? 0}</span>
+                                                            )}
+                                                        </div>
+                                                    ) : null}
+                                                </div>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
                             </div>
                         )}
+
                     </div>
                     <input type="hidden" {...register(`items.${index}.product_id`, { valueAsNumber: true })} />
                     {errors.items?.[index]?.product_id && <p className="text-xs text-red-500 mt-1">{errors.items[index].product_id.message as string}</p>}

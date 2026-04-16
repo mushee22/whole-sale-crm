@@ -19,9 +19,12 @@ interface ProductFormProps {
     onCancel: () => void;
     isVariantMode: boolean; // Added control for variant mode
     implicitParentId?: string; // If provided, parent selection is hidden and this ID is used
+    defaultName?: string; // Initial name for new products
 }
 
-export function ProductForm({ onSubmit, isLoading, initialData, onCancel, isVariantMode, implicitParentId }: ProductFormProps) {
+
+export function ProductForm({ onSubmit, isLoading, initialData, onCancel, isVariantMode, implicitParentId, defaultName }: ProductFormProps) {
+
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
     const [isActive, setIsActive] = useState(true);
@@ -30,9 +33,11 @@ export function ProductForm({ onSubmit, isLoading, initialData, onCancel, isVari
     const [colorId, setColorId] = useState<string>("");
     const [sizeId, setSizeId] = useState<string>("");
 
-    const { data: products } = useQuery({ queryKey: ["products"], queryFn: getProducts });
-    const { data: colors } = useQuery({ queryKey: ["colors"], queryFn: getColors });
-    const { data: sizes } = useQuery({ queryKey: ["sizes"], queryFn: getSizes });
+    const { data: products } = useQuery({ queryKey: ["products"], queryFn: () => getProducts() });
+
+    const { data: colors } = useQuery({ queryKey: ["colors"], queryFn: () => getColors() });
+    const { data: sizes } = useQuery({ queryKey: ["sizes"], queryFn: () => getSizes() });
+
 
     useEffect(() => {
         if (initialData) {
@@ -49,7 +54,7 @@ export function ProductForm({ onSubmit, isLoading, initialData, onCancel, isVari
             setColorId(initialData.color_id ? initialData.color_id.toString() : "none");
             setSizeId(initialData.size_id ? initialData.size_id.toString() : "none");
         } else {
-            setName("");
+            setName(defaultName || "");
             setDescription("");
             setIsActive(true);
             setImage(null);
@@ -57,7 +62,8 @@ export function ProductForm({ onSubmit, isLoading, initialData, onCancel, isVari
             setColorId("none");
             setSizeId("none");
         }
-    }, [initialData, implicitParentId]);
+    }, [initialData, implicitParentId, defaultName]);
+
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();

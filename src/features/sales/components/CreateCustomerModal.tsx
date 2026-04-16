@@ -29,8 +29,8 @@ export function CreateCustomerModal({ isOpen, onClose, onCustomerCreated }: Crea
     const { user } = useAuth();
 
     const { data: locations } = useQuery({
-        queryKey: ["locations"],
-        queryFn: getLocations
+        queryKey: ['locations'],
+        queryFn: () => getLocations()
     });
 
     const { data: usersResponse } = useQuery({

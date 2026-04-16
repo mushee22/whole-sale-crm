@@ -1,13 +1,29 @@
 import { api } from "../../../lib/api";
-import { type Size, type CreateMasterDataParams, type UpdateMasterDataParams } from "../types";
+import { type Size, type CreateMasterDataParams, type UpdateMasterDataParams, type PaginatedResponse } from "../types";
 
-export const getSizes = async (): Promise<Size[]> => {
-    const response = await api.get("/sizes");
+export async function getSizes(): Promise<Size[]>;
+export async function getSizes(params: { page: number }): Promise<PaginatedResponse<Size>>;
+export async function getSizes(params?: any): Promise<Size[] | PaginatedResponse<Size>> {
+    const hasPage = params && typeof params === 'object' && 'page' in params;
+    const actualParams = hasPage ? params : undefined;
+    
+    const response = await api.get("/sizes", { params: actualParams });
     const data = response.data;
+    
+    const isPaginatedResponse = data && Array.isArray(data.data) && 'current_page' in data;
+
+    if (hasPage && isPaginatedResponse) {
+        return data as PaginatedResponse<Size>;
+    }
+    
+    if (isPaginatedResponse) return data.data;
     if (Array.isArray(data)) return data;
     if (data && Array.isArray(data.data)) return data.data;
     return [];
-};
+}
+
+
+
 
 export const createSize = async (data: CreateMasterDataParams): Promise<Size> => {
     const response = await api.post("/sizes", data);

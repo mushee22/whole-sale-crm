@@ -76,8 +76,8 @@ export default function StaffDetailsPage() {
     });
 
     const { data: locations } = useQuery({
-        queryKey: ['master-data', 'locations'],
-        queryFn: getLocations,
+        queryKey: ['locations'],
+        queryFn: () => getLocations(),
     });
 
     // Fetch dashboard summary for this user

@@ -9,6 +9,12 @@ export const getProducts = async (params?: any): Promise<Product[]> => {
     return [];
 };
 
+export const getProduct = async (id: number | string): Promise<Product> => {
+    const response = await api.get(`/products/${id}`);
+    return response.data;
+};
+
+
 export const getProductVariants = async (params: any): Promise<Product[]> => {
     const response = await api.get("/products/variants/list", { params });
     const data = response.data;

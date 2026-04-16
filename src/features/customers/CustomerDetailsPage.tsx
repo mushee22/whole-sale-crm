@@ -203,8 +203,9 @@ export default function CustomerDetailsPage() {
                                                 <Badge variant="outline" className={`capitalize
                                                     ${tx.type === 'credit' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}
                                                 `}>
-                                                    {tx.type === 'credit' ? 'Cash Collected' : 'Sale'}
+                                                    {tx.type}
                                                 </Badge>
+
                                             </div>
 
                                             <div className="flex justify-between items-center text-sm">
@@ -295,8 +296,9 @@ export default function CustomerDetailsPage() {
                                                         <Badge variant="outline" className={`capitalize
                                                             ${tx.type === 'credit' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}
                                                         `}>
-                                                            {tx.type === 'credit' ? 'Cash Collected' : 'Sale'}
+                                                            {tx.type}
                                                         </Badge>
+
                                                     </TableCell>
                                                     <TableCell className="capitalize text-sm text-gray-700">{tx.payment_mode}</TableCell>
                                                     <TableCell className="text-sm text-gray-600">

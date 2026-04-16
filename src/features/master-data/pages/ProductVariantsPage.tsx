@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { getProductVariants, createProduct, updateProduct, deleteProduct } from "../api/products";
+import { getProductVariants, createProduct, updateProduct, deleteProduct, getProduct } from "../api/products";
 import { ProductForm } from "../components/ProductForm";
 import { Button } from "../../../components/ui/button";
+
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { Modal } from "../../../components/ui/modal";
@@ -24,6 +25,13 @@ export function ProductVariantsPage() {
         queryFn: () => getProductVariants({ parent_id: id }),
         enabled: !!id
     });
+
+    const { data: parentProduct } = useQuery({
+        queryKey: ["products", id],
+        queryFn: () => getProduct(id!),
+        enabled: !!id
+    });
+
 
     const createMutation = useMutation({
         mutationFn: createProduct,
@@ -67,8 +75,8 @@ export function ProductVariantsPage() {
     };
 
     const handleSubmit = (data: FormData) => {
-        // Ensure parent_id is set for new variants
-        if (!editingProduct && id) {
+        // Ensure parent_id is set for new variants if not already in FormData
+        if (!editingProduct && id && !data.has("parent_id")) {
             data.append("parent_id", id);
         }
 
@@ -78,6 +86,7 @@ export function ProductVariantsPage() {
             createMutation.mutate(data);
         }
     };
+
 
     return (
         <div className="space-y-4">
@@ -183,7 +192,9 @@ export function ProductVariantsPage() {
                     onCancel={() => setIsFormOpen(false)}
                     isVariantMode={true}
                     implicitParentId={id}
+                    defaultName={parentProduct?.name}
                 />
+
             </Modal>
 
             <Modal

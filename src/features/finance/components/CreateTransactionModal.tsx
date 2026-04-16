@@ -64,7 +64,7 @@ export function CreateTransactionModal({ trigger, open, onOpenChange, customerId
     const queryClient = useQueryClient();
     const { user } = useAuth();
 
-    const { register, control, handleSubmit, formState: { errors }, reset, setValue } = useForm<CreateTransactionData>({
+    const { register, control, handleSubmit, formState: { errors }, reset, setValue, watch } = useForm<CreateTransactionData>({
         resolver: zodResolver(createTransactionSchema) as any,
         defaultValues: {
             amount: 0,
@@ -75,6 +75,9 @@ export function CreateTransactionModal({ trigger, open, onOpenChange, customerId
             customer_id: customerId,
         },
     });
+
+    const transactionType = watch("type");
+
 
     useEffect(() => {
         const collectorId = collectedBy || user?.id;
@@ -185,30 +188,57 @@ export function CreateTransactionModal({ trigger, open, onOpenChange, customerId
                                 <p className="text-sm text-red-500">{errors.amount.message}</p>
                             )}
                         </div>
+
                         <div className="space-y-2">
-                            <Label htmlFor="payment_mode">Payment Mode</Label>
+                            <Label htmlFor="type">Type</Label>
                             <Controller
-                                name="payment_mode"
+                                name="type"
                                 control={control}
                                 render={({ field }) => (
                                     <Select onValueChange={field.onChange} value={field.value}>
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select mode" />
+                                            <SelectValue placeholder="Select type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="cash">Cash</SelectItem>
-                                            <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
-                                            <SelectItem value="check">Check</SelectItem>
-                                            <SelectItem value="upi">UPI</SelectItem>
-                                            <SelectItem value="other">Other</SelectItem>
+                                            <SelectItem value="credit">Credit</SelectItem>
+                                            <SelectItem value="debit">Debit</SelectItem>
                                         </SelectContent>
                                     </Select>
                                 )}
                             />
-                            {errors.payment_mode && (
-                                <p className="text-sm text-red-500">{errors.payment_mode.message}</p>
+                            {errors.type && (
+                                <p className="text-sm text-red-500">{errors.type.message}</p>
                             )}
                         </div>
+
+                        {transactionType === 'credit' && (
+                            <div className="space-y-2 col-span-2">
+                                <Label htmlFor="payment_mode">Payment Mode</Label>
+                                <Controller
+                                    name="payment_mode"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <Select onValueChange={field.onChange} value={field.value}>
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Select mode" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                <SelectItem value="cash">Cash</SelectItem>
+                                                <SelectItem value="bank_transfer">Bank Transfer</SelectItem>
+                                                <SelectItem value="check">Check</SelectItem>
+                                                <SelectItem value="upi">UPI</SelectItem>
+                                                <SelectItem value="other">Other</SelectItem>
+                                            </SelectContent>
+                                        </Select>
+                                    )}
+                                />
+                                {errors.payment_mode && (
+                                    <p className="text-sm text-red-500">{errors.payment_mode.message}</p>
+                                )}
+                            </div>
+                        )}
+
+
 
 
 
