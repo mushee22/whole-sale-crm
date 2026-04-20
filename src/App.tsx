@@ -22,6 +22,8 @@ import UsersListPage from "./features/users/UsersListPage";
 import DeliveryBoysListPage from "./features/users/DeliveryBoysListPage";
 import UserProfilePage from "./features/users/UserProfilePage";
 import StaffDetailsPage from "./features/users/StaffDetailsPage";
+import UserProductCommissionPage from "./features/users/UserProductCommissionPage";
+import UserCommissionReportPage from "./features/users/UserCommissionReportPage";
 import { ProductsPage } from "./features/master-data/pages/ProductsPage";
 import { ProductVariantsPage } from "./features/master-data/pages/ProductVariantsPage";
 import ColorsPage from "./features/master-data/pages/ColorsPage";
@@ -171,6 +173,18 @@ const router = createBrowserRouter([
         path: "users/:id",
         element: (
           <StaffDetailsPage />
+        ),
+      },
+      {
+        path: "users/:id/commissions",
+        element: (
+          <UserProductCommissionPage />
+        ),
+      },
+      {
+        path: "users/:id/commission-report",
+        element: (
+          <UserCommissionReportPage />
         ),
       },
       {

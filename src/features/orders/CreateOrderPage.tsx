@@ -12,7 +12,10 @@ import { Plus, Trash2, Search, ArrowLeft, Check } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { getProducts, getProduct, type Product } from "../products/api/products";
 import { getCustomers, getCustomer, type Customer } from "../customers/api/customers";
+import { getUsers } from "../users/api/users";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select";
+import { SearchableSelect } from "../../components/ui/searchable-select";
+import { useAuth } from "../../context/AuthContext";
 
 // --- OrderItemRow Component ---
 interface OrderItemRowProps {
@@ -263,6 +266,7 @@ export default function CreateOrderPage() {
     const isEditMode = !!id;
     const orderId = Number(id);
     const queryClient = useQueryClient();
+    const { user } = useAuth();
 
     // State from Navigation (Quote Page)
     const { customerId: stateCustomerId, quotedItems: stateQuotedItems } = location.state || {};
@@ -286,6 +290,17 @@ export default function CreateOrderPage() {
         enabled: isCustomerSearchOpen
     });
 
+    // Fetch Staff Users
+    const { data: usersData } = useQuery({
+        queryKey: ['users-staff'],
+        queryFn: () => getUsers({ per_page: 100 }),
+    });
+
+    const staffOptions = usersData?.data?.map(u => ({
+        value: u.id.toString(),
+        label: u.name
+    })) || [];
+
     // Fetch Full Customer Details (including product_prices)
     const { data: customerDetails } = useQuery({
         queryKey: ['customer', selectedCustomerId],
@@ -307,9 +322,17 @@ export default function CreateOrderPage() {
         resolver: zodResolver(createOrderSchema),
         defaultValues: {
             items: [{ product_id: 0, quantity: 1, unit_price: 0 }],
-            order_date: getTodayDate()
+            order_date: getTodayDate(),
+            created_by: user?.id
         }
     });
+
+    // Update created_by when user loads if not in edit mode
+    useEffect(() => {
+        if (!isEditMode && user?.id && !watch("created_by")) {
+            setValue("created_by", user.id);
+        }
+    }, [user, isEditMode, setValue, watch]);
 
     const { fields, append, remove } = useFieldArray({
         control,
@@ -380,6 +403,9 @@ export default function CreateOrderPage() {
                 setValue("estimated_delivery_date", orderData.estimated_delivery_date.split('T')[0]);
             }
             setSelectedCustomerId(orderData.customer.id);
+            if (orderData.created_by) {
+                setValue("created_by", orderData.created_by);
+            }
 
             // Map Items
             const mappedItems = orderData.items.map(item => ({
@@ -442,6 +468,7 @@ export default function CreateOrderPage() {
         if (data.customer_id) formData.append("customer_id", String(data.customer_id));
         formData.append("order_date", data.order_date);
         if (data.estimated_delivery_date) formData.append("estimated_delivery_date", data.estimated_delivery_date);
+        if (data.created_by) formData.append("created_by", String(data.created_by));
         if (status && isEditMode) formData.append("status", status);
 
         // Appending items as individual fields with array notation
@@ -600,6 +627,16 @@ export default function CreateOrderPage() {
                                 <Label htmlFor="phone">Phone Number</Label>
                                 <Input id="phone" placeholder="Enter phone number" {...register("phone")} />
                                 {errors.phone && <p className="text-sm text-red-500">{errors.phone.message as string}</p>}
+                            </div>
+                            <div className="space-y-2">
+                                <Label>Created By</Label>
+                                <SearchableSelect
+                                    options={staffOptions}
+                                    value={watch("created_by")?.toString()}
+                                    onChange={(val) => setValue("created_by", parseInt(val))}
+                                    placeholder="Select creator..."
+                                />
+                                {errors.created_by && <p className="text-sm text-red-500">{errors.created_by.message as string}</p>}
                             </div>
                             <div className="space-y-2">
                                 <Label>Location</Label>

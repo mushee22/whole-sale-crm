@@ -8,7 +8,7 @@ import { Button } from "../../components/ui/button";
 import { Modal } from "../../components/ui/modal";
 import { AlertDialog } from "../../components/ui/alert-dialog";
 import { Pagination } from "../../components/ui/pagination";
-import { Plus, Pencil, Trash2, User as UserIcon, Eye } from "lucide-react";
+import { Plus, Pencil, Trash2, User as UserIcon, Eye, Coins } from "lucide-react";
 import { toast } from "sonner";
 import UserForm from "./components/UserForm";
 import { PermissionGuard } from "../../hooks/usePermission";
@@ -171,6 +171,16 @@ export default function UsersListPage() {
                                                         </Button>
                                                     )}
                                                 </PermissionGuard>
+                                                <PermissionGuard module="users" action="update">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="h-8 text-amber-600 border-amber-200 hover:bg-amber-50"
+                                                        onClick={() => navigate(`/users/${user.id}/commissions`)}
+                                                    >
+                                                        <Coins className="h-4 w-4 mr-2" /> Commission
+                                                    </Button>
+                                                </PermissionGuard>
                                             </div>
                                         </div>
                                     ))}
@@ -246,6 +256,17 @@ export default function UsersListPage() {
                                                                         <Trash2 className="h-4 w-4" />
                                                                     </Button>
                                                                 )}
+                                                            </PermissionGuard>
+                                                            <PermissionGuard module="users" action="update">
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    className="h-8 w-8 text-amber-600 hover:text-amber-700 hover:bg-amber-50"
+                                                                    onClick={() => navigate(`/users/${user.id}/commissions`)}
+                                                                    title="Manage Commissions"
+                                                                >
+                                                                    <Coins className="h-4 w-4" />
+                                                                </Button>
                                                             </PermissionGuard>
                                                         </div>
                                                     </TableCell>

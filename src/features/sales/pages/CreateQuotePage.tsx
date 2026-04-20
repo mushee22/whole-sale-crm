@@ -7,7 +7,6 @@ import { Button } from "../../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Label } from "../../../components/ui/label";
 import { Input } from "../../../components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { getCustomers, getCustomer, updateCustomerPrices, type Customer } from "../../customers/api/customers";
 import { getProducts, type Product } from "../../products/api/products";
@@ -70,9 +69,9 @@ export function CreateQuotePage() {
 
     const customers: Customer[] = customersData?.data || [];
     const products: Product[] = productsData?.data || [];
-    
+
     // Local product filtering
-    const filteredProducts = products.filter(p => 
+    const filteredProducts = products.filter(p =>
         p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
         p.sku?.toLowerCase().includes(productSearch.toLowerCase()) ||
         p.color?.name?.toLowerCase().includes(productSearch.toLowerCase()) ||
@@ -111,7 +110,7 @@ export function CreateQuotePage() {
                 const product = products.find(p => p.id === pp.product_id);
                 return {
                     productId: pp.product_id.toString(),
-                    productName: product 
+                    productName: product
                         ? `${product.name}${product.color?.name ? ` (${product.color.name})` : ""}${product.size?.name ? ` [${product.size.name}]` : ""}`
                         : pp.product ? `${pp.product.name}${pp.product.color?.name ? ` (${pp.product.color.name})` : ""}${pp.product.size?.name ? ` [${pp.product.size.name}]` : ""}` : `Product #${pp.product_id}`,
                     price: parseFloat(pp.price)
@@ -323,7 +322,7 @@ export function CreateQuotePage() {
                                                 <Input
                                                     placeholder="Search products..."
                                                     className="pl-9 bg-white"
-                                                    value={selectedProduct ? 
+                                                    value={selectedProduct ?
                                                         `${selectedProduct.name}${selectedProduct.color?.name ? ` (${selectedProduct.color.name})` : ""}${selectedProduct.size?.name ? ` [${selectedProduct.size.name}]` : ""}`
                                                         : productSearch}
                                                     onChange={(e) => {

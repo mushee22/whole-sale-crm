@@ -140,3 +140,48 @@ export const getUserOrderLogs = async (userId: number, params: { page?: number; 
     const response = await api.get<OrderLogsResponse>(`/admin/order-logs?${queryParams.toString()}`);
     return response.data;
 };
+
+export interface StaffProductCommission {
+    id: number;
+    user_id: number;
+    product_id: number;
+    commission_rate: string | number;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface StaffProductCommissionPayload {
+    commissions: {
+        user_id: number;
+        product_id: number;
+        commission_rate: number;
+    }[];
+}
+
+export const getStaffProductCommissions = async (userId: number) => {
+    const response = await api.get<{ data: StaffProductCommission[] }>(`/staff-product-commissions?user_id=${userId}&per_page=200`);
+    return response.data;
+};
+
+export const saveStaffProductCommissions = async (payload: StaffProductCommissionPayload) => {
+    const response = await api.post("/staff-product-commissions", payload);
+    return response.data;
+};
+
+export interface StaffCommissionReportParams {
+    user_id: number;
+    start_date?: string;
+    end_date?: string;
+    product_id?: number;
+}
+
+export const getStaffCommissionReport = async (params: StaffCommissionReportParams) => {
+    const queryParams = new URLSearchParams();
+    queryParams.append('user_id', params.user_id.toString());
+    if (params.start_date) queryParams.append('start_date', params.start_date);
+    if (params.end_date) queryParams.append('end_date', params.end_date);
+    if (params.product_id) queryParams.append('product_id', params.product_id.toString());
+
+    const response = await api.get<{ data: any[], total_commission: number }>(`/staff-product-commissions/report?${queryParams.toString()}`);
+    return response.data;
+};

@@ -176,6 +176,7 @@ export const createOrderSchema = z.object({
     total_amount: z.number().optional().nullable(),
     order_date: z.string(),
     estimated_delivery_date: z.string().optional(), // Added estimated_delivery_date
+    created_by: z.number().optional().nullable(),
     items_to_delete: z.array(z.number()).optional(),
 });
 

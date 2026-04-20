@@ -65,16 +65,23 @@ export function SearchableSelect({
                 </div>
                 
                 <Input
-                    className="pl-9 pr-10 bg-white"
+                    className="pl-9 pr-10 bg-white cursor-pointer"
                     placeholder={selectedOption ? selectedOption.label : placeholder}
                     value={open ? search : (selectedOption ? selectedOption.label : "")}
+                    readOnly={!open}
                     onChange={(e) => {
                         setSearch(e.target.value)
                         setOpen(true)
                     }}
                     onFocus={() => {
                         setOpen(true)
-                        setSearch("") // Clear display text to show placeholder/search as you type
+                        setSearch("") 
+                    }}
+                    onClick={() => {
+                        if (!open) {
+                            setOpen(true)
+                            setSearch("")
+                        }
                     }}
                 />
                 
