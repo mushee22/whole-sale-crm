@@ -1,12 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "../../../components/ui/dialog";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
-import { Plus, Trash2, Save } from "lucide-react";
+import { Plus, Trash2, Save, Search } from "lucide-react";
 import { toast } from "sonner";
 import { getProducts, type Product } from "../../products/api/products";
 import { getCustomer, updateCustomerPrices } from "../api/customers";
@@ -20,17 +19,22 @@ interface EditCustomerPricesModalProps {
 export function EditCustomerPricesModal({ customerId, isOpen, onClose }: EditCustomerPricesModalProps) {
     const queryClient = useQueryClient();
     const [selectedProductId, setSelectedProductId] = useState<string>("");
+    const [search, setSearch] = useState("");
+    const [isSearchOpen, setIsSearchOpen] = useState(false);
+    const wrapperRef = useRef<HTMLDivElement>(null);
     const [price, setPrice] = useState<string>("");
     const [priceItems, setPriceItems] = useState<Array<{
         productId: string;
         productName: string;
         price: number;
+        color?: string;
+        size?: string;
     }>>([]);
 
     // Fetch products
     const { data: productsData } = useQuery({
-        queryKey: ["products"],
-        queryFn: () => getProducts({ per_page: 100 }),
+        queryKey: ["products", "all"],
+        queryFn: () => getProducts({ per_page: 300 }),
         enabled: isOpen
     });
 
@@ -43,6 +47,16 @@ export function EditCustomerPricesModal({ customerId, isOpen, onClose }: EditCus
         enabled: isOpen && !!customerId
     });
 
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+                setIsSearchOpen(false);
+            }
+        }
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
     // Populate initial items from customer data
     useEffect(() => {
         if (customerData?.product_prices && productsData?.data) {
@@ -51,7 +65,9 @@ export function EditCustomerPricesModal({ customerId, isOpen, onClose }: EditCus
                 return {
                     productId: pp.product_id.toString(),
                     productName: product ? product.name : `Product #${pp.product_id}`,
-                    price: parseFloat(pp.price)
+                    price: parseFloat(pp.price),
+                    color: product?.color?.name,
+                    size: product?.size?.name
                 };
             });
             setPriceItems(existingItems);
@@ -64,8 +80,16 @@ export function EditCustomerPricesModal({ customerId, isOpen, onClose }: EditCus
         const product = products.find(p => p.id.toString() === selectedProductId);
         if (product) {
             setPrice(product.price.toString());
+            setSearch(`${product.name}${product.color?.name ? ` (${product.color.name})` : ""}${product.size?.name ? ` [${product.size.name}]` : ""}`);
         }
     }, [selectedProductId, products]);
+
+    const filteredProducts = products.filter(p =>
+        p.name.toLowerCase().includes(search.toLowerCase()) ||
+        p.sku?.toLowerCase().includes(search.toLowerCase()) ||
+        p.color?.name?.toLowerCase().includes(search.toLowerCase()) ||
+        p.size?.name?.toLowerCase().includes(search.toLowerCase())
+    ).slice(0, 10);
 
     const updatePricesMutation = useMutation({
         mutationFn: (data: { customerId: number, prices: { product_id: number, price: number }[] }) =>
@@ -90,7 +114,9 @@ export function EditCustomerPricesModal({ customerId, isOpen, onClose }: EditCus
         const newItem = {
             productId: selectedProductId,
             productName: product.name,
-            price: parseFloat(price)
+            price: parseFloat(price),
+            color: product.color?.name,
+            size: product.size?.name
         };
 
         setPriceItems(prev => {
@@ -105,6 +131,7 @@ export function EditCustomerPricesModal({ customerId, isOpen, onClose }: EditCus
 
         // Reset inputs
         setSelectedProductId("");
+        setSearch("");
         setPrice("");
     };
 
@@ -135,20 +162,58 @@ export function EditCustomerPricesModal({ customerId, isOpen, onClose }: EditCus
                     {/* Add New Price */}
                     <div className="p-4 bg-slate-50 rounded-lg border border-slate-100 space-y-4">
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-                            <div className="md:col-span-6 space-y-2">
+                            <div className="md:col-span-6 space-y-2 relative" ref={wrapperRef}>
                                 <Label>Select Product</Label>
-                                <Select value={selectedProductId} onValueChange={setSelectedProductId}>
-                                    <SelectTrigger className="bg-white">
-                                        <SelectValue placeholder="Choose product..." />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {products.map((p) => (
-                                            <SelectItem key={p.id} value={p.id.toString()}>
-                                                {p.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <div className="relative">
+                                    <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                                    <Input
+                                        placeholder="Search products..."
+                                        className="pl-9 bg-white"
+                                        value={search}
+                                        onChange={(e) => {
+                                            setSearch(e.target.value);
+                                            setIsSearchOpen(true);
+                                            setSelectedProductId("");
+                                        }}
+                                        onFocus={() => setIsSearchOpen(true)}
+                                    />
+                                </div>
+                                {isSearchOpen && search && (
+                                    <div className="absolute z-[100] w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-auto">
+                                        {filteredProducts.length === 0 ? (
+                                            <div className="px-4 py-3 text-sm text-gray-500 text-center">
+                                                No products found
+                                            </div>
+                                        ) : (
+                                            <ul className="py-1">
+                                                {filteredProducts.map((p) => (
+                                                    <li
+                                                        key={p.id}
+                                                        className="px-3 py-2 text-sm hover:bg-gray-100 cursor-pointer border-b border-gray-50 last:border-0"
+                                                        onClick={() => {
+                                                            setSelectedProductId(p.id.toString());
+                                                            setIsSearchOpen(false);
+                                                        }}
+                                                    >
+                                                        <div className="flex justify-between items-center">
+                                                            <div className="flex flex-col">
+                                                                <span className="font-medium text-gray-900">
+                                                                    {p.name}
+                                                                    {p.color?.name && ` (${p.color.name})`}
+                                                                    {p.size?.name && ` [${p.size.name}]`}
+                                                                </span>
+                                                                {/* <span className="text-xs text-gray-400">
+                                                                    SKU: {p.sku || 'N/A'} | Stock: {p.stock}
+                                                                </span> */}
+                                                            </div>
+                                                            <span className="text-sm font-medium">₹{p.price}</span>
+                                                        </div>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        )}
+                                    </div>
+                                )}
                             </div>
                             <div className="md:col-span-4 space-y-2">
                                 <Label>Set Price</Label>
@@ -188,7 +253,14 @@ export function EditCustomerPricesModal({ customerId, isOpen, onClose }: EditCus
                                 ) : (
                                     priceItems.map((item, index) => (
                                         <TableRow key={index}>
-                                            <TableCell className="font-medium">{item.productName}</TableCell>
+                                            <TableCell>
+                                                <div className="font-medium">{item.productName}</div>
+                                                {(item.color || item.size) && (
+                                                    <div className="text-[10px] text-muted-foreground">
+                                                        {item.color}{item.color && item.size ? ' / ' : ''}{item.size}
+                                                    </div>
+                                                )}
+                                            </TableCell>
                                             <TableCell>
                                                 <div className="font-bold text-green-600">
                                                     ₹{item.price.toFixed(2)}

@@ -16,7 +16,7 @@ import { useWatch } from "react-hook-form";
 import { useAuth } from "../../../context/AuthContext";
 
 interface CustomerFormProps {
-    onSuccess: () => void;
+    onSuccess: (data?: any) => void;
     onCancel: () => void;
     initialData?: Customer;
 }
@@ -72,11 +72,11 @@ export default function CustomerForm({ onSuccess, onCancel, initialData }: Custo
             return createCustomer(data);
         },
 
-        onSuccess: () => {
+        onSuccess: (data) => {
             toast.success(initialData ? "Customer updated successfully" : "Customer created successfully");
             queryClient.invalidateQueries({ queryKey: ['customers'] });
             queryClient.invalidateQueries({ queryKey: ['customer', initialData?.id] });
-            onSuccess();
+            onSuccess(data);
         },
         onError: (error: any) => {
             toast.error(initialData ? "Failed to update customer" : "Failed to create customer");

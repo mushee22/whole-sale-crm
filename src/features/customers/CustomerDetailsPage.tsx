@@ -384,12 +384,17 @@ export default function CustomerDetailsPage() {
                                 {customer.product_prices && customer.product_prices.length > 0 ? (
                                     customer.product_prices.map((pp) => (
                                         <div key={pp.id} className="p-4 space-y-2 hover:bg-slate-50 transition-colors">
-                                            <div className="flex justify-between items-start">
-                                                <div className="font-medium text-slate-900 line-clamp-2 text-sm">{pp.product?.name || `Product #${pp.product_id}`}</div>
+                                                <div className="flex flex-col flex-1 min-w-0">
+                                                    <div className="font-medium text-slate-900 line-clamp-2 text-sm">{pp.product?.name || `Product #${pp.product_id}`}</div>
+                                                    {(pp.product?.color || pp.product?.size) && (
+                                                        <div className="text-[10px] text-muted-foreground">
+                                                            {pp.product.color?.name}{pp.product.color && pp.product.size ? ' / ' : ''}{pp.product.size?.name}
+                                                        </div>
+                                                    )}
+                                                </div>
                                                 <div className="font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded text-sm shrink-0 ml-2">
                                                     {pp.price}
                                                 </div>
-                                            </div>
                                             {pp.product?.description && (
                                                 <div className="text-xs text-gray-500 line-clamp-1">{pp.product.description}</div>
                                             )}
