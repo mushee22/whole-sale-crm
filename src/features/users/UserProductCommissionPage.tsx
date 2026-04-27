@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { getUser, getStaffProductCommissions, saveStaffProductCommissions, type StaffProductCommissionPayload } from "./api/users";
@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../..
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
-import { ArrowLeft, Save, Loader2, Search, Coins, AlertCircle, FileText } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Search, Coins, AlertCircle, FileText, ChevronDown, ChevronRight, CornerDownRight } from "lucide-react";
 import { toast } from "sonner";
 
 export default function UserProductCommissionPage() {
@@ -17,6 +17,7 @@ export default function UserProductCommissionPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [commissions, setCommissions] = useState<{ [productId: number]: number }>({});
     const [isDirty, setIsDirty] = useState(false);
+    const [openAccordionId, setOpenAccordionId] = useState<number | null>(null);
 
     const { data: user, isLoading: isLoadingUser } = useQuery({
         queryKey: ['user', userId],
@@ -56,13 +57,21 @@ export default function UserProductCommissionPage() {
         }
     });
 
-    const handleCommissionChange = (productId: number, value: string) => {
+    const handleCommissionChange = (productId: number, value: string, isMainProduct: boolean = false) => {
         setIsDirty(true);
         const numValue = parseFloat(value);
-        setCommissions(prev => ({
-            ...prev,
-            [productId]: isNaN(numValue) ? 0 : numValue
-        }));
+        const newCommissionRate = isNaN(numValue) ? 0 : numValue;
+        
+        setCommissions(prev => {
+            const next = { ...prev, [productId]: newCommissionRate };
+            if (isMainProduct && products) {
+                const variants = products.filter(p => p.parent_id === productId);
+                variants.forEach(v => {
+                    next[v.id as number] = newCommissionRate;
+                });
+            }
+            return next;
+        });
     };
 
     const handleSave = () => {
@@ -78,9 +87,18 @@ export default function UserProductCommissionPage() {
         saveMutation.mutate(payload);
     };
 
-    const filteredProducts = products?.filter(p =>
-        p.name.toLowerCase().includes(searchTerm.toLowerCase())
-    ) || [];
+    const mainProducts = products?.filter(p => !p.parent_id) || [];
+    
+    const filteredMainProducts = mainProducts.filter(mainProduct => {
+        const matchesName = mainProduct.name.toLowerCase().includes(searchTerm.toLowerCase());
+        const variants = products?.filter(p => p.parent_id === mainProduct.id) || [];
+        const variantMatches = variants.some(v => v.name.toLowerCase().includes(searchTerm.toLowerCase()));
+        return matchesName || variantMatches;
+    });
+
+    const toggleAccordion = (id: number) => {
+        setOpenAccordionId(openAccordionId === id ? null : id);
+    };
 
     const isLoading = isLoadingUser || isLoadingProducts || isLoadingCommissions;
 
@@ -166,46 +184,105 @@ export default function UserProductCommissionPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredProducts.map((product) => (
-                                    <TableRow key={product.id} className="hover:bg-slate-50 transition-colors border-gray-100">
-                                        <TableCell className="pl-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                {product.image_url ? (
-                                                    <img src={product.image_url} alt="" className="h-10 w-10 rounded bg-slate-50 object-cover border border-slate-100" />
-                                                ) : (
-                                                    <div className="h-10 w-10 rounded bg-slate-50 flex items-center justify-center text-slate-300">
-                                                        <Coins className="h-5 w-5" />
-                                                    </div>
-                                                )}
-                                                <div>
-                                                    <div className="font-medium text-slate-900">{product.name}</div>
-                                                    <div className="text-[10px] text-slate-500 flex items-center gap-2 mt-0.5 uppercase tracking-wider font-semibold">
-                                                        {product.color?.name && (
-                                                            <span className="bg-slate-100 px-1 rounded">Color: {product.color.name}</span>
+                                {filteredMainProducts.map((mainProduct) => {
+                                    const isExpanded = openAccordionId === mainProduct.id;
+                                    const variants = products?.filter(p => p.parent_id === mainProduct.id) || [];
+                                    const hasVariants = variants.length > 0;
+
+                                    return (
+                                        <React.Fragment key={mainProduct.id}>
+                                            <TableRow 
+                                                className={`transition-colors border-gray-100 ${hasVariants ? 'cursor-pointer' : ''} ${isExpanded ? 'bg-indigo-50/40 hover:bg-indigo-50/60' : 'hover:bg-slate-50'}`}
+                                                onClick={() => hasVariants && toggleAccordion(mainProduct.id as number)}
+                                            >
+                                                <TableCell className="pl-6 py-4">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-5 flex justify-center">
+                                                            {hasVariants ? (
+                                                                isExpanded ? <ChevronDown className="h-4 w-4 text-indigo-500" /> : <ChevronRight className="h-4 w-4 text-slate-400" />
+                                                            ) : null}
+                                                        </div>
+                                                        {mainProduct.image_url ? (
+                                                            <img src={mainProduct.image_url} alt="" className="h-10 w-10 rounded bg-white object-cover border border-slate-200" />
+                                                        ) : (
+                                                            <div className="h-10 w-10 rounded bg-white border border-slate-200 flex items-center justify-center text-slate-300">
+                                                                <Coins className="h-5 w-5" />
+                                                            </div>
                                                         )}
-                                                        {product.size?.name && (
-                                                            <span className="bg-slate-100 px-1 rounded">Size: {product.size.name}</span>
-                                                        )}
+                                                        <div>
+                                                            <div className="font-medium text-slate-900">{mainProduct.name}</div>
+                                                            <div className={`text-[10px] flex items-center gap-2 mt-0.5 uppercase tracking-wider font-semibold ${isExpanded ? 'text-indigo-600' : 'text-slate-500'}`}>
+                                                                Main Product {hasVariants && `• ${variants.length} Variants`}
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                        <TableCell className="py-4 text-right pr-6">
-                                            <div className="flex justify-end">
-                                                <Input
-                                                    type="number"
-                                                    step="0.01"
-                                                    min="0"
-                                                    placeholder="0.00"
-                                                    className="w-24 h-9 text-right font-medium"
-                                                    value={commissions[product.id as number] ?? ""}
-                                                    onChange={(e) => handleCommissionChange(product.id as number, e.target.value)}
-                                                />
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                                {filteredProducts.length === 0 && (
+                                                </TableCell>
+                                                <TableCell className="py-4 text-right pr-6" onClick={(e) => e.stopPropagation()}>
+                                                    <div className="flex justify-end items-center gap-3">
+                                                        {hasVariants && isExpanded && (
+                                                            <span className="text-xs text-indigo-500 font-medium whitespace-nowrap bg-indigo-100/50 px-2 py-1 rounded hidden sm:inline-block">
+                                                                Applies to variants
+                                                            </span>
+                                                        )}
+                                                        <Input
+                                                            type="number"
+                                                            step="0.01"
+                                                            min="0"
+                                                            placeholder="0.00"
+                                                            className={`w-24 h-9 text-right font-medium ${isExpanded ? 'border-indigo-200 focus-visible:ring-indigo-500' : ''}`}
+                                                            value={commissions[mainProduct.id as number] ?? ""}
+                                                            onChange={(e) => handleCommissionChange(mainProduct.id as number, e.target.value, true)}
+                                                        />
+                                                    </div>
+                                                </TableCell>
+                                            </TableRow>
+                                            {isExpanded && variants.map((variant) => (
+                                                <TableRow key={variant.id} className="bg-slate-50/30 hover:bg-slate-50/80 transition-colors border-gray-100">
+                                                    <TableCell className="py-3 pl-10">
+                                                        <div className="flex items-start gap-2">
+                                                            <CornerDownRight className="h-4 w-4 text-slate-300 mt-2 shrink-0" />
+                                                            <div className="flex items-center gap-3 bg-white p-1.5 pr-4 rounded-md border border-slate-100 shadow-sm w-full">
+                                                                {variant.image_url ? (
+                                                                    <img src={variant.image_url} alt="" className="h-8 w-8 rounded bg-slate-50 object-cover border border-slate-100" />
+                                                                ) : (
+                                                                    <div className="h-8 w-8 rounded bg-slate-50 flex items-center justify-center text-slate-300">
+                                                                        <Coins className="h-4 w-4" />
+                                                                    </div>
+                                                                )}
+                                                                <div>
+                                                                    <div className="text-sm font-medium text-slate-800">{variant.name}</div>
+                                                                    <div className="text-[10px] flex items-center gap-2 mt-0.5 uppercase tracking-wider font-semibold">
+                                                                        <span className="text-indigo-500 bg-indigo-50 px-1.5 py-0.5 rounded">Variant</span>
+                                                                        {variant.color?.name && (
+                                                                            <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">Color: {variant.color.name}</span>
+                                                                        )}
+                                                                        {variant.size?.name && (
+                                                                            <span className="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">Size: {variant.size.name}</span>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </TableCell>
+                                                    <TableCell className="py-3 text-right pr-6" onClick={(e) => e.stopPropagation()}>
+                                                        <div className="flex justify-end">
+                                                            <Input
+                                                                type="number"
+                                                                step="0.01"
+                                                                min="0"
+                                                                placeholder="0.00"
+                                                                className="w-24 h-8 text-right text-sm"
+                                                                value={commissions[variant.id as number] ?? ""}
+                                                                onChange={(e) => handleCommissionChange(variant.id as number, e.target.value, false)}
+                                                            />
+                                                        </div>
+                                                    </TableCell>
+                                                </TableRow>
+                                            ))}
+                                        </React.Fragment>
+                                    );
+                                })}
+                                {filteredMainProducts.length === 0 && (
                                     <TableRow>
                                         <TableCell colSpan={2} className="h-32 text-center text-gray-400">
                                             No products found.

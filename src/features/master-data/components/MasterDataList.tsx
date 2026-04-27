@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../../components/ui/table";
 import { Button } from "../../../components/ui/button";
 import { Modal } from "../../../components/ui/modal";
-import { Plus, Pencil, Trash2, AlertTriangle } from "lucide-react";
+import { Plus, Pencil, Trash2, AlertTriangle, Search } from "lucide-react";
 import { Card, CardHeader, CardContent, CardTitle } from "../../../components/ui/card";
+import { Input } from "../../../components/ui/input";
 import { MasterDataForm } from "./MasterDataForm";
 import { toast } from "sonner";
 import { PermissionGuard } from "../../../hooks/usePermission";
 import { Pagination } from "../../../components/ui/pagination";
+import { useDebounce } from "../../../hooks/useDebounce";
 import { type MasterDataItem, type PaginatedResponse } from "../types";
 
 
@@ -23,7 +25,7 @@ interface MasterDataListProps {
     title: string;
     module?: string;
     queryKey: string;
-    fetchFn: (params: { page: number }) => Promise<MasterDataItem[] | PaginatedResponse<MasterDataItem>>;
+    fetchFn: (params: { page: number; search?: string }) => Promise<MasterDataItem[] | PaginatedResponse<MasterDataItem>>;
     createFn: (data: any) => Promise<MasterDataItem>;
     updateFn: (id: number | string, data: any) => Promise<MasterDataItem>;
     deleteFn: (id: number | string) => Promise<void>;
@@ -38,10 +40,16 @@ export function MasterDataList({ title, module, queryKey, fetchFn, createFn, upd
     const [editingItem, setEditingItem] = useState<MasterDataItem | null>(null);
     const [deleteId, setDeleteId] = useState<number | string | null>(null);
     const [currentPage, setCurrentPage] = useState(1);
+    const [search, setSearch] = useState("");
+    const debouncedSearch = useDebounce(search, 500);
+
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [debouncedSearch]);
 
     const { data: rawData, isLoading } = useQuery({
-        queryKey: [queryKey, currentPage],
-        queryFn: () => fetchFn({ page: currentPage })
+        queryKey: [queryKey, currentPage, debouncedSearch],
+        queryFn: () => fetchFn({ page: currentPage, search: debouncedSearch })
     });
 
     const isPaginated = (data: any): data is PaginatedResponse<MasterDataItem> => {
@@ -106,17 +114,28 @@ export function MasterDataList({ title, module, queryKey, fetchFn, createFn, upd
             <Card className="border-gray-100 shadow-sm">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-gray-100">
                     <CardTitle className="text-lg font-bold">{title}</CardTitle>
-                    {module ? (
-                        <PermissionGuard module={module} action="add">
+                    <div className="flex items-center gap-4">
+                        <div className="relative w-64">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+                            <Input
+                                placeholder={`Search ${title.toLowerCase()}s...`}
+                                className="pl-9 h-9"
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                            />
+                        </div>
+                        {module ? (
+                            <PermissionGuard module={module} action="add">
+                                <Button size="sm" onClick={openCreate} className="bg-slate-900 text-white hover:bg-slate-800">
+                                    <Plus className="mr-2 h-4 w-4" /> Add {title}
+                                </Button>
+                            </PermissionGuard>
+                        ) : (
                             <Button size="sm" onClick={openCreate} className="bg-slate-900 text-white hover:bg-slate-800">
                                 <Plus className="mr-2 h-4 w-4" /> Add {title}
                             </Button>
-                        </PermissionGuard>
-                    ) : (
-                        <Button size="sm" onClick={openCreate} className="bg-slate-900 text-white hover:bg-slate-800">
-                            <Plus className="mr-2 h-4 w-4" /> Add {title}
-                        </Button>
-                    )}
+                        )}
+                    </div>
                 </CardHeader>
                 <CardContent className="p-0">
                     {isLoading ? (
