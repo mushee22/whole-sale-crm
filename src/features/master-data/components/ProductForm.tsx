@@ -4,7 +4,8 @@ import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { Textarea } from "../../../components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../../components/ui/select";
+import { SearchableSelect } from "../../../components/ui/searchable-select";
+import { useDebounce } from "../../../hooks/useDebounce";
 import { getProducts } from "../api/products";
 import { getColors } from "../api/colors";
 import { getSizes } from "../api/sizes";
@@ -33,10 +34,19 @@ export function ProductForm({ onSubmit, isLoading, initialData, onCancel, isVari
     const [colorId, setColorId] = useState<string>("");
     const [sizeId, setSizeId] = useState<string>("");
 
-    const { data: products } = useQuery({ queryKey: ["products"], queryFn: () => getProducts() });
+    const [productSearch, setProductSearch] = useState("");
+    const debouncedProductSearch = useDebounce(productSearch, 300);
 
-    const { data: colors } = useQuery({ queryKey: ["colors"], queryFn: () => getColors() });
-    const { data: sizes } = useQuery({ queryKey: ["sizes"], queryFn: () => getSizes() });
+    const [colorSearch, setColorSearch] = useState("");
+    const debouncedColorSearch = useDebounce(colorSearch, 300);
+
+    const [sizeSearch, setSizeSearch] = useState("");
+    const debouncedSizeSearch = useDebounce(sizeSearch, 300);
+
+    const { data: products } = useQuery({ queryKey: ["products", debouncedProductSearch], queryFn: () => getProducts({ search: debouncedProductSearch, per_page: 200, is_main: true }) });
+
+    const { data: colors } = useQuery({ queryKey: ["colors", debouncedColorSearch], queryFn: () => getColors({ search: debouncedColorSearch, per_page: 200 }) });
+    const { data: sizes } = useQuery({ queryKey: ["sizes", debouncedSizeSearch], queryFn: () => getSizes({ search: debouncedSizeSearch, per_page: 200 }) });
 
 
     useEffect(() => {
@@ -114,48 +124,36 @@ export function ProductForm({ onSubmit, isLoading, initialData, onCancel, isVari
                         {!implicitParentId && (
                             <div className="space-y-2">
                                 <Label>Parent Product</Label>
-                                <Select value={parentId} onValueChange={setParentId}>
-                                    <SelectTrigger>
-                                        <SelectValue placeholder="Select Parent" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="none">None</SelectItem>
-                                        {products?.map((p) => (
-                                            <SelectItem key={p.id} value={p.id.toString()}>{p.name}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <SearchableSelect
+                                    options={[{ value: "none", label: "None" }, ...(products?.map((p) => ({ value: p.id.toString(), label: p.name })) || [])]}
+                                    value={parentId}
+                                    onChange={setParentId}
+                                    onSearchChange={setProductSearch}
+                                    placeholder="Select Parent"
+                                />
                             </div>
                         )}
 
                         <div className="space-y-2">
                             <Label>Color</Label>
-                            <Select value={colorId} onValueChange={setColorId}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select Color" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">None</SelectItem>
-                                    {colors?.map((c) => (
-                                        <SelectItem key={c.id} value={c.id.toString()}>{c.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <SearchableSelect
+                                options={[{ value: "none", label: "None" }, ...(colors?.map((c) => ({ value: c.id.toString(), label: c.name })) || [])]}
+                                value={colorId}
+                                onChange={setColorId}
+                                onSearchChange={setColorSearch}
+                                placeholder="Select Color"
+                            />
                         </div>
 
                         <div className="space-y-2">
                             <Label>Size</Label>
-                            <Select value={sizeId} onValueChange={setSizeId}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select Size" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="none">None</SelectItem>
-                                    {sizes?.map((s) => (
-                                        <SelectItem key={s.id} value={s.id.toString()}>{s.name}</SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+                            <SearchableSelect
+                                options={[{ value: "none", label: "None" }, ...(sizes?.map((s) => ({ value: s.id.toString(), label: s.name })) || [])]}
+                                value={sizeId}
+                                onChange={setSizeId}
+                                onSearchChange={setSizeSearch}
+                                placeholder="Select Size"
+                            />
                         </div>
                     </>
                 )}

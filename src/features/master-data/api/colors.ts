@@ -1,13 +1,12 @@
 import { api } from "../../../lib/api";
 import { type Color, type CreateMasterDataParams, type UpdateMasterDataParams, type PaginatedResponse } from "../types";
 
-export async function getColors(): Promise<Color[]>;
-export async function getColors(params: { page: number }): Promise<PaginatedResponse<Color>>;
+export async function getColors(params?: { search?: string, per_page?: number }): Promise<Color[]>;
+export async function getColors(params: { search?: string, page: number, per_page?: number }): Promise<PaginatedResponse<Color>>;
 export async function getColors(params?: any): Promise<Color[] | PaginatedResponse<Color>> {
     const hasPage = params && typeof params === 'object' && 'page' in params;
-    const actualParams = hasPage ? params : undefined;
     
-    const response = await api.get("/colors", { params: actualParams });
+    const response = await api.get("/colors", { params });
     const data = response.data;
     
     const isPaginatedResponse = data && Array.isArray(data.data) && 'current_page' in data;

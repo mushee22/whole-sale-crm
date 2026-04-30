@@ -1,13 +1,12 @@
 import { api } from "../../../lib/api";
 import { type Size, type CreateMasterDataParams, type UpdateMasterDataParams, type PaginatedResponse } from "../types";
 
-export async function getSizes(): Promise<Size[]>;
-export async function getSizes(params: { page: number }): Promise<PaginatedResponse<Size>>;
+export async function getSizes(params?: { search?: string, per_page?: number }): Promise<Size[]>;
+export async function getSizes(params: { search?: string, page: number, per_page?: number }): Promise<PaginatedResponse<Size>>;
 export async function getSizes(params?: any): Promise<Size[] | PaginatedResponse<Size>> {
     const hasPage = params && typeof params === 'object' && 'page' in params;
-    const actualParams = hasPage ? params : undefined;
     
-    const response = await api.get("/sizes", { params: actualParams });
+    const response = await api.get("/sizes", { params });
     const data = response.data;
     
     const isPaginatedResponse = data && Array.isArray(data.data) && 'current_page' in data;

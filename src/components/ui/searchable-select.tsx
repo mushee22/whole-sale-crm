@@ -12,6 +12,7 @@ interface SearchableSelectProps {
     options: SearchableSelectOption[];
     value?: string;
     onChange: (value: string) => void;
+    onSearchChange?: (value: string) => void;
     placeholder?: string;
     emptyText?: string;
     className?: string;
@@ -21,6 +22,7 @@ export function SearchableSelect({
     options,
     value,
     onChange,
+    onSearchChange,
     placeholder = "Select option...",
     emptyText = "No option found.",
     className,
@@ -71,11 +73,13 @@ export function SearchableSelect({
                     readOnly={!open}
                     onChange={(e) => {
                         setSearch(e.target.value)
+                        onSearchChange?.(e.target.value)
                         setOpen(true)
                     }}
                     onFocus={() => {
                         setOpen(true)
                         setSearch("") 
+                        onSearchChange?.("")
                     }}
                     onClick={() => {
                         if (!open) {
