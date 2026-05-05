@@ -274,6 +274,14 @@ export default function ConfirmedOrdersPage() {
                                                     </div>
                                                 </div>
                                                 <div className="pt-2 flex gap-2">
+                                                    <Button size="sm" variant="outline" className="flex-1 gap-2"
+                                                        onClick={(e) => {
+                                                            e.stopPropagation();
+                                                            setSelectedOrder(order.id);
+                                                        }}
+                                                    >
+                                                        <Eye className="h-4 w-4" /> View
+                                                    </Button>
                                                     <Button size="sm" variant="outline" className="flex-1 gap-2" onClick={() => navigate(`/orders/edit/${order.id}`)}>
                                                         <Pencil className="h-4 w-4" /> Edit
                                                     </Button>
