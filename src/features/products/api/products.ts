@@ -64,6 +64,7 @@ export const getProducts = async (params: GetProductsParams = {}) => {
     if (params.search) queryParams.append('search', params.search);
     if (params.is_active !== undefined) queryParams.append('is_active', params.is_active.toString());
     if (params.per_page) queryParams.append('per_page', params.per_page.toString());
+    if (params.is_main) queryParams.append('is_main', 'true')
 
     const response = await api.get<ProductListResponse>(`products?${queryParams.toString()}`);
     return response.data;

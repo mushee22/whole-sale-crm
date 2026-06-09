@@ -34,7 +34,7 @@ export function EditCustomerPricesModal({ customerId, isOpen, onClose }: EditCus
     // Fetch products
     const { data: productsData } = useQuery({
         queryKey: ["products", "all"],
-        queryFn: () => getProducts({ per_page: 300 }),
+        queryFn: () => getProducts({ per_page: 300, is_main: true }),
         enabled: isOpen
     });
 

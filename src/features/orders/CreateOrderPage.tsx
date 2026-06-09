@@ -83,15 +83,25 @@ function OrderItemRow({ index, register, remove, setValue, watch, errors, custom
         // --- Special Price Logic ---
         let effectivePrice = Number(product.price);
 
-        // 1. Check for special customer price
         if (customer && customer.product_prices) {
+            // 1. Check for direct product special price
             const specialPrice = customer.product_prices.find(pp => String(pp.product_id) === String(product.id));
+
             if (specialPrice) {
                 effectivePrice = Number(specialPrice.price);
             } else {
-                // 2. Fallback to discount price if no special price
-                if (product.discount_price) {
-                    effectivePrice = Number(product.discount_price);
+                // 2. Fallback: check if the product's parent has a special price
+                const parentSpecialPrice = product.parent_id
+                    ? customer.product_prices.find(pp => String(pp.product_id) === String(product.parent_id))
+                    : null;
+
+                if (parentSpecialPrice) {
+                    effectivePrice = Number(parentSpecialPrice.price);
+                } else {
+                    // 3. No special price found, fallback to discount price
+                    if (product.discount_price) {
+                        effectivePrice = Number(product.discount_price);
+                    }
                 }
             }
         } else {
@@ -107,7 +117,7 @@ function OrderItemRow({ index, register, remove, setValue, watch, errors, custom
     };
 
     const lineTotal = (unitPrice || 0) * (quantity || 0);
-    const filteredProducts = (productsData?.data || []).filter(p => 
+    const filteredProducts = (productsData?.data || []).filter(p =>
         p.name.toLowerCase().includes(search.toLowerCase()) ||
         p.sku?.toLowerCase().includes(search.toLowerCase()) ||
         p.color?.name?.toLowerCase().includes(search.toLowerCase()) ||
